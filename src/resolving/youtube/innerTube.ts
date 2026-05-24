@@ -266,8 +266,27 @@ export class InnerTubeClient {
   #parseMixResults(data: any): InnerTubeSearchResult[] {
     const results: InnerTubeSearchResult[] = []
     try {
-      const secondary = data?.contents?.twoColumnWatchNextRenderer?.secondaryResults?.secondaryResults?.results ?? []
+      const secondary = data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results ?? []
       for (const item of secondary) {
+        // Skip non-video items (reelShelfRenderer = Shorts, etc)
+        if (item?.reelShelfRenderer) continue
+        // New format: lockupViewModel
+        const lockup = item?.lockupViewModel
+        if (lockup && lockup.contentId) {
+          const meta = lockup?.metadata?.lockupMetadataViewModel
+          const contentMeta = meta?.metadata?.contentMetadataViewModel
+          const rows = contentMeta?.metadataRows ?? []
+          const durationText = rows.map((r: any) => r.metadataParts?.map((p: any) => p?.text?.content).join('')).join(' ') ?? ''
+          results.push({
+            videoId: lockup.contentId,
+            title: meta?.title?.content ?? 'Unknown',
+            author: rows[0]?.metadataParts?.[0]?.text?.content ?? 'Unknown',
+            duration: this.#parseDuration(durationText),
+            thumbnail: lockup?.contentImage?.lockupContentImageViewModel?.contentThumbnailViewModel?.image?.sources?.[0]?.url ?? '',
+          })
+          continue
+        }
+        // Old format: compactVideoRenderer
         const video = item?.compactVideoRenderer
         if (!video?.videoId) continue
         const len = video?.lengthText?.simpleText ?? video?.lengthText?.runs?.[0]?.text ?? '0:00'
@@ -290,13 +309,25 @@ export class InnerTubeClient {
       for (const section of contents) {
         const items = section?.itemSectionRenderer?.contents ?? []
         for (const item of items) {
+          // New format: lockupViewModel
+          const lockup = item?.lockupViewModel
+          if (lockup?.contentType === 'LOCKUP_CONTENT_TYPE_PLAYLIST' && lockup?.contentId) {
+            results.push({
+              playlistId: lockup.contentId,
+              title: lockup?.metadata?.lockupMetadataViewModel?.title?.content ?? 'Unknown',
+              videoCount: 0,
+              thumbnail: lockup?.contentImage?.lockupContentImageViewModel?.contentThumbnailViewModel?.image?.sources?.[0]?.url ?? '',
+            })
+            continue
+          }
+          // Old format: playlistRenderer
           const playlist = item?.playlistRenderer
-          if (!playlist?.playlistId) continue
+          if (!playlist) continue
           results.push({
             playlistId: playlist.playlistId,
             title: this.#getText(playlist?.title),
+            videoCount: Number(playlist?.videoCount ?? 0),
             thumbnail: playlist?.thumbnails?.[playlist.thumbnails.length - 1]?.url ?? '',
-            videoCount: playlist?.videoCount ?? 0,
           })
         }
       }
@@ -312,6 +343,23 @@ export class InnerTubeClient {
       for (const section of contents) {
         const items = section?.itemSectionRenderer?.contents ?? []
         for (const item of items) {
+          // New format: lockupViewModel (video type)
+          const lockup = item?.lockupViewModel
+          if (lockup && lockup.contentId && lockup.contentType !== 'LOCKUP_CONTENT_TYPE_PLAYLIST') {
+            const meta = lockup?.metadata?.lockupMetadataViewModel
+            const contentMeta = meta?.metadata?.contentMetadataViewModel
+            const rows = contentMeta?.metadataRows ?? []
+            const durationText = rows.map((r: any) => r.metadataParts?.map((p: any) => p?.text?.content).join('')).join(' ') ?? ''
+            results.push({
+              videoId: lockup.contentId,
+              title: meta?.title?.content ?? 'Unknown',
+              author: rows[0]?.metadataParts?.[0]?.text?.content ?? 'Unknown',
+              duration: this.#parseDuration(durationText),
+              thumbnail: lockup?.contentImage?.lockupContentImageViewModel?.contentThumbnailViewModel?.image?.sources?.[0]?.url ?? '',
+            })
+            continue
+          }
+          // Old formats
           const video = item?.videoRenderer || item?.compactVideoRenderer
           if (!video) continue
           const videoId = video?.videoId
@@ -370,8 +418,36 @@ export class InnerTubeClient {
       for (const tab of tabs) {
         const contents = tab?.tabRenderer?.content?.sectionListRenderer?.contents ?? []
         for (const section of contents) {
-          const items = section?.itemSectionRenderer?.contents ?? section?.playlistVideoListRenderer?.contents ?? []
+          let items: any[] = []
+          // playlistVideoListRenderer may be directly in section or wrapped in itemSectionRenderer
+          if (section?.playlistVideoListRenderer?.contents) {
+            items = section.playlistVideoListRenderer.contents
+          } else if (section?.itemSectionRenderer?.contents) {
+            for (const isItem of section.itemSectionRenderer.contents) {
+              if (isItem?.playlistVideoListRenderer?.contents) {
+                items = isItem.playlistVideoListRenderer.contents
+                break
+              }
+            }
+          }
           for (const item of items) {
+            // New format: lockupViewModel
+            const lockup = item?.lockupViewModel
+            if (lockup && lockup.contentId) {
+              const meta = lockup?.metadata?.lockupMetadataViewModel
+              const contentMeta = meta?.metadata?.contentMetadataViewModel
+              const rows = contentMeta?.metadataRows ?? []
+              const durationText = rows.map((r: any) => r.metadataParts?.map((p: any) => p?.text?.content).join('')).join(' ') ?? ''
+              results.push({
+                videoId: lockup.contentId,
+                title: meta?.title?.content ?? 'Unknown',
+                author: rows[0]?.metadataParts?.[0]?.text?.content ?? 'Unknown',
+                duration: this.#parseDuration(durationText),
+                thumbnail: lockup?.contentImage?.lockupContentImageViewModel?.contentThumbnailViewModel?.image?.sources?.[0]?.url ?? '',
+              })
+              continue
+            }
+            // Old format
             const video = item?.playlistVideoRenderer ?? item?.videoRenderer
             if (!video?.videoId) continue
 

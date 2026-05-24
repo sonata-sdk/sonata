@@ -103,6 +103,8 @@ const publicPaths = [
   cfg.server.healthPath ?? '/health',
   cfg.server.versionPath ?? '/version',
   cfg.server.dashboard ?? '/dashboard',
+  '/lyrics',
+  `${cfg.server.dashboard}/ws`,
 ]
 for (const p of publicPaths) srv.noAuth(p)
 
