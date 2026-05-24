@@ -170,14 +170,25 @@ describe('AudioMixer', () => {
 })
 
 describe('Resolver', () => {
-  it('returns empty for unknown queries', async () => {
+  it('returns empty when all sources are disabled', async () => {
     const resolver = new Resolver({
-      youtube: { enabled: true },
-      soundcloud: { enabled: true },
+      youtube: { enabled: false },
+      soundcloud: { enabled: false },
       spotify: { enabled: false, clientId: '', clientSecret: '' },
     })
-    const result = await resolver.resolveAsync('asdfghjkl123')
+    const result = await resolver.resolveAsync('anything')
     expect(result.loadType).toBe('empty')
+  })
+
+  it('returns search for text queries with YouTube enabled', async () => {
+    const resolver = new Resolver({
+      youtube: { enabled: true },
+      soundcloud: { enabled: false },
+      spotify: { enabled: false, clientId: '', clientSecret: '' },
+    })
+    const result = await resolver.resolveAsync('never gonna give you up')
+    expect(result.loadType).toBe('search')
+    expect(result.tracks.length).toBeGreaterThan(0)
   })
 })
 
