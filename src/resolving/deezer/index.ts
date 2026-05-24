@@ -9,6 +9,7 @@ interface DeezerTrack {
   title: string
   link: string
   duration: number
+  preview: string
   artist: { name: string }
   album: { title: string; cover_big: string }
 }
@@ -114,6 +115,7 @@ export class DeezerSource implements AudioSource {
         position: 0,
       },
       source: 'deezer',
+      userData: t.preview ? { audioUrl: t.preview } : undefined,
     }
   }
 }

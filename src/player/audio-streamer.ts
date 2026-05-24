@@ -154,7 +154,7 @@ export class AudioStreamer extends EventTarget {
   #startStream() {
     if (!this.#currentTrack) return
 
-    const uri = this.#currentTrack.info.uri
+    const uri = this.#currentTrack.userData?.audioUrl as string ?? this.#currentTrack.info.uri
     if (!uri) {
       this.#onEnd('loadFailed')
       return

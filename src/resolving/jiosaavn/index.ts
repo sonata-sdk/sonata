@@ -11,6 +11,8 @@ interface JioSaavnSong {
   album?: string
   image?: string
   perma_url?: string
+  media_preview_url?: string
+  vlink?: string
   duration?: string
   primary_artists?: string
   singers?: string
@@ -143,6 +145,7 @@ export class JioSaavnSource implements AudioSource {
       ?? t.more_info?.music
       ?? t.music
       ?? 'Unknown'
+    const audioUrl = t.vlink ?? t.media_preview_url ?? ''
 
     return {
       encoded: Buffer.from(t.id).toString('base64url'),
@@ -158,6 +161,7 @@ export class JioSaavnSource implements AudioSource {
         position: 0,
       },
       source: 'jiosaavn',
+      userData: audioUrl ? { audioUrl } : undefined,
     }
   }
 }
