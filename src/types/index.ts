@@ -176,25 +176,116 @@ export interface LowPassOptions {
 
 export interface Config {
   server: {
+    /** Host to bind the HTTP/WS server */
     host: string
+    /** Port to listen on */
     port: number
+    /** Lavalink auth password */
     password: string
+    /** Number of worker threads (0 = main thread only) */
+    workers?: number
+    /** Max request body size in bytes */
+    maxBodySize?: number
+    /** HTTP socket timeout in ms */
+    socketTimeout?: number
+    /** Trust X-Forwarded-For headers */
+    trustProxy?: boolean
   }
   logging: {
     level: 'debug' | 'info' | 'warn' | 'error'
     format: 'text' | 'json'
+    /** Write logs to file instead of stdout */
+    destination?: string
+    /** Colorize text output */
+    colorize?: boolean
+    /** Exclude these URL paths from access logs */
+    excludePaths?: string[]
   }
   sources: {
-    youtube: boolean
-    soundcloud: boolean
-    spotify: boolean
+    youtube: {
+      /** Enable YouTube source */
+      enabled: boolean
+      /** InnerTube client profiles to try in order */
+      clientProfiles?: ('WEB' | 'MUSIC' | 'ANDROID' | 'IOS' | 'TV')[]
+      /** Proxy for YouTube requests */
+      proxy?: string
+    }
+    soundcloud: {
+      /** Enable SoundCloud source */
+      enabled: boolean
+      /** Custom client ID (auto-discovered if empty) */
+      clientId?: string
+    }
+    spotify: {
+      /** Enable Spotify source (metadata-only; mirrors to YouTube for audio) */
+      enabled: boolean
+      /** Spotify API client ID */
+      clientId: string
+      /** Spotify API client secret */
+      clientSecret: string
+      /** Country code for market filtering */
+      market?: string
+    }
+    /** Enable direct HTTP audio URLs */
+    http?: boolean
+    /** Enable local file playback */
+    local?: boolean
+  }
+  lavalink: {
+    apiVersion: 3 | 4
+    /** Session resume timeout in seconds */
+    resumeTimeout?: number
+    /** Fixed resume key (auto-generated if empty) */
+    resumeKey?: string
+    /** Session timeout in seconds */
+    sessionTimeout?: number
+  }
+  voice: {
+    /** UDP mode: ipv4 or ipv6 */
+    udpMode?: 'ipv4' | 'ipv6'
+    /** External IP for voice connections (auto if empty) */
+    externalAddress?: string
+    /** UDP port range [min, max] */
+    portRange?: [number, number]
+    /** UDP socket buffer size */
+    bufferSize?: number
+  }
+  queue: {
+    /** Max size of play history */
+    maxHistorySize?: number
+    /** Default volume (0-1000) */
+    defaultVolume?: number
+  }
+  metrics: {
+    /** Enable Prometheus metrics endpoint */
+    enabled: boolean
+    /** Metrics path (default: /metrics) */
+    path?: string
+    /** Custom metric prefix */
+    prefix?: string
+  }
+  rateLimiting: {
+    /** Enable rate limiting */
+    enabled: boolean
+    /** Time window in ms */
+    windowMs?: number
+    /** Max requests per window */
+    maxRequests?: number
+  }
+  plugins: {
+    /** Paths to plugin modules */
+    paths?: string[]
+    /** Plugin configs keyed by plugin name */
+    configs?: Record<string, Record<string, unknown>>
   }
   clustering: {
     enabled: boolean
-    nodes: string[]
-  }
-  lavalink: {
-    version: 3 | 4
+    nodes?: {
+      host: string
+      port: number
+      password?: string
+      secure?: boolean
+    }[]
   }
 }
 

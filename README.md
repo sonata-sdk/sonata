@@ -4,20 +4,21 @@ High-performance Lavalink-compatible audio server for Discord bots. Written in T
 
 ## Features
 
-- **Lavalink v4 + v3 API** — drop-in replacement, works with lavalink.js, lavasnek, etc.
-- **Native audio resolvers** — YouTube (InnerTube API), SoundCloud, Spotify (via mirroring)
+- **Lavalink v4 + v3 API** — drop-in replacement
+- **Native audio resolvers** — YouTube (InnerTube API), SoundCloud, Spotify
 - **No yt-dlp** — direct API integrations like the official Lavalink
+- **C++ native addon** — OPUS encoder/decoder, audio mixer (volume, rotation, channel mix, low-pass)
 - **WebSocket events** — real-time track start/end, player updates, session resume
 - **Player management** — play, pause, seek, volume, equalizer, filters
 - **Queue system** — shuffle, loop (track/queue), remove, clear, history
 - **Discord Gateway** — voice state updates, auto-reconnect
+- **Discord Voice** — UDP connection, RTP, xsalsa20_poly1305 encryption
 - **Route planner** — load balancing across IP blocks
 - **Plugin system** — extend with custom audio sources
 - **Prometheus metrics** — `/metrics` endpoint
-- **Rate limiting** — per-token/IP
-- **Structured logging** — text or JSON
-- **Single process** — zero runtime deps (no JVM)
-- **Docker** — multi-stage, 3 layers, 150MB
+- **Rate limiting** — configurable per-window
+- **Structured logging** — text or JSON, file output supported
+- **Docker** — multi-stage with native addon
 
 ## Quick Start
 
@@ -28,11 +29,11 @@ npm install
 # Build
 npm run build
 
-# Run
+# Run (looks for config.js in current dir, or pass path)
 node dist/index.js
 
-# Or with config
-node dist/index.js sonata.json
+# With custom config
+node dist/index.js /path/to/config.js
 ```
 
 ### Docker
@@ -44,20 +45,11 @@ docker run -p 2333:2333 sonata
 
 ## Configuration
 
-```json
-{
-  "server": {
-    "host": "0.0.0.0",
-    "port": 2333,
-    "password": "youshallnotpass"
-  },
-  "logging": {
-    "level": "info",
-    "format": "text"
-  },
-  "sources": {
-    "youtube": true,
-    "soundcloud": true,
+Sonata uses a JavaScript config file (`config.js` by default). Copy `config.example.js` and edit:
+
+```bash
+cp config.example.js config.js
+```
     "spotify": false
   },
   "lavalink": {

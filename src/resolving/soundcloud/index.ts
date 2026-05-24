@@ -19,6 +19,10 @@ export class SoundCloudSource implements AudioSource {
   #clientId: string | null = null
   #clientIdPromise: Promise<string | null> | null = null
 
+  constructor(config?: { clientId?: string }) {
+    if (config?.clientId) this.#clientId = config.clientId
+  }
+
   matches(url: string): boolean {
     return SC_REGEX.test(url)
   }

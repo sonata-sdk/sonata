@@ -9,7 +9,11 @@ const YT_WATCH_REGEX = /(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
 
 export class YouTubeSource implements AudioSource {
   name = 'youtube'
-  #client = new InnerTubeClient()
+  #client: InnerTubeClient
+
+  constructor(config?: { clientProfiles?: string[]; proxy?: string }) {
+    this.#client = new InnerTubeClient(config?.clientProfiles, config?.proxy)
+  }
 
   matches(url: string): boolean {
     return YT_REGEX.test(url) || YT_ID_REGEX.test(url)

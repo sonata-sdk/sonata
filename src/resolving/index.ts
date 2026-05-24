@@ -5,17 +5,21 @@ import { SpotifySource } from './spotify/index.js'
 import { MirrorResolver } from './mirror.js'
 import type { Track, LoadTracksResult } from '../types/index.js'
 
+interface ResolverConfig {
+  youtube: { enabled: boolean; clientProfiles?: string[]; proxy?: string }
+  soundcloud: { enabled: boolean; clientId?: string }
+  spotify: { enabled: boolean; clientId: string; clientSecret: string; market?: string }
+  http?: boolean
+  local?: boolean
+}
+
 export class Resolver {
   #sourceManager = new AudioSourceManager()
   #mirror: MirrorResolver
-  #spotifyClientId: string
-  #spotifyClientSecret: string
 
-  constructor(spotifyClientId = '', spotifyClientSecret = '') {
-    this.#spotifyClientId = spotifyClientId
-    this.#spotifyClientSecret = spotifyClientSecret
+  constructor(config: ResolverConfig) {
     this.#mirror = new MirrorResolver(this.#sourceManager)
-    this.#registerDefaultSources()
+    this.#registerSources(config)
   }
 
   get sourceManager() { return this.#sourceManager }
@@ -35,10 +39,8 @@ export class Resolver {
     else if (tracks.length > 1) loadType = 'search'
     else loadType = 'empty'
 
-    // Check if any tracks need mirroring (Spotify)
     const needsMirror = tracks.some(t => (t as any).needsResolve)
     if (needsMirror && tracks.length === 1) {
-      // Try to resolve immediately for single track
       const resolved = await this.#mirror.resolve(tracks[0])
       if (resolved) return { loadType: 'track', tracks: [resolved] }
     }
@@ -56,12 +58,15 @@ export class Resolver {
     return track
   }
 
-  #registerDefaultSources() {
-    this.#sourceManager.register(new YouTubeSource())
-    this.#sourceManager.register(new SoundCloudSource())
-
-    if (this.#spotifyClientId && this.#spotifyClientSecret) {
-      this.#sourceManager.register(new SpotifySource(this.#spotifyClientId, this.#spotifyClientSecret))
+  #registerSources(config: ResolverConfig) {
+    if (config.youtube?.enabled) {
+      this.#sourceManager.register(new YouTubeSource(config.youtube))
+    }
+    if (config.soundcloud?.enabled) {
+      this.#sourceManager.register(new SoundCloudSource(config.soundcloud))
+    }
+    if (config.spotify?.enabled && config.spotify.clientId && config.spotify.clientSecret) {
+      this.#sourceManager.register(new SpotifySource(config.spotify.clientId, config.spotify.clientSecret))
     }
   }
 }

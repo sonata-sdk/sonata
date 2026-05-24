@@ -163,7 +163,11 @@ describe('AudioMixer', () => {
 
 describe('Resolver', () => {
   it('returns empty for unknown queries', async () => {
-    const resolver = new Resolver()
+    const resolver = new Resolver({
+      youtube: { enabled: true },
+      soundcloud: { enabled: true },
+      spotify: { enabled: false, clientId: '', clientSecret: '' },
+    })
     const result = await resolver.resolveAsync('asdfghjkl123')
     expect(result.loadType).toBe('empty')
   })

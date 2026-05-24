@@ -71,7 +71,13 @@ interface InnerTubeSearchResult {
 }
 
 export class InnerTubeClient {
-  #profiles: ClientProfile[] = [CLIENTS.WEB, CLIENTS.MUSIC, CLIENTS.ANDROID, CLIENTS.IOS, CLIENTS.TV]
+  #profiles: ClientProfile[]
+
+  constructor(clientProfiles?: string[], private proxy?: string) {
+    this.#profiles = clientProfiles?.length
+      ? clientProfiles.map(name => CLIENTS[name]).filter(Boolean)
+      : [CLIENTS.WEB, CLIENTS.MUSIC, CLIENTS.ANDROID, CLIENTS.IOS, CLIENTS.TV]
+  }
 
   async search(query: string): Promise<InnerTubeSearchResult[]> {
     for (const client of this.#profiles) {
