@@ -195,6 +195,28 @@ export interface Config {
     dashboard?: string
     /** Version endpoint path */
     versionPath?: string
+    /** Health endpoint path */
+    healthPath?: string
+    /** HTTP keep-alive timeout (ms) */
+    keepAliveTimeout?: number
+    /** Max header size (bytes) */
+    maxHeaderSize?: number
+    /** Enable gzip/deflate compression */
+    compression?: boolean
+    /** HTTP/2 support */
+    http2?: boolean
+    /** HTTPS/TLS options */
+    ssl?: {
+      cert: string
+      key: string
+      ca?: string
+      passphrase?: string
+      secureOptions?: number
+    }
+    /** Custom response headers */
+    customHeaders?: Record<string, string>
+    /** Rate limit bypass IPs (always allowed) */
+    trustedIps?: string[]
   }
   logging: {
     level: 'debug' | 'info' | 'warn' | 'error'
@@ -202,33 +224,118 @@ export interface Config {
     destination?: string
     colorize?: boolean
     excludePaths?: string[]
+    /** File-based logging */
+    file?: {
+      enabled: boolean
+      path: string
+      maxSize?: number
+      maxFiles?: number
+      compress?: boolean
+    }
+    /** Per-module log levels (e.g. { server: 'debug', resolving: 'warn' }) */
+    moduleLevels?: Record<string, 'debug' | 'info' | 'warn' | 'error'>
+    /** Timestamp format in logs */
+    timestampFormat?: 'iso' | 'epoch' | 'relative' | 'none'
+    /** Include process PID in logs */
+    showPid?: boolean
   }
   sources: {
-    youtube: { enabled: boolean; clientProfiles?: ('WEB' | 'MUSIC' | 'ANDROID' | 'IOS' | 'TV')[]; proxy?: string }
-    soundcloud: { enabled: boolean; clientId?: string }
-    spotify: { enabled: boolean; clientId: string; clientSecret: string; market?: string }
-    bandcamp?: { enabled: boolean }
-    twitch?: { enabled: boolean }
-    vimeo?: { enabled: boolean }
-    deezer?: { enabled: boolean }
-    apple?: { enabled: boolean }
-    nico?: { enabled: boolean }
-    mixcloud?: { enabled: boolean }
-    podcast?: { enabled: boolean }
-    http?: boolean
-    local?: boolean
+    youtube: {
+      enabled: boolean
+      clientProfiles?: ('WEB' | 'MUSIC' | 'ANDROID' | 'IOS' | 'TV')[]
+      proxy?: string
+      /** Custom InnerTube API key */
+      apiKey?: string
+      /** Custom client name sent to InnerTube */
+      clientName?: string
+      /** Request timeout per search */
+      timeout?: number
+      /** Max results per search */
+      maxResults?: number
+      /** Fetch and parse player.js for cipher decoding */
+      fetchPlayerJS?: boolean
+      /** Use OAuth for authenticated requests */
+      oauth?: {
+        enabled: boolean
+        refreshToken?: string
+        clientId?: string
+        clientSecret?: string
+      }
+    }
+    soundcloud: {
+      enabled: boolean
+      clientId?: string
+      /** Custom API URL (for mirrors) */
+      apiUrl?: string
+      /** Resolve redirects */
+      resolveRedirects?: boolean
+      /** Timeout per request */
+      timeout?: number
+    }
+    spotify: {
+      enabled: boolean
+      clientId: string
+      clientSecret: string
+      market?: string
+      /** Country code for regional filtering */
+      country?: string
+      /** Max playlist tracks to fetch */
+      maxPlaylistTracks?: number
+      /** Flavor of resolver to use (auto = try mirror first, then fallback) */
+      resolverFlavor?: 'auto' | 'mirror' | 'direct'
+      /** Retry on failure count */
+      retryCount?: number
+    }
+    bandcamp?: { enabled: boolean; quality?: 'high' | 'medium' | 'low'; timeout?: number }
+    twitch?: { enabled: boolean; clientId?: string; clientSecret?: string; quality?: string; timeout?: number }
+    vimeo?: { enabled: boolean; quality?: string; timeout?: number }
+    deezer?: { enabled: boolean; quality?: 'FLAC' | 'MP3_320' | 'MP3_128'; arl?: string; timeout?: number }
+    apple?: { enabled: boolean; quality?: 'high' | 'medium' | 'low'; storefront?: string; timeout?: number }
+    nico?: { enabled: boolean; quality?: string; timeout?: number }
+    mixcloud?: { enabled: boolean; quality?: string; timeout?: number }
+    podcast?: { enabled: boolean; maxEpisodes?: number; userAgent?: string; timeout?: number }
+    http?: boolean | { timeout?: number; retryCount?: number; userAgent?: string; followRedirects?: boolean; maxRedirects?: number }
+    local?: boolean | { basePath?: string; allowedExtensions?: string[]; maxFileSize?: number }
+    /** Source priority ordering (first match wins) */
+    priority?: string[]
+    /** Custom user-agent per source */
+    userAgent?: string
+    /** Global source request timeout */
+    requestTimeout?: number
   }
   lavalink: {
     apiVersion: 3 | 4
     resumeTimeout?: number
     resumeKey?: string
     sessionTimeout?: number
+    /** Path to lavalink plugin jars (auto-load) */
+    pluginDir?: string
+    /** External API base URL for plugin calls */
+    externalApi?: string
+    /** Custom track decoder URL */
+    decoderEndpoint?: string
+    /** Max track length in ms for inbound requests */
+    maxTrackLength?: number
+    /** Validate track payload structure */
+    strictValidation?: boolean
   }
   voice: {
     udpMode?: 'ipv4' | 'ipv6'
     externalAddress?: string
     portRange?: [number, number]
     bufferSize?: number
+    /** Force IP discovery even if externalAddress is set */
+    forceIpDiscovery?: boolean
+    /** Encryption fallback modes (ordered) */
+    encryptionFallback?: ('xsalsa20_poly1305' | 'aes256_gcm' | 'aes256_cbc' | 'plain')[]
+    /** Silence frames to send on connection */
+    silenceFrames?: number
+    /** Keepalive interval (ms) */
+    keepaliveInterval?: number
+    /** Max reconnect attempts */
+    maxReconnectAttempts?: number
+    /** Reconnect delay base (ms, exponential backoff) */
+    reconnectDelay?: number
   }
   queue: {
     maxHistorySize?: number
@@ -237,6 +344,16 @@ export interface Config {
     maxSize?: number
     /** Crossfade duration in ms */
     crossfade?: number
+    /** Separate crossfade fade-in duration (ms) */
+    crossfadeFadeIn?: number
+    /** Separate crossfade fade-out duration (ms) */
+    crossfadeFadeOut?: number
+    /** Enable shuffle by default */
+    shuffle?: boolean
+    /** Repeat mode when queue is empty (none = stop, track = repeat last, queue = refill from history) */
+    emptyRepeatMode?: 'none' | 'track' | 'queue'
+    /** Max tracks per source (e.g. { youtube: 50, soundcloud: 30 }) */
+    perSourceLimits?: Record<string, number>
   }
   player: {
     /** Auto advance to next track */
@@ -245,6 +362,26 @@ export interface Config {
     replaygain?: boolean
     /** Max event history entries */
     eventHistory?: number
+    /** Behavior when queue is empty */
+    emptyQueueBehavior?: 'stop' | 'pause' | 'await'
+    /** Auto-leave voice after inactivity (ms) */
+    autoLeaveMs?: number
+    /** Skip track on decode error */
+    skipOnError?: boolean
+    /** Max consecutive error skips before stopping */
+    maxErrorSkips?: number
+    /** Max track duration in ms (0 = unlimited) */
+    maxTrackDuration?: number
+    /** Minimum track duration in ms */
+    minTrackDuration?: number
+    /** Idle timeout (ms) before cleanup */
+    idleTimeout?: number
+    /** Start crossfade this many ms before track end */
+    crossfadeOffset?: number
+    /** Enable seeking for streams */
+    allowStreamSeek?: boolean
+    /** Max seek position (ms) */
+    maxSeekPosition?: number
   }
   cache: {
     /** Enable track cache */
@@ -255,35 +392,126 @@ export interface Config {
     maxSize?: number
     /** Redis URL (if using redis cache) */
     redis?: string
+    /** Separate TTL for search results (ms) */
+    searchTtl?: number
+    /** Separate TTL for playlist results (ms) */
+    playlistTtl?: number
+    /** Negative cache TTL (failed lookups, ms) */
+    negativeTtl?: number
+    /** Cache keys prefix (useful with redis) */
+    keyPrefix?: string
+    /** Memory cache only (ignore redis config) */
+    memoryOnly?: boolean
   }
   metrics: {
     enabled: boolean
     path?: string
     prefix?: string
+    /** Histogram buckets for latency (ms) */
+    histogramBuckets?: number[]
+    /** Custom label values */
+    labels?: Record<string, string>
+    /** Exclude specific routes from metrics */
+    excludeRoutes?: string[]
   }
   rateLimiting: {
     enabled?: boolean
     windowMs?: number
     maxRequests?: number
+    /** Rate limit per route (overrides global) */
+    perRoute?: Record<string, { maxRequests: number; windowMs: number }>
+    /** Status code to return on rate limit */
+    statusCode?: number
+    /** Error message on rate limit */
+    message?: string
+    /** Include rate limit headers */
+    sendHeaders?: boolean
+    /** Trust forwarded-for header for rate limiting IP */
+    trustProxy?: boolean
   }
   security: {
-    /** Rate limit enabled */
+    /** Rate limit enabled (deprecated, use rateLimiting.enabled) */
     rateLimit?: boolean
-    /** Max requests per window */
+    /** Max requests per window (deprecated, use rateLimiting.maxRequests) */
     maxRequests?: number
-    /** Window in ms */
+    /** Window in ms (deprecated, use rateLimiting.windowMs) */
     windowMs?: number
+    /** Block specific HTTP methods */
+    blockMethods?: string[]
+    /** Block specific paths (glob patterns) */
+    blockPaths?: string[]
+    /** Request body validation (max nested depth) */
+    maxBodyDepth?: number
+    /** Require specific content-type for POST/PUT/PATCH */
+    enforceContentType?: boolean
+    /** HSTS header max-age (seconds, 0 = disable) */
+    hstsMaxAge?: number
+    /** Block requests without User-Agent header */
+    requireUserAgent?: boolean
+    /** SQL injection pattern blocking */
+    blockSqlInjection?: boolean
+    /** XSS pattern blocking */
+    blockXss?: boolean
   }
   plugins: {
     paths?: string[]
     configs?: Record<string, Record<string, unknown>>
+    /** Auto-install plugins from npm */
+    npm?: string[]
+    /** Plugin directory to scan for .js/.mjs files */
+    scanDir?: string
   }
   clustering: {
     enabled: boolean
-    nodes?: { host: string; port: number; password?: string; secure?: boolean }[]
+    nodes?: { host: string; port: number; password?: string; secure?: boolean; weight?: number }[]
+    /** Node ID (for identification in logs) */
+    nodeId?: string
+    /** Heartbeat interval (ms) */
+    heartbeatInterval?: number
+    /** Heartbeat timeout (ms) */
+    heartbeatTimeout?: number
+    /** Node election strategy */
+    electionStrategy?: 'manual' | 'lowestLoad' | 'roundRobin' | 'hash'
+    /** Auto-scale settings */
+    autoScale?: {
+      minNodes: number
+      maxNodes: number
+      cpuThreshold: number
+      cooldownMs: number
+    }
   }
   /** Graceful shutdown delay in ms */
   shutdownDelay?: number
+  /** Dashboard customization */
+  dashboard?: {
+    title?: string
+    theme?: 'light' | 'dark' | 'auto'
+    refreshInterval?: number
+    showTrackHistory?: boolean
+    showPlayerControls?: boolean
+    brandColor?: string
+    customCss?: string
+    logoUrl?: string
+    faviconUrl?: string
+    footerText?: string
+  }
+  /** Custom resolver behavior */
+  resolving?: {
+    /** Strict mode (reject unknown sources) */
+    strict?: boolean
+    /** Max URI length for direct link resolution */
+    maxUriLength?: number
+    /** Default search engine when no source prefix */
+    defaultSearch?: string
+    /** Search engine aliases (e.g. { yt: 'youtube', sc: 'soundcloud' }) */
+    searchAliases?: Record<string, string>
+    /** Retry count per source */
+    retryCount?: number
+    /** Retry delay base (ms) */
+    retryDelay?: number
+    /** Fallback sources if primary fails */
+    fallbacks?: string[]
+  }
 }
 
 export interface Route {

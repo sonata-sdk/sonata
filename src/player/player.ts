@@ -1,6 +1,7 @@
 import type { Track, PlayerState, FilterOptions } from '../types/index.js'
 import { Queue } from './queue.js'
 import { VoiceConnection } from './voice.js'
+import { PlayerEvents } from './events.js'
 
 export enum State { Stopped, Playing, Paused, Ended }
 
@@ -15,11 +16,13 @@ export interface PlayerEventHandlers {
 
 export class Player {
   readonly guildId: string
+  readonly events = new PlayerEvents()
   #queue = new Queue()
   #state = State.Stopped
   #volume = 100
   #position = 0
   #lastUpdate = Date.now()
+  #lastActive = Date.now()
   #voice: VoiceConnection | null = null
   #filters: FilterOptions = {}
   #events: PlayerEventHandlers
@@ -35,6 +38,7 @@ export class Player {
     if (!track) {
       this.#state = State.Stopped
       this.#events.onQueueEnd(this)
+      this.#lastActive = Date.now()
       return
     }
 
@@ -42,29 +46,77 @@ export class Player {
     this.#state = State.Playing
     this.#position = 0
     this.#lastUpdate = Date.now()
+    this.#lastActive = Date.now()
     this.#events.onTrackStart(this, track)
+    this.events.emit('trackStart', { guildId: this.guildId, track })
   }
 
   stop() {
     this.#state = State.Stopped
     this.#position = 0
     this.#queue.clear()
+    this.#lastActive = Date.now()
   }
 
-  pause() { if (this.#state === State.Playing) this.#state = State.Paused }
-  resume() { if (this.#state === State.Paused) this.#state = State.Playing }
+  pause(): boolean {
+    if (this.#state === State.Paused) return false
+    if (this.#state === State.Playing) {
+      this.#state = State.Paused
+      this.#lastActive = Date.now()
+      this.events.emit('pause', { guildId: this.guildId })
+      return true
+    }
+    return false
+  }
+
+  resume(): boolean {
+    if (this.#state === State.Paused) {
+      this.#state = State.Playing
+      this.#lastUpdate = Date.now()
+      this.#lastActive = Date.now()
+      this.events.emit('resume', { guildId: this.guildId })
+      return true
+    }
+    return false
+  }
+
+  skip(reason?: string) {
+    const track = this.#queue.current
+    this.#state = State.Stopped
+    this.#position = 0
+    this.#lastActive = Date.now()
+    if (track) {
+      this.#events.onTrackEnd(this, track, reason ?? 'stopped')
+      this.events.emit('trackEnd', { guildId: this.guildId, track, reason: reason ?? 'stopped' })
+    }
+  }
 
   setPosition(pos: number) {
     this.#position = pos
     this.#lastUpdate = Date.now()
+    this.#lastActive = Date.now()
+    this.events.emit('seek', { guildId: this.guildId, position: pos })
   }
 
-  setVolume(v: number) { this.#volume = Math.max(0, Math.min(1000, v)) }
+  setVolume(v: number) {
+    this.#volume = Math.max(0, Math.min(1000, v))
+    this.#lastActive = Date.now()
+    this.events.emit('volumeChange', { guildId: this.guildId, volume: this.#volume })
+  }
+
   setVoice(vc: VoiceConnection) { this.#voice = vc }
-  setFilters(f: FilterOptions) { this.#filters = f }
+
+  setFilters(f: FilterOptions) {
+    this.#filters = f
+    this.#lastActive = Date.now()
+    this.events.emit('filterChange', { guildId: this.guildId, filters: f })
+  }
+
   setLoop(mode: 'none' | 'track' | 'queue') { this.#loopMode = mode }
+  loop(mode: 'none' | 'track' | 'queue') { this.#loopMode = mode }
 
   get state() { return this.#state }
+  get stateName(): string { return State[this.#state] }
   get volume() { return this.#volume }
   get queue() { return this.#queue }
   get voice() { return this.#voice }
@@ -80,6 +132,14 @@ export class Player {
 
   get track(): Track | null {
     return this.#queue.current
+  }
+
+  isPlaying(): boolean { return this.#state === State.Playing }
+  isPaused(): boolean { return this.#state === State.Paused }
+  isConnected(): boolean { return this.#voice?.connected ?? false }
+
+  getIdleTime(): number {
+    return Date.now() - this.#lastActive
   }
 
   toState(): PlayerState {

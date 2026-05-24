@@ -43,6 +43,7 @@ export class SessionManager {
     return session
   }
 
+  all(): Session[] { return [...this.#sessions.values()] }
   get(id: string): Session | undefined { return this.#sessions.get(id) }
   remove(id: string) { this.#sessions.delete(id) }
   count() { return this.#sessions.size }

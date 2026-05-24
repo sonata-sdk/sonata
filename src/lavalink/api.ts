@@ -40,6 +40,35 @@ export class LavalinkAPI {
     srv.handle('POST', '/v4/routeplanner/free/address', (req, res, params, body) => this.#routePlannerFreeAddress(res, body))
     srv.handle('POST', '/v4/routeplanner/free/all', (req, res) => this.#routePlannerFreeAll(res))
     srv.handle('POST', '/v4/decodetracks', (req, res, params, body) => this.#decodeTracks(res, body))
+
+    // v3 compat - same handlers as v4
+    srv.handle('GET', '/v3/version', (req, res) => this.#version(res))
+    srv.handle('GET', '/v3/info', (req, res) => this.#version(res))
+    srv.handle('GET', '/v3/stats', (req, res) => this.#stats(res))
+    srv.handle('GET', '/v3/sessions', (req, res) => this.#listSessions(res))
+    srv.handle('POST', '/v3/sessions', (req, res, params, body) => this.#createSession(res, body))
+    srv.handle('GET', '/v3/sessions/{id}', (req, res, params) => this.#getSession(res, params))
+    srv.handle('PATCH', '/v3/sessions/{id}', (req, res, params, body) => this.#updateSession(res, params, body))
+    srv.handle('DELETE', '/v3/sessions/{id}', (req, res, params) => this.#destroySession(res, params))
+    srv.handle('GET', '/v3/sessions/{id}/players', (req, res) => this.#getPlayers(res))
+    srv.handle('GET', '/v3/sessions/{id}/players/{guildId}', (req, res, params) => this.#getPlayer(res, params))
+    srv.handle('PATCH', '/v3/sessions/{id}/players/{guildId}', (req, res, params, body) => this.#updatePlayer(res, params, body))
+    srv.handle('DELETE', '/v3/sessions/{id}/players/{guildId}', (req, res, params) => this.#destroyPlayer(res, params))
+    srv.handle('POST', '/v3/sessions/{id}/players/{guildId}/voice', (req, res, params, body) => this.#updateVoice(res, params, body))
+    srv.handle('GET', '/v3/routeplanner/status', (req, res) => this.#routePlannerStatus(res))
+    srv.handle('POST', '/v3/routeplanner/free/address', (req, res, params, body) => this.#routePlannerFreeAddress(res, body))
+    srv.handle('POST', '/v3/routeplanner/free/all', (req, res) => this.#routePlannerFreeAll(res))
+
+    // New v4 endpoints
+    srv.handle('GET', '/v4/version', (req, res) => this.#version(res))
+    srv.handle('GET', '/v4/sessions', (req, res) => this.#listSessions(res))
+
+    // queue management endpoints
+    srv.handle('POST', '/v4/sessions/{id}/players/{guildId}/queue', (req, res, params, body) => this.#addToQueue(res, params, body))
+    srv.handle('DELETE', '/v4/sessions/{id}/players/{guildId}/queue', (req, res, params) => this.#clearQueue(res, params))
+    srv.handle('DELETE', '/v4/sessions/{id}/players/{guildId}/queue/{index}', (req, res, params) => this.#removeFromQueue(res, params))
+    srv.handle('PATCH', '/v4/sessions/{id}/players/{guildId}/queue/{index}', (req, res, params, body) => this.#moveInQueue(res, params, body))
+    srv.handle('GET', '/v4/sessions/{id}/players/{guildId}/history', (req, res, params) => this.#getHistory(res, params))
   }
 
   #loadTracks(req: IncomingMessage, res: ServerResponse) {
@@ -54,6 +83,16 @@ export class LavalinkAPI {
 
     this.#resolver.resolveAsync(identifier).then(result => {
       if (this.#cache && result.tracks.length > 0) this.#cache.set(identifier, result.tracks)
+
+      // detect playlists when loadType isn't set but tracks > 1
+      if (result.loadType !== 'playlist' && result.tracks.length > 1) {
+        const isPlaylist = !!identifier.match(/[?&]list=|[?&]playlist=|(open\.)?spotify\.com\/(playlist|album)\/|soundcloud\.com\/[^/]+\/sets\//)
+        if (isPlaylist) {
+          result.loadType = 'playlist'
+          result.playlistInfo = result.playlistInfo ?? { name: 'Playlist', trackCount: result.tracks.length }
+        }
+      }
+
       this.#json(res, 200, result)
     })
   }
@@ -182,6 +221,63 @@ export class LavalinkAPI {
       } catch { return null }
     }).filter(Boolean)
     this.#json(res, 200, decoded)
+  }
+
+  #version(res: ServerResponse) {
+    this.#json(res, 200, {
+      name: 'sonata',
+      version: '4.0.0',
+      lavalink: { version: 4, apiVersion: 4 },
+      node: { version: process.version, platform: process.platform, arch: process.arch },
+      build: { time: Date.now(), commit: process.env.SOURCE_COMMIT || 'unknown' },
+    })
+  }
+
+  #listSessions(res: ServerResponse) {
+    const sessions = this.#sessions.all()
+    this.#json(res, 200, sessions.map(s => s.toState()))
+  }
+
+  #addToQueue(res: ServerResponse, params: Record<string, string>, body: any) {
+    if (!body?.track) return this.#json(res, 400, { error: 'Missing track' })
+    const p = this.#pm.get(params.guildId)
+    if (!p) return this.#json(res, 404, { error: 'Player not found' })
+    p.queue.add(body.track, body.index)
+    res.statusCode = 204
+    res.end()
+  }
+
+  #clearQueue(res: ServerResponse, params: Record<string, string>) {
+    const p = this.#pm.get(params.guildId)
+    if (!p) return this.#json(res, 404, { error: 'Player not found' })
+    p.queue.clear()
+    res.statusCode = 204
+    res.end()
+  }
+
+  #removeFromQueue(res: ServerResponse, params: Record<string, string>) {
+    const p = this.#pm.get(params.guildId)
+    if (!p) return this.#json(res, 404, { error: 'Player not found' })
+    const index = parseInt(params.index)
+    const removed = p.queue.remove(index)
+    if (!removed) return this.#json(res, 404, { error: 'Track not found at index' })
+    this.#json(res, 200, removed)
+  }
+
+  #moveInQueue(res: ServerResponse, params: Record<string, string>, body: any) {
+    const p = this.#pm.get(params.guildId)
+    if (!p) return this.#json(res, 404, { error: 'Player not found' })
+    const from = parseInt(params.index)
+    const to = body?.to ?? 0
+    p.queue.move(from, to)
+    res.statusCode = 204
+    res.end()
+  }
+
+  #getHistory(res: ServerResponse, params: Record<string, string>) {
+    const p = this.#pm.get(params.guildId)
+    if (!p) return this.#json(res, 404, { error: 'Player not found' })
+    this.#json(res, 200, p.queue.history)
   }
 
   #json(res: ServerResponse, status: number, data: unknown) {

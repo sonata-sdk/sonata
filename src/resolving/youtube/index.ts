@@ -20,7 +20,7 @@ export class YouTubeSource implements AudioSource {
   }
 
   async resolve(query: string): Promise<Track[]> {
-    if (!this.matches(query)) return this.#search(query)
+    if (!this.matches(query)) return this.search(query)
 
     const videoId = this.#extractId(query)
     if (videoId) {
@@ -42,7 +42,7 @@ export class YouTubeSource implements AudioSource {
     return video ? this.#toTrack(video) : null
   }
 
-  async #search(query: string): Promise<Track[]> {
+  async search(query: string, options?: { type?: 'video' | 'playlist' | 'channel'; limit?: number }): Promise<Track[]> {
     const results = await this.#client.search(query)
     return results.map(r => this.#toTrack(r))
   }

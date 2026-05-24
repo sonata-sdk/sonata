@@ -9,6 +9,11 @@ import { Server } from '../src/server/index.js'
 import { PlayerManager } from '../src/player/manager.js'
 import { SessionManager } from '../src/lavalink/session.js'
 import { LavalinkAPI } from '../src/lavalink/api.js'
+import { TrackCache } from '../src/cache/index.js'
+import { RateLimiter } from '../src/middleware/ratelimit.js'
+import { clampVolume, formatDuration, parseDuration, truncate } from '../src/player/utils.js'
+import { PlayerEvents } from '../src/player/events.js'
+import { VERSION, NAME } from '../src/version.js'
 import type { Track } from '../src/types/index.js'
 
 const noop = () => {}
@@ -188,5 +193,95 @@ describe('Server', () => {
     // Can't predict port with :0, so just verify server started
     expect(srv.stats().uptime).toBeGreaterThan(0)
     await srv.close()
+  })
+})
+
+describe('SessionManager', () => {
+  it('creates and lists sessions', () => {
+    const sm = new SessionManager({})
+    const s1 = sm.create(true, 'key1')
+    const s2 = sm.create(false)
+    expect(sm.count()).toBe(2)
+    expect(sm.all().length).toBe(2)
+    expect(sm.get(s1.id)?.resume).toBe(true)
+    sm.remove(s1.id)
+    expect(sm.count()).toBe(1)
+  })
+})
+
+describe('TrackCache', () => {
+  it('stores and expires tracks', async () => {
+    const cache = new TrackCache(50, 100) // 50ms ttl
+    const tracks = [makeTrack('1')]
+    cache.set('test-key', tracks)
+    expect(cache.get('test-key')).toEqual(tracks)
+    expect(cache.size).toBe(1)
+    await new Promise(r => setTimeout(r, 60))
+    expect(cache.get('test-key')).toBeNull()
+  })
+
+  it('respects max size', () => {
+    const cache = new TrackCache(5000, 2)
+    cache.set('a', [makeTrack('1')])
+    cache.set('b', [makeTrack('2')])
+    cache.set('c', [makeTrack('3')])
+    expect(cache.size).toBe(2)
+    expect(cache.get('a')).toBeNull()
+  })
+})
+
+describe('RateLimiter', () => {
+  it('allows requests within limit', () => {
+    const limiter = new RateLimiter(5, 1000)
+    const req = { headers: { authorization: 'test' }, socket: { remoteAddress: '127.0.0.1' } } as any
+    const res = { statusCode: 0, setHeader: () => {}, end: () => {} } as any
+    for (let i = 0; i < 5; i++) {
+      expect(limiter.check(req, res)).toBe(true)
+    }
+    expect(limiter.check(req, res)).toBe(false)
+  })
+})
+
+describe('PlayerUtils', () => {
+  it('clamps volume', () => {
+    expect(clampVolume(-10)).toBe(0)
+    expect(clampVolume(500)).toBe(500)
+    expect(clampVolume(1500)).toBe(1000)
+  })
+
+  it('formats duration', () => {
+    expect(formatDuration(0)).toBe('0:00')
+    expect(formatDuration(1000)).toBe('0:01')
+    expect(formatDuration(61000)).toBe('1:01')
+    expect(formatDuration(3661000)).toBe('1:01:01')
+  })
+
+  it('parses duration strings', () => {
+    expect(parseDuration('1:30')).toBe(90000)
+    expect(parseDuration('1:01:01')).toBe(3661000)
+    expect(parseDuration('0')).toBe(0)
+  })
+
+  it('truncates strings', () => {
+    expect(truncate('hello world', 5)).toBe('he...')
+    expect(truncate('hello', 10)).toBe('hello')
+  })
+})
+
+describe('PlayerEvents', () => {
+  it('emits and receives typed events', () => {
+    const events = new PlayerEvents()
+    let received: any = null
+    events.on('trackStart', (detail) => { received = detail })
+    events.emit('trackStart', { guildId: 'g1', track: makeTrack() })
+    expect(received?.guildId).toBe('g1')
+    expect(received?.track.info.title).toBe('Test Song')
+  })
+})
+
+describe('Version', () => {
+  it('exports version constants', () => {
+    expect(VERSION).toBe('4.0.0')
+    expect(NAME).toBe('sonata')
   })
 })

@@ -11,6 +11,8 @@ import { TrackCache } from './cache/index.js'
 import { AuthManager } from './middleware/auth.js'
 import { corsHandler } from './middleware/cors.js'
 import { dashboardHandler } from './dashboard/index.js'
+import { logStartup, logMemory } from './utils/logging.js'
+import { VERSION } from './version.js'
 
 const cfg = await loadConfig(process.argv[2])
 
@@ -26,8 +28,8 @@ const resolver = new Resolver({
   nico: cfg.sources.nico?.enabled,
   mixcloud: cfg.sources.mixcloud?.enabled,
   podcast: cfg.sources.podcast?.enabled,
-  http: cfg.sources.http,
-  local: cfg.sources.local,
+  http: cfg.sources.http === true || typeof cfg.sources.http === 'object',
+  local: cfg.sources.local === true || typeof cfg.sources.local === 'object',
 })
 
 const cache = cfg.cache?.enabled ? new TrackCache(cfg.cache.ttl, cfg.cache.maxSize) : null
@@ -122,7 +124,11 @@ if (cfg.server.dashboard) {
     sessions: sessions.count(),
     memory: `${Math.round(process.memoryUsage().rss / 1024 / 1024)}MB`,
     sources: Object.entries(cfg.sources)
-      .filter(([, v]) => typeof v === 'object' ? v.enabled : v)
+      .filter(([k, v]) => {
+        if (k === 'priority' || k === 'userAgent' || k === 'requestTimeout') return false
+        if (typeof v === 'object' && v !== null) return 'enabled' in v ? (v as any).enabled : false
+        return !!v
+      })
       .map(([k]) => k),
   })))
 }
@@ -174,19 +180,12 @@ async function shutdown() {
 process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
+// Memory usage log every 5 minutes
+if (process.env['NODE_ENV'] !== 'test') {
+  setInterval(logMemory, 300_000)
+}
+
 // Start
 srv.listen(cfg.server.port, cfg.server.host, () => {
-  console.log(`Sonata v0.1.0 running on ${cfg.server.host}:${cfg.server.port}`)
-  console.log(`Lavalink API: v${cfg.lavalink.apiVersion}`)
-  const active = Object.entries(cfg.sources)
-    .filter(([, v]) => typeof v === 'object' ? v.enabled : v)
-    .map(([k]) => k)
-  console.log(`Sources: ${active.join(', ')}`)
-  console.log(`Features: ${[
-    cache && 'cache',
-    cfg.server.cors && 'cors',
-    cfg.server.dashboard && 'dashboard',
-    cfg.player?.autoPlay && 'autoplay',
-    cfg.queue?.crossfade && 'crossfade',
-  ].filter(Boolean).join(', ')}`)
+  logStartup(cfg)
 })

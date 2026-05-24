@@ -34,6 +34,12 @@ export class DiscordVoice extends EventTarget {
   #encoder: OpusScript
   #secretKey: Buffer = Buffer.alloc(0)
   #modes: string[] = []
+  #keepaliveInterval: ReturnType<typeof setInterval> | null = null
+  #reconnectAttempts = 0
+  #maxReconnectAttempts = 5
+  #lastRTT = 0
+  #pingStart = 0
+  #onPingCallback: ((rtt: number) => void) | null = null
 
   constructor() {
     super()
@@ -48,19 +54,26 @@ export class DiscordVoice extends EventTarget {
     this.ssrc = opts.ssrc
     this.#sequence = 0
     this.#timestamp = 0
+    this.#reconnectAttempts = 0
     this.#socket = createSocket('udp4')
     this.#socket.on('error', (err) => this.dispatchEvent(new CustomEvent('error', { detail: err })))
     this.#socket.on('message', (msg) => this.#handleMessage(msg))
     this.#socket.send(this.#ipDiscovery(), this.port, this.endpoint)
+    this.#pingStart = Date.now()
+    this.#keepaliveInterval = setInterval(() => {
+      if (this.#socket) this.#socket.send(this.#ipDiscovery(), this.port, this.endpoint)
+    }, 30000)
   }
 
   close() {
+    if (this.#keepaliveInterval) { clearInterval(this.#keepaliveInterval); this.#keepaliveInterval = null }
     this.#socket?.close()
     this.#socket = null
     this.connected = false
     this.#speaking = false
     this.#sequence = 0
     this.#timestamp = 0
+    this.#reconnectAttempts = 0
   }
 
   setSecretKey(key: Buffer) { this.#secretKey = key }
@@ -83,6 +96,26 @@ export class DiscordVoice extends EventTarget {
 
   stop() { if (this.#speaking) { this.#sendSpeaking(0); this.#speaking = false } }
 
+  get ping(): number { return this.#lastRTT }
+
+  set onPing(cb: ((rtt: number) => void) | null) { this.#onPingCallback = cb }
+
+  reconnect() {
+    this.close()
+    this.#reconnectAttempts++
+    if (this.#reconnectAttempts > this.#maxReconnectAttempts) {
+      this.dispatchEvent(new CustomEvent('error', { detail: new Error('Max reconnect attempts reached') }))
+      return
+    }
+    this.connect({ endpoint: this.endpoint, port: this.port, ssrc: this.ssrc, token: '', guildId: '' })
+  }
+
+  sendSilence() {
+    const silence = Buffer.alloc(FRAME_SIZE * CHANNELS * 2)
+    const opus = Buffer.from(this.#encoder.encode(silence, FRAME_SIZE))
+    if (opus.length > 0) this.#sendPacket(opus)
+  }
+
   #handleMessage(msg: Buffer) {
     if (msg.length === 74) {
       const ip = msg.slice(8, 72).toString().replace(/\0/g, '')
@@ -90,6 +123,8 @@ export class DiscordVoice extends EventTarget {
       this.dispatchEvent(new CustomEvent('ipDiscovery', { detail: { ip, port: ourPort, ssrc: this.ssrc } }))
       this.connected = true
       this.#selectProtocol(ip, ourPort)
+      this.#lastRTT = Date.now() - this.#pingStart
+      this.#onPingCallback?.(this.#lastRTT)
     } else if (msg.length === 70) {
       this.connected = msg.readUInt32BE(4) === 1
       if (this.connected) this.dispatchEvent(new CustomEvent('ready'))
