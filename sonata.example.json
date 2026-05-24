@@ -1,0 +1,23 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 2333,
+    "password": "youshallnotpass"
+  },
+  "logging": {
+    "level": "info",
+    "format": "text"
+  },
+  "sources": {
+    "youtube": true,
+    "soundcloud": true,
+    "spotify": false
+  },
+  "lavalink": {
+    "version": 4
+  },
+  "clustering": {
+    "enabled": false,
+    "nodes": []
+  }
+}
