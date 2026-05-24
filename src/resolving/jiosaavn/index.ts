@@ -81,6 +81,7 @@ export class JioSaavnSource implements AudioSource {
   }
 
   async resolve(query: string): Promise<Track[]> {
+    if (query.startsWith('jiosaavnsearch:')) query = query.slice(15).trim()
     if (!this.matches(query)) return this.#search(query)
     return this.#resolveUrl(query)
   }

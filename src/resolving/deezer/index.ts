@@ -39,6 +39,7 @@ export class DeezerSource implements AudioSource {
   }
 
   async resolve(query: string): Promise<Track[]> {
+    if (query.startsWith('deezersearch:')) query = query.slice(13).trim()
     if (!this.matches(query)) return this.#search(query)
     try {
       const parts = new URL(query).pathname.split('/').filter(Boolean)
