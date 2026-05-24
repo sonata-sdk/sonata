@@ -91,6 +91,19 @@ Environment variables: `SONATA_HOST`, `SONATA_PORT`, `SONATA_PASSWORD`, `SONATA_
 | `GET` | `/metrics` | Prometheus metrics |
 | `GET` | `/health` | Health check |
 
+### Running without build
+
+```bash
+# One-shot (no build needed)
+npx tsx src/index.ts
+
+# Watch mode (auto-restart on changes)
+npm run dev
+
+# Or with explicit watch
+npx tsx watch src/index.ts
+```
+
 ### Search prefixes
 
 | Prefix | Source | Example |
