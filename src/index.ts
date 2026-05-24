@@ -11,11 +11,13 @@ import { TrackCache } from './cache/index.js'
 import { AuthManager } from './middleware/auth.js'
 import { corsHandler } from './middleware/cors.js'
 import { dashboardHandler } from './dashboard/index.js'
+import { createLogger } from './utils/logger.js'
 import { logStartup, logMemory } from './utils/logging.js'
 import { showBanner, formatTrackProgress } from './console/index.js'
 import { VERSION } from './version.js'
 
 const cfg = await loadConfig(process.argv[2])
+const logger = createLogger(cfg.logging)
 
 const resolver = new Resolver({
   youtube: cfg.sources.youtube,
@@ -29,6 +31,7 @@ const resolver = new Resolver({
   nico: cfg.sources.nico?.enabled,
   mixcloud: cfg.sources.mixcloud?.enabled,
   podcast: cfg.sources.podcast?.enabled,
+  tiktok: cfg.sources.tiktok?.enabled,
   http: cfg.sources.http === true || typeof cfg.sources.http === 'object',
   local: cfg.sources.local === true || typeof cfg.sources.local === 'object',
 })
@@ -37,7 +40,7 @@ let cache: TrackCache | null = null
 if (cfg.cache?.enabled) {
   if (cfg.cache.redis && typeof cfg.cache.redis === 'string' && cfg.cache.redis.length > 0) {
     const { RedisTrackCache } = await import('./cache/redis.js')
-    cache = new RedisTrackCache(cfg.cache.redis, cfg.cache.ttl, cfg.cache.keyPrefix) as unknown as TrackCache
+    cache = new RedisTrackCache(cfg.cache.redis, cfg.cache.ttl, cfg.cache.keyPrefix, logger) as unknown as TrackCache
   } else {
     cache = new TrackCache(cfg.cache.ttl, cfg.cache.maxSize)
   }
@@ -45,8 +48,7 @@ if (cfg.cache?.enabled) {
 const metrics = cfg.metrics?.enabled ? new Metrics(cfg.metrics) : null
 
 const srv = new Server({
-  level: cfg.logging.level,
-  format: cfg.logging.format,
+  logger,
   password: cfg.server.password,
 })
 const auth = new AuthManager([
@@ -73,7 +75,7 @@ const pm = new PlayerManager({
     if (state.track && !state.paused) {
       const progress = formatTrackProgress(state.position, state.track.info.duration)
       const mem = Math.round(process.memoryUsage().rss / 1024 / 1024)
-      console.log(`\r${progress} | players: ${pm.count()} | mem: ${mem}MB`)
+      logger.info('player', `${progress} | players: ${pm.count()} | mem: ${mem}MB`)
     }
   },
   onQueueEnd: (p) => {
@@ -85,12 +87,12 @@ const pm = new PlayerManager({
   },
 }, Boolean(cfg.player?.stickyQueue), cfg.player?.stickyQueueFile ?? '')
 
-const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player })
+const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player }, logger)
 
 // Auto-leave (voice activity detection)
 if (cfg.player?.autoLeaveMs && cfg.player.autoLeaveMs > 0) {
   pm.setAutoLeave(cfg.player.autoLeaveMs, (guildId) => {
-    console.log(`[AutoLeave] guild=${guildId} disconnected due to inactivity`)
+    logger.info('autoleave', `guild=${guildId} disconnected due to inactivity`)
     wsHandler.cleanupGuild(guildId)
     pm.remove(guildId)
   })
@@ -166,6 +168,10 @@ if (cfg.server.dashboard) {
       })
       .map(([k]) => k),
   })))
+
+  const { createDashboardWS } = await import('./dashboard/ws.js')
+  const dashboardWSS = srv.addWS(`${cfg.server.dashboard}/ws`, { auth: false })
+  dashboardWSS.on('connection', createDashboardWS(pm))
 }
 
 // Metrics
@@ -207,7 +213,7 @@ if (cfg.server.versionPath) {
 // Graceful shutdown
 const shutdownDelay = cfg.shutdownDelay ?? 10_000
 async function shutdown() {
-  console.log('\nShutting down...')
+  logger.info('system', 'Shutting down...')
   pm.reset()
   await new Promise(r => setTimeout(r, 100))
   srv.close().then(() => process.exit(0))
@@ -217,11 +223,11 @@ process.on('SIGINT', shutdown)
 
 // Memory usage log every 5 minutes
 if (process.env['NODE_ENV'] !== 'test') {
-  setInterval(logMemory, 300_000)
+  setInterval(() => logMemory(logger), 300_000)
 }
 
 // Start
 srv.listen(cfg.server.port, cfg.server.host, () => {
   showBanner(cfg)
-  logStartup(cfg)
+  logStartup(cfg, logger)
 })

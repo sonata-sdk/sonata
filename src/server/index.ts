@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
 import { WebSocketServer, WebSocket } from 'ws'
-import pino from 'pino'
+import { createLogger, Logger } from '../utils/logger.js'
 import type { HttpMethod } from '../types/index.js'
 
 type Handler = (req: IncomingMessage, res: ServerResponse, params: Record<string, string>, body?: any) => void | Promise<void>
@@ -16,19 +16,16 @@ export class Server {
   #routes: RouteEntry[] = []
   #server = createServer((req, res) => this.#handle(req, res))
   #wss = new WebSocketServer({ noServer: true })
-  #wsUpgradePath = ''
-  #logger: pino.Logger
+  #wsPaths = new Map<string, { wss: WebSocketServer; auth: boolean }>()
+  #logger: Logger
   #started = Date.now()
   #requestCount = 0
   #password: string
   #noAuthPaths: Set<string> = new Set()
   #preHandlers: ((req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>)[] = []
 
-  constructor(opts: { level?: string; format?: string; password?: string }) {
-    this.#logger = pino({
-      level: opts.level ?? 'info',
-      transport: opts.format === 'json' ? undefined : { target: 'pino/file' },
-    })
+  constructor(opts: { logger?: Logger; password?: string }) {
+    this.#logger = opts.logger ?? createLogger({ level: 'normal' })
     this.#password = opts.password ?? ''
   }
 
@@ -50,23 +47,33 @@ export class Server {
     this.#preHandlers.push(fn)
   }
 
-  ws(path: string) { this.#wsUpgradePath = path }
+  ws(path: string, opts?: { auth?: boolean }): WebSocketServer {
+    this.#wsPaths.set(path, { wss: this.#wss, auth: opts?.auth ?? true })
+    return this.#wss
+  }
+
+  addWS(path: string, opts?: { auth?: boolean }): WebSocketServer {
+    const wss = new WebSocketServer({ noServer: true })
+    this.#wsPaths.set(path, { wss, auth: opts?.auth ?? false })
+    return wss
+  }
 
   listen(port: number, host: string, cb?: () => void) {
     this.#server.on('upgrade', (req, socket, head) => {
       const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
-      if (url.pathname === this.#wsUpgradePath) {
+      const wsCfg = this.#wsPaths.get(url.pathname)
+      if (wsCfg) {
         const auth = req.headers['authorization']
-        if (this.#password && auth !== this.#password) {
+        if (wsCfg.auth && this.#password && auth !== this.#password) {
           socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
           socket.destroy()
           return
         }
-        this.#wss.handleUpgrade(req, socket, head, (ws) => this.#wss.emit('connection', ws, req))
+        wsCfg.wss.handleUpgrade(req, socket, head, (ws) => wsCfg.wss.emit('connection', ws, req))
       } else socket.destroy()
     })
     this.#server.listen(port, host, () => {
-      this.#logger.info({ port, host }, 'Sonata server started')
+      this.#logger.info('http', `Sonata server started on ${host}:${port}`)
       cb?.()
     })
   }
@@ -106,8 +113,8 @@ export class Server {
 
       this.#readBody(req, (body) => {
         Promise.resolve(route.handler(req, res, params, body))
-          .catch((err) => { this.#logger.error(err); this.#json(res, 500, { error: 'Internal Server Error' }) })
-          .finally(() => this.#logger.info({ method: req.method, path: url.pathname, status: res.statusCode, ms: Date.now() - start }))
+          .catch((err) => { this.#logger.error('http', `request handler error: ${err.message || err}`); this.#json(res, 500, { error: 'Internal Server Error' }) })
+          .finally(() => this.#logger.info('http', `${req.method} ${url.pathname} ${res.statusCode} ${Date.now() - start}ms`))
       })
       return
     }

@@ -221,7 +221,7 @@ export interface Config {
     trustedIps?: string[]
   }
   logging: {
-    level: 'debug' | 'info' | 'warn' | 'error'
+    level: 'trace' | 'verbose' | 'debug' | 'normal' | 'warn' | 'error'
     format: 'text' | 'json'
     destination?: string
     colorize?: boolean
@@ -235,7 +235,7 @@ export interface Config {
       compress?: boolean
     }
     /** Per-module log levels (e.g. { server: 'debug', resolving: 'warn' }) */
-    moduleLevels?: Record<string, 'debug' | 'info' | 'warn' | 'error'>
+    moduleLevels?: Record<string, 'trace' | 'verbose' | 'debug' | 'normal' | 'warn' | 'error'>
     /** Timestamp format in logs */
     timestampFormat?: 'iso' | 'epoch' | 'relative' | 'none'
     /** Include process PID in logs */
@@ -296,6 +296,7 @@ export interface Config {
     nico?: { enabled: boolean; quality?: string; timeout?: number }
     mixcloud?: { enabled: boolean; quality?: string; timeout?: number }
     podcast?: { enabled: boolean; maxEpisodes?: number; userAgent?: string; timeout?: number }
+    tiktok?: { enabled: boolean; quality?: string; timeout?: number }
     http?: boolean | { timeout?: number; retryCount?: number; userAgent?: string; followRedirects?: boolean; maxRedirects?: number }
     local?: boolean | { basePath?: string; allowedExtensions?: string[]; maxFileSize?: number }
     /** Source priority ordering (first match wins) */

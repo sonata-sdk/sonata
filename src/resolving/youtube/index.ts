@@ -42,6 +42,20 @@ export class YouTubeSource implements AudioSource {
     return video ? this.#toTrack(video) : null
   }
 
+  async getMix(videoId: string): Promise<Track[]> {
+    const results = await this.#client.getMix(videoId)
+    return results.map(r => this.#toTrack(r))
+  }
+
+  async searchPlaylist(query: string): Promise<Track[]> {
+    const results = await this.#client.searchPlaylists(query)
+    if (results.length > 0) {
+      const tracks = await this.#client.getPlaylist(results[0].playlistId)
+      return tracks.map(r => this.#toTrack(r))
+    }
+    return []
+  }
+
   async search(query: string, options?: { type?: 'video' | 'playlist' | 'channel'; limit?: number }): Promise<Track[]> {
     const results = await this.#client.search(query)
     return results.map(r => this.#toTrack(r))

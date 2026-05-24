@@ -26,7 +26,7 @@ const DEFAULTS: Config = {
     customHeaders: {},
   },
   logging: {
-    level: 'info',
+    level: 'normal',
     format: 'text',
     colorize: true,
     excludePaths: ['/health', '/metrics', '/dashboard', '/version'],

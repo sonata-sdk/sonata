@@ -70,6 +70,13 @@ interface InnerTubeSearchResult {
   thumbnail: string
 }
 
+interface InnerTubePlaylistSearchResult {
+  playlistId: string
+  title: string
+  thumbnail: string
+  videoCount: number
+}
+
 export class InnerTubeClient {
   #profiles: ClientProfile[]
 
@@ -101,6 +108,24 @@ export class InnerTubeClient {
     for (const client of this.#profiles) {
       try {
         return await this.#getPlaylistWithClient(playlistId, client)
+      } catch { continue }
+    }
+    return []
+  }
+
+  async getMix(videoId: string): Promise<InnerTubeSearchResult[]> {
+    for (const client of this.#profiles) {
+      try {
+        return await this.#getMixWithClient(videoId, client)
+      } catch { continue }
+    }
+    return []
+  }
+
+  async searchPlaylists(query: string): Promise<InnerTubePlaylistSearchResult[]> {
+    for (const client of this.#profiles) {
+      try {
+        return await this.#searchPlaylistsWithClient(query, client)
       } catch { continue }
     }
     return []
@@ -183,6 +208,100 @@ export class InnerTubeClient {
     const data = await res.json()
 
     return this.#parsePlaylistResponse(data)
+  }
+
+  async #getMixWithClient(videoId: string, client: ClientProfile): Promise<InnerTubeSearchResult[]> {
+    const body = {
+      videoId,
+      context: {
+        client: {
+          clientName: client.clientName,
+          clientVersion: client.clientVersion,
+          hl: 'en',
+          gl: 'US',
+        },
+      },
+    }
+
+    const res = await fetch(`${BASE_URL}/next`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': client.userAgent },
+      body: JSON.stringify(body),
+    })
+
+    if (!res.ok) throw new Error(`InnerTube next failed: ${res.status}`)
+    const data = await res.json()
+
+    return this.#parseMixResults(data)
+  }
+
+  async #searchPlaylistsWithClient(query: string, client: ClientProfile): Promise<InnerTubePlaylistSearchResult[]> {
+    const body: Record<string, any> = {
+      query,
+      params: 'EgIQAw==',
+      context: {
+        client: {
+          clientName: client.clientName,
+          clientVersion: client.clientVersion,
+          hl: 'en',
+          gl: 'US',
+        },
+      },
+      contentCheckOk: true,
+      racyCheckOk: true,
+    }
+
+    const res = await fetch(`${BASE_URL}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': client.userAgent },
+      body: JSON.stringify(body),
+    })
+
+    if (!res.ok) throw new Error(`InnerTube search playlists failed: ${res.status}`)
+    const data = await res.json()
+
+    return this.#parseSearchPlaylistResults(data)
+  }
+
+  #parseMixResults(data: any): InnerTubeSearchResult[] {
+    const results: InnerTubeSearchResult[] = []
+    try {
+      const secondary = data?.contents?.twoColumnWatchNextRenderer?.secondaryResults?.secondaryResults?.results ?? []
+      for (const item of secondary) {
+        const video = item?.compactVideoRenderer
+        if (!video?.videoId) continue
+        const len = video?.lengthText?.simpleText ?? video?.lengthText?.runs?.[0]?.text ?? '0:00'
+        results.push({
+          videoId: video.videoId,
+          title: this.#getText(video?.title),
+          author: this.#getText(video?.longBylineText ?? video?.shortBylineText),
+          duration: this.#parseDuration(len),
+          thumbnail: video?.thumbnail?.thumbnails?.[video.thumbnail.thumbnails.length - 1]?.url ?? '',
+        })
+      }
+    } catch {}
+    return results
+  }
+
+  #parseSearchPlaylistResults(data: any): InnerTubePlaylistSearchResult[] {
+    const results: InnerTubePlaylistSearchResult[] = []
+    try {
+      const contents = data?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents ?? []
+      for (const section of contents) {
+        const items = section?.itemSectionRenderer?.contents ?? []
+        for (const item of items) {
+          const playlist = item?.playlistRenderer
+          if (!playlist?.playlistId) continue
+          results.push({
+            playlistId: playlist.playlistId,
+            title: this.#getText(playlist?.title),
+            thumbnail: playlist?.thumbnails?.[playlist.thumbnails.length - 1]?.url ?? '',
+            videoCount: playlist?.videoCount ?? 0,
+          })
+        }
+      }
+    } catch {}
+    return results
   }
 
   #parseSearchResults(data: any): InnerTubeSearchResult[] {

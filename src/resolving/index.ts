@@ -17,6 +17,7 @@ interface ResolverConfig {
   nico?: boolean
   mixcloud?: boolean
   podcast?: boolean
+  tiktok?: boolean
   http?: boolean
   local?: boolean
 }
@@ -34,6 +35,28 @@ export class Resolver {
   get mirror() { return this.#mirror }
 
   async resolveAsync(query: string): Promise<LoadTracksResult> {
+    if (query.startsWith('ytmixes:')) {
+      const videoId = query.slice(8)
+      const yt = this.#sourceManager.get('youtube') as any
+      if (yt?.getMix) {
+        const tracks = await yt.getMix(videoId)
+        if (tracks.length > 0) {
+          return { loadType: 'playlist', tracks, playlistInfo: { name: 'Recommended', trackCount: tracks.length } }
+        }
+      }
+    }
+
+    if (query.startsWith('ytplaylist:')) {
+      const searchQuery = query.slice(11)
+      const yt = this.#sourceManager.get('youtube') as any
+      if (yt?.searchPlaylist) {
+        const tracks = await yt.searchPlaylist(searchQuery)
+        if (tracks.length > 0) {
+          return { loadType: 'playlist', tracks, playlistInfo: { name: tracks[0]?.info?.title || 'Playlist', trackCount: tracks.length } }
+        }
+      }
+    }
+
     const result = await this.#sourceManager.resolve(query)
 
     if (!result) {
@@ -80,6 +103,7 @@ export class Resolver {
     this.#registerOptional(config.nico, './nico/index.js', 'NicoNicoSource')
     this.#registerOptional(config.mixcloud, './mixcloud/index.js', 'MixcloudSource')
     this.#registerOptional(config.podcast, './podcast/index.js', 'PodcastSource')
+    this.#registerOptional(config.tiktok, './tiktok/index.js', 'TikTokSource')
   }
 
   async #registerOptional(enabled: boolean | undefined, path: string, className: string) {

@@ -2,6 +2,7 @@ import { spawn, ChildProcess } from 'node:child_process'
 import { DiscordVoice } from '../discord/voice.js'
 import { AudioMixer } from '../audio/mixer.js'
 import type { Track } from '../types/index.js'
+import type { Logger } from '../utils/logger.js'
 
 const SAMPLE_RATE = 48000
 const FRAME_DURATION = 20
@@ -50,6 +51,7 @@ export class AudioStreamer extends EventTarget {
   #crossfadeStart = 0
   #crossfadingOut = false
   #mixer: AudioMixer | null = null
+  #logger: Logger | null = null
 
   constructor(voice: DiscordVoice) {
     super()
@@ -59,6 +61,8 @@ export class AudioStreamer extends EventTarget {
       if (this.#currentTrack && !this.#playing) this.#startStream()
     })
   }
+
+  setLogger(logger: Logger) { this.#logger = logger }
 
   setNormalization(enabled: boolean, target = -14) {
     if (this.#mixer) {
@@ -87,7 +91,7 @@ export class AudioStreamer extends EventTarget {
 
   #beginCrossfade() {
     if (!this.#nextTrack || this.#isCrossfading) return
-    console.log(`[Streamer] beginning crossfade to "${this.#nextTrack.info.title}"`)
+    this.#logger?.debug('streamer', `beginning crossfade to "${this.#nextTrack.info.title}"`)
     this.#isCrossfading = true
     this.#crossfadeStart = Date.now()
     this.#crossfadingOut = true
@@ -122,7 +126,7 @@ export class AudioStreamer extends EventTarget {
   }
 
   async play(track: Track, startTime = 0) {
-    console.log(`[Streamer] play: track="${track.info.title}" voice.connected=${this.#voice.connected}`)
+    this.#logger?.debug('streamer', `play: track="${track.info.title}" voice.connected=${this.#voice.connected}`)
 
     if (this.#playing && this.#crossfade && this.#crossfade.duration > 0 && this.#currentTrack && !this.#isCrossfading) {
       this.setNextTrack(track)
@@ -140,7 +144,7 @@ export class AudioStreamer extends EventTarget {
     this.#paused = false
 
     if (!this.#voice.connected) {
-      console.log(`[Streamer] play: voice not connected, waiting for ready event`)
+      this.#logger?.debug('streamer', `play: voice not connected, waiting for ready event`)
       return
     }
 
@@ -172,10 +176,10 @@ export class AudioStreamer extends EventTarget {
       args.unshift('-ss', String(this.#seekPosition / 1000))
     }
 
-    console.log(`[Streamer] starting ffmpeg`)
+    this.#logger?.debug('streamer', `starting ffmpeg`)
 
     this.#proc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'ignore'] })
-    this.#proc.on('error', (e) => console.log(`[Streamer] ffmpeg error: ${e.message}`))
+    this.#proc.on('error', (e) => this.#logger?.error('streamer', `ffmpeg error: ${e.message}`))
 
     const stdout = this.#proc.stdout
     if (!stdout) {
@@ -196,12 +200,12 @@ export class AudioStreamer extends EventTarget {
     })
 
     stdout.on('end', () => {
-      console.log(`[Streamer] ffmpeg done, total PCM buffered`)
+      this.#logger?.debug('streamer', `ffmpeg done, total PCM buffered`)
       feedDone = true
     })
 
     this.#proc.on('exit', (code, signal) => {
-      console.log(`[Streamer] ffmpeg exit: code=${code} signal=${signal}`)
+      this.#logger?.debug('streamer', `ffmpeg exit: code=${code} signal=${signal}`)
       feedDone = true
       if (code !== 0 && this.#playing) {
         this.#onEnd('loadFailed')

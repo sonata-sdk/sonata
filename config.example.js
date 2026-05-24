@@ -24,7 +24,7 @@ export default {
 
   // ── Logging ─────────────────────────────────────────────────────────
   logging: {
-    level: 'info',          // debug | info | warn | error
+    level: 'normal',        // trace | verbose | debug | normal | warn | error
     format: 'text',         // text | json
     colorize: true,
     showPid: true,
@@ -74,12 +74,13 @@ export default {
     nico:      { enabled: true, quality: 'best',    timeout: 10_000 },
     mixcloud:  { enabled: true, quality: 'best',    timeout: 10_000 },
     podcast:   { enabled: true, maxEpisodes: 50,    timeout: 10_000 },
+    tiktok:    { enabled: false, quality: 'best', timeout: 10_000 },
     http:      true,
     local:     true,
 
     // Source priority ordering (first match wins)
     priority: ['youtube', 'soundcloud', 'spotify', 'bandcamp', 'twitch',
-               'vimeo', 'deezer', 'apple', 'nico', 'mixcloud', 'podcast', 'http', 'local'],
+               'vimeo', 'deezer', 'apple', 'nico', 'mixcloud', 'podcast', 'tiktok', 'http', 'local'],
     requestTimeout: 10_000,
   },
 

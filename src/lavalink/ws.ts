@@ -6,6 +6,7 @@ import { DiscordVoice } from '../discord/voice.js'
 import { AudioStreamer } from '../player/audio-streamer.js'
 import { decodeTrack } from '../player/encoder.js'
 import type { Track, PlayerState } from '../types/index.js'
+import type { Logger } from '../utils/logger.js'
 
 interface WSClient { ws: WebSocket; sessionId: string; resumed: boolean; userId?: string }
 interface PendingPlay { track: Track; client: WSClient; startTime: number }
@@ -21,8 +22,9 @@ export class LavalinkWS {
   #crossfade: { duration: number; fadeIn: number; fadeOut: number } | null = null
   #normalizationEnabled = false
   #normalizationTarget = -14
+  #logger: Logger | null
 
-  constructor(pm: PlayerManager, sessions: SessionManager, cfg?: { queue?: { crossfade?: number; crossfadeFadeIn?: number; crossfadeFadeOut?: number }; player?: { normalization?: boolean; normalizationTarget?: number } }) {
+  constructor(pm: PlayerManager, sessions: SessionManager, cfg?: { queue?: { crossfade?: number; crossfadeFadeIn?: number; crossfadeFadeOut?: number }; player?: { normalization?: boolean; normalizationTarget?: number } }, logger?: Logger) {
     this.pm = pm
     this.sessions = sessions
     if (cfg?.queue?.crossfade && cfg.queue.crossfade > 0) {
@@ -36,6 +38,7 @@ export class LavalinkWS {
       this.#normalizationEnabled = true
       this.#normalizationTarget = cfg.player.normalizationTarget ?? -14
     }
+    this.#logger = logger ?? null
   }
 
   handleConnection(ws: WebSocket, resumeSessionId?: string, userId = '') {
@@ -99,7 +102,7 @@ export class LavalinkWS {
         const { sessionId, event } = msg
         if (!event) return
 
-        console.log(`[WS] voiceUpdate: guild=${guildId} endpoint=${event.endpoint}`)
+        this.#logger?.debug('ws', `voiceUpdate: guild=${guildId} endpoint=${event.endpoint}`)
 
         const existing = this.#voices.get(guildId)
         if (existing) existing.close()
@@ -118,6 +121,7 @@ export class LavalinkWS {
         this.#voices.set(guildId, dv)
 
         const streamer = new AudioStreamer(dv)
+        if (this.#logger) streamer.setLogger(this.#logger)
         if (this.#crossfade) streamer.setCrossfade(this.#crossfade)
         if (this.#normalizationEnabled) streamer.setNormalization(true, this.#normalizationTarget)
         streamer.addEventListener('start', ((e: CustomEvent) => {
@@ -142,7 +146,7 @@ export class LavalinkWS {
 
         // Process any pending play requests
         const pending = this.#pendingPlays.get(guildId)
-        console.log(`[WS] voiceUpdate: pending=${pending?.length ?? 0} guild=${guildId}`)
+        this.#logger?.debug('ws', `voiceUpdate: pending=${pending?.length ?? 0} guild=${guildId}`)
         if (pending && pending.length > 0) {
           for (const req of pending) {
             this.#streamAudio(guildId, req.track, req.client, req.startTime)
@@ -153,10 +157,10 @@ export class LavalinkWS {
       }
 
       case 'play': {
-        console.log(`[WS] play: guild=${guildId} track_raw="${msg.track?.substring(0, 40)}..."`)
-        const track = msg.track ? decodeTrack(msg.track) : null
+        this.#logger?.debug('ws', `play: guild=${guildId} track_raw="${msg.track?.substring(0, 40)}..."`)
+        const track = msg.track ? decodeTrack(msg.track, this.#logger ?? undefined) : null
         if (!track) {
-          console.log(`[WS] play: guild=${guildId} FAILED to decode track`)
+          this.#logger?.debug('ws', `play: guild=${guildId} FAILED to decode track`)
           this.#broadcast(client, 'event', {
             type: 'TrackExceptionEvent',
             guildId,
@@ -165,7 +169,7 @@ export class LavalinkWS {
           return
         }
 
-        console.log(`[WS] play: guild=${guildId} track="${track.info.title}" voice=${this.#voices.has(guildId)}`)
+        this.#logger?.debug('ws', `play: guild=${guildId} track="${track.info.title}" voice=${this.#voices.has(guildId)}`)
         p.play(track)
 
         // If voice isn't set up yet, queue the play
@@ -255,14 +259,14 @@ export class LavalinkWS {
 
   async #streamAudio(guildId: string, track: Track, client: WSClient, startTime = 0) {
     const streamer = this.#streamers.get(guildId)
-    console.log(`[WS] streamAudio: guild=${guildId} hasStreamer=${!!streamer} uri=${track.info.uri}`)
+    this.#logger?.debug('ws', `streamAudio: guild=${guildId} hasStreamer=${!!streamer} uri=${track.info.uri}`)
     if (!streamer) return
 
     // Resolve streaming URL if needed (YouTube tracks have uri = watch page URL)
     if (!track.info.uri || track.info.uri.includes('youtube.com/watch?v=') || track.info.uri.includes('youtu.be/')) {
-      console.log(`[WS] streamAudio: resolving stream URL for ${track.info.identifier}`)
+      this.#logger?.debug('ws', `streamAudio: resolving stream URL for ${track.info.identifier}`)
       const resolved = await this.#resolveStreamUrl(track)
-      console.log(`[WS] streamAudio: resolved=${resolved}`)
+      this.#logger?.debug('ws', `streamAudio: resolved=${resolved}`)
       if (!resolved) {
         this.#broadcast(client, 'event', {
           type: 'TrackExceptionEvent',
@@ -273,7 +277,7 @@ export class LavalinkWS {
       }
     }
 
-    console.log(`[WS] streamAudio: calling streamer.play()`)
+    this.#logger?.debug('ws', `streamAudio: calling streamer.play()`)
     streamer.play(track, startTime)
   }
 

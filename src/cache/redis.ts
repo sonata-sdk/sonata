@@ -1,4 +1,5 @@
 import type { Track } from '../types/index.js'
+import type { Logger } from '../utils/logger.js'
 
 interface CacheEntry {
   tracks: Track[]
@@ -23,17 +24,19 @@ export class RedisTrackCache {
   #client: any
   #ttl: number
   #prefix: string
+  #logger: Logger | null
 
-  constructor(url: string, ttl = 300_000, prefix = 'sonata:') {
+  constructor(url: string, ttl = 300_000, prefix = 'sonata:', logger?: Logger) {
     this.#ttl = ttl
     this.#prefix = prefix
     this.#client = null
+    this.#logger = logger ?? null
     getRedis().then(r => {
       if (r) {
         this.#client = new r(url)
-        this.#client.on('error', (err: Error) => console.error('[RedisCache]', err.message))
+        this.#client.on('error', (err: Error) => this.#logger?.error('redis', err.message))
       } else {
-        console.warn('[RedisCache] ioredis not installed, falling back to memory store')
+        this.#logger?.warn('redis', 'ioredis not installed, falling back to memory store')
       }
     })
   }

@@ -1,4 +1,5 @@
 import type { Track, TrackInfo } from '../types/index.js'
+import type { Logger } from '../utils/logger.js'
 
 export function encodeTrack(track: Track): string {
   const data = JSON.stringify({
@@ -13,7 +14,7 @@ export function encodeTrack(track: Track): string {
   return Buffer.from(data).toString('base64')
 }
 
-export function decodeTrack(encoded: string): Track | null {
+export function decodeTrack(encoded: string, logger?: Logger): Track | null {
   if (!encoded) return null
   // Try base64 JSON first
   try {
@@ -72,7 +73,7 @@ export function decodeTrack(encoded: string): Track | null {
       source: sourceName,
     }
   } catch (e) {
-    console.log(`[Encoder] binary decode failed: ${e}`)
+    logger?.warn('encoder', `binary decode failed: ${e}`)
   }
   // Fallback: treat as raw YouTube identifier
   if (/^[a-zA-Z0-9_-]{11}$/.test(encoded)) {

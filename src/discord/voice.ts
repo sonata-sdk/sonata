@@ -1,5 +1,6 @@
 import OpusScript from 'opusscript'
 import voiceLib from '@performanc/voice'
+import type { Logger } from '../utils/logger.js'
 
 const { joinVoiceChannel } = voiceLib
 
@@ -21,9 +22,12 @@ export class DiscordVoice extends EventTarget {
   #readyEmitted = false
   #encoder: any = null
   #hasSpoken = false
+  #logger: Logger | null = null
 
   connected = false
   ping = 0
+
+  setLogger(logger: Logger) { this.#logger = logger }
 
   get ssrc() { return this.#connection?.udpInfo?.ssrc ?? 0 }
   get speaking() { return this.#connection?.playerState?.status === 'playing' }
@@ -35,7 +39,7 @@ export class DiscordVoice extends EventTarget {
 
   #createConnection() {
     const opts = this.#opts!
-    console.log(`[Voice] Creating connection: guild=${opts.guildId} userId=${opts.userId} channelId=${opts.channelId}`)
+    this.#logger?.debug('voice', `Creating connection: guild=${opts.guildId} userId=${opts.userId} channelId=${opts.channelId}`)
 
     this.#connection = joinVoiceChannel({
       guildId: opts.guildId,
@@ -44,14 +48,14 @@ export class DiscordVoice extends EventTarget {
       encryption: 'aead_aes256_gcm_rtpsize',
     })
 
-    console.log(`[Voice] Connection object created, initial state=${this.#connection.state?.status}`)
+    this.#logger?.debug('voice', `Connection object created, initial state=${this.#connection.state?.status}`)
 
     this.#connection.on('stateChange', (_oldState: any, newState: any) => {
       const status = newState.status
       const reason = newState.reason
       const code = newState.code
       const closeReason = newState.closeReason
-      console.log(`[Voice] stateChange: ${_oldState?.status} -> ${status} (reason=${reason}, code=${code}, closeReason=${closeReason})`)
+      this.#logger?.debug('voice', `stateChange: ${_oldState?.status} -> ${status} (reason=${reason}, code=${code}, closeReason=${closeReason})`)
       if (status === 'connected') {
         this.connected = true
         this.ping = this.#connection.ping ?? 0
@@ -74,7 +78,7 @@ export class DiscordVoice extends EventTarget {
     })
 
     this.#connection.on('error', (err: any) => {
-      console.log(`[Voice] Error: ${err?.message ?? err}`)
+      this.#logger?.error('voice', `Error: ${err?.message ?? err}`)
     })
   }
 
@@ -82,13 +86,13 @@ export class DiscordVoice extends EventTarget {
     if (!this.#connection) return
 
     const cleanEndpoint = endpoint.replace(/^wss:\/\//, '').replace(/\/\?v=\d+$/, '')
-    console.log(`[Voice] feedVoiceUpdate: endpoint=${cleanEndpoint} sessionId=${sessionId}`)
+    this.#logger?.debug('voice', `feedVoiceUpdate: endpoint=${cleanEndpoint} sessionId=${sessionId}`)
 
     this.#connection.voiceStateUpdate({ session_id: sessionId })
     this.#connection.voiceServerUpdate({ token, endpoint: cleanEndpoint })
-    console.log(`[Voice] calling connect()...`)
+    this.#logger?.debug('voice', `calling connect()...`)
     this.#connection.connect()
-    console.log(`[Voice] connect() returned, state=${this.#connection.state?.status}`)
+    this.#logger?.debug('voice', `connect() returned, state=${this.#connection.state?.status}`)
   }
 
   sendPCM(pcm: Buffer): number {
@@ -96,10 +100,10 @@ export class DiscordVoice extends EventTarget {
     if (!c || !this.connected) return 0
     if (!this.#encoder) {
       this.#encoder = new OpusScript(48000, 2, OpusScript.Application.AUDIO)
-      console.log(`[Voice] Opus encoder created`)
+      this.#logger?.debug('voice', `Opus encoder created`)
     }
     if (pcm.length < PCM_FRAME_SIZE) {
-      console.log(`[Voice] sendPCM: short frame ${pcm.length} < ${PCM_FRAME_SIZE}`)
+      this.#logger?.debug('voice', `sendPCM: short frame ${pcm.length} < ${PCM_FRAME_SIZE}`)
       return 0
     }
     try {
@@ -107,16 +111,16 @@ export class DiscordVoice extends EventTarget {
       if (opus?.length > 0) {
         if (!this.#hasSpoken) {
           this.#hasSpoken = true
-          console.log(`[Voice] first audio chunk, setting speaking`)
-          try { c._setSpeaking(1 << 0) } catch (e) { console.log(`[Voice] _setSpeaking error: ${e}`) }
+          this.#logger?.debug('voice', `first audio chunk, setting speaking`)
+          try { c._setSpeaking(1 << 0) } catch (e) { this.#logger?.error('voice', `_setSpeaking error: ${e}`) }
         }
         c.sendAudioChunk(opus)
       } else {
-        console.log(`[Voice] opus encode returned empty`)
+        this.#logger?.debug('voice', `opus encode returned empty`)
         return 0
       }
     } catch (e) {
-      console.log(`[Voice] sendPCM error: ${e}`)
+      this.#logger?.error('voice', `sendPCM error: ${e}`)
       return 0
     }
     return 1
