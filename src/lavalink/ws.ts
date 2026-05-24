@@ -18,10 +18,24 @@ export class LavalinkWS {
   #voices = new Map<string, DiscordVoice>()
   #streamers = new Map<string, AudioStreamer>()
   #pendingPlays = new Map<string, PendingPlay[]>()
+  #crossfade: { duration: number; fadeIn: number; fadeOut: number } | null = null
+  #normalizationEnabled = false
+  #normalizationTarget = -14
 
-  constructor(pm: PlayerManager, sessions: SessionManager) {
+  constructor(pm: PlayerManager, sessions: SessionManager, cfg?: { queue?: { crossfade?: number; crossfadeFadeIn?: number; crossfadeFadeOut?: number }; player?: { normalization?: boolean; normalizationTarget?: number } }) {
     this.pm = pm
     this.sessions = sessions
+    if (cfg?.queue?.crossfade && cfg.queue.crossfade > 0) {
+      this.#crossfade = {
+        duration: cfg.queue.crossfade,
+        fadeIn: cfg.queue.crossfadeFadeIn || cfg.queue.crossfade,
+        fadeOut: cfg.queue.crossfadeFadeOut || cfg.queue.crossfade,
+      }
+    }
+    if (cfg?.player?.normalization) {
+      this.#normalizationEnabled = true
+      this.#normalizationTarget = cfg.player.normalizationTarget ?? -14
+    }
   }
 
   handleConnection(ws: WebSocket, resumeSessionId?: string, userId = '') {
@@ -104,6 +118,8 @@ export class LavalinkWS {
         this.#voices.set(guildId, dv)
 
         const streamer = new AudioStreamer(dv)
+        if (this.#crossfade) streamer.setCrossfade(this.#crossfade)
+        if (this.#normalizationEnabled) streamer.setNormalization(true, this.#normalizationTarget)
         streamer.addEventListener('start', ((e: CustomEvent) => {
           this.#broadcast(client, 'event', {
             type: 'TrackStartEvent',
@@ -158,6 +174,14 @@ export class LavalinkWS {
           pending.push({ track, client, startTime: msg.startTime ?? 0 })
           this.#pendingPlays.set(guildId, pending)
           return
+        }
+
+        // If crossfade is active and streamer is playing, queue it as next track
+        const existingStreamer = this.#streamers.get(guildId)
+        if (existingStreamer?.playing && this.#crossfade) {
+          existingStreamer.setNextTrack(track)
+          p.queue.setCurrent(track)
+          break
         }
 
         this.#streamAudio(guildId, track, client, msg.startTime ?? 0)
@@ -266,6 +290,10 @@ export class LavalinkWS {
       } catch {}
     }
     return null
+  }
+
+  cleanupGuild(guildId: string) {
+    this.#cleanup(guildId)
   }
 
   #cleanup(guildId: string) {

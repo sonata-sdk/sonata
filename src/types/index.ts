@@ -384,6 +384,14 @@ export interface Config {
     allowStreamSeek?: boolean
     /** Max seek position (ms) */
     maxSeekPosition?: number
+    /** Persist queue to disk */
+    stickyQueue?: boolean
+    /** File path for sticky queue */
+    stickyQueueFile?: string
+    /** Audio normalization (volume leveling) */
+    normalization?: boolean
+    /** Normalization target LUFS */
+    normalizationTarget?: number
   }
   cache: {
     /** Enable track cache */
@@ -430,6 +438,8 @@ export interface Config {
     sendHeaders?: boolean
     /** Trust forwarded-for header for rate limiting IP */
     trustProxy?: boolean
+    /** Per-user rate limiting (key by user ID from Authorization) */
+    perUser?: boolean
   }
   security: {
     /** Rate limit enabled (deprecated, use rateLimiting.enabled) */

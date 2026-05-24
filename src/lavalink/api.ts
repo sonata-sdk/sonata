@@ -7,6 +7,7 @@ import { VoiceConnection } from '../player/voice.js'
 import { TrackCache } from '../cache/index.js'
 import { encodeTrack } from '../player/encoder.js'
 import type { VoiceState } from '../types/index.js'
+import { getLyrics } from '../lyrics/index.js'
 
 export class LavalinkAPI {
   #pm: PlayerManager
@@ -77,6 +78,7 @@ export class LavalinkAPI {
     srv.handle('DELETE', '/v4/sessions/{id}/players/{guildId}/queue/{index}', (req, res, params) => this.#removeFromQueue(res, params))
     srv.handle('PATCH', '/v4/sessions/{id}/players/{guildId}/queue/{index}', (req, res, params, body) => this.#moveInQueue(res, params, body))
     srv.handle('GET', '/v4/sessions/{id}/players/{guildId}/history', (req, res, params) => this.#getHistory(res, params))
+    srv.handle('GET', '/lyrics', (req, res) => this.#lyrics(req, res))
   }
 
   #loadTracks(req: IncomingMessage, res: ServerResponse) {
@@ -326,6 +328,36 @@ export class LavalinkAPI {
     const p = this.#pm.get(params.guildId)
     if (!p) return this.#json(res, 404, { error: 'Player not found' })
     this.#json(res, 200, p.queue.history)
+  }
+
+  async #lyrics(req: IncomingMessage, res: ServerResponse) {
+    const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
+    const artist = url.searchParams.get('artist') ?? ''
+    const title = url.searchParams.get('title') ?? ''
+    const encoded = url.searchParams.get('track')
+    let resolvedArtist = artist
+    let resolvedTitle = title
+
+    if (encoded && (!artist || !title)) {
+      const { decodeTrack } = await import('../player/encoder.js')
+      const track = decodeTrack(encoded)
+      if (track) {
+        resolvedArtist = track.info.author
+        resolvedTitle = track.info.title
+      }
+    }
+
+    if (!resolvedArtist || !resolvedTitle) {
+      return this.#json(res, 400, { error: 'Missing artist or title' })
+    }
+
+    try {
+      const result = await getLyrics(resolvedArtist, resolvedTitle)
+      if (!result) return this.#json(res, 404, { error: 'Lyrics not found' })
+      this.#json(res, 200, result)
+    } catch {
+      this.#json(res, 500, { error: 'Failed to fetch lyrics' })
+    }
   }
 
   #json(res: ServerResponse, status: number, data: unknown) {

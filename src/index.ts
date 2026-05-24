@@ -12,6 +12,7 @@ import { AuthManager } from './middleware/auth.js'
 import { corsHandler } from './middleware/cors.js'
 import { dashboardHandler } from './dashboard/index.js'
 import { logStartup, logMemory } from './utils/logging.js'
+import { showBanner, formatTrackProgress } from './console/index.js'
 import { VERSION } from './version.js'
 
 const cfg = await loadConfig(process.argv[2])
@@ -32,8 +33,22 @@ const resolver = new Resolver({
   local: cfg.sources.local === true || typeof cfg.sources.local === 'object',
 })
 
-const cache = cfg.cache?.enabled ? new TrackCache(cfg.cache.ttl, cfg.cache.maxSize) : null
+let cache: TrackCache | null = null
+if (cfg.cache?.enabled) {
+  if (cfg.cache.redis && typeof cfg.cache.redis === 'string' && cfg.cache.redis.length > 0) {
+    const { RedisTrackCache } = await import('./cache/redis.js')
+    cache = new RedisTrackCache(cfg.cache.redis, cfg.cache.ttl, cfg.cache.keyPrefix) as unknown as TrackCache
+  } else {
+    cache = new TrackCache(cfg.cache.ttl, cfg.cache.maxSize)
+  }
+}
 const metrics = cfg.metrics?.enabled ? new Metrics(cfg.metrics) : null
+
+const srv = new Server({
+  level: cfg.logging.level,
+  format: cfg.logging.format,
+  password: cfg.server.password,
+})
 const auth = new AuthManager([
   cfg.server.password,
   ...(cfg.server.tokens ?? []),
@@ -55,6 +70,11 @@ const pm = new PlayerManager({
   onPlayerUpdate: (p, state) => {
     wsHandler.onPlayerUpdate(p, state)
     if (metrics) metrics.playersActive.set(pm.count())
+    if (state.track && !state.paused) {
+      const progress = formatTrackProgress(state.position, state.track.info.duration)
+      const mem = Math.round(process.memoryUsage().rss / 1024 / 1024)
+      console.log(`\r${progress} | players: ${pm.count()} | mem: ${mem}MB`)
+    }
   },
   onQueueEnd: (p) => {
     wsHandler.onQueueEnd(p)
@@ -63,15 +83,18 @@ const pm = new PlayerManager({
       if (next) p.play(next)
     }
   },
-})
+}, Boolean(cfg.player?.stickyQueue), cfg.player?.stickyQueueFile ?? '')
 
-const wsHandler = new LavalinkWS(pm, sessions)
+const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player })
 
-const srv = new Server({
-  level: cfg.logging.level,
-  format: cfg.logging.format,
-  password: cfg.server.password,
-})
+// Auto-leave (voice activity detection)
+if (cfg.player?.autoLeaveMs && cfg.player.autoLeaveMs > 0) {
+  pm.setAutoLeave(cfg.player.autoLeaveMs, (guildId) => {
+    console.log(`[AutoLeave] guild=${guildId} disconnected due to inactivity`)
+    wsHandler.cleanupGuild(guildId)
+    pm.remove(guildId)
+  })
+}
 
 // Public paths (no auth required)
 const publicPaths = [
@@ -107,9 +130,10 @@ if (whitelist?.length || blacklist?.length) {
 }
 
 // Rate limiter
-if (cfg.security?.rateLimit) {
+const rateLimitCfg = cfg.rateLimiting?.enabled ? cfg.rateLimiting : (cfg.security?.rateLimit ? { windowMs: cfg.security.windowMs ?? 60_000, maxRequests: cfg.security.maxRequests ?? 100, perUser: false } : null)
+if (rateLimitCfg) {
   const { RateLimiter } = await import('./middleware/ratelimit.js')
-  const limiter = new RateLimiter(cfg.security.windowMs ?? 60_000, cfg.security.maxRequests ?? 100)
+  const limiter = new RateLimiter(rateLimitCfg.maxRequests ?? 100, rateLimitCfg.windowMs ?? 60_000, rateLimitCfg.perUser ?? false)
   srv.onPreHandle((req, res) => {
     return !limiter.check(req, res)
   })
@@ -198,5 +222,6 @@ if (process.env['NODE_ENV'] !== 'test') {
 
 // Start
 srv.listen(cfg.server.port, cfg.server.host, () => {
+  showBanner(cfg)
   logStartup(cfg)
 })

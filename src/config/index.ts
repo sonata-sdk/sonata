@@ -98,6 +98,10 @@ const DEFAULTS: Config = {
     crossfadeOffset: 0,
     allowStreamSeek: false,
     maxSeekPosition: 0,
+    stickyQueue: false,
+    stickyQueueFile: '',
+    normalization: false,
+    normalizationTarget: -14,
   },
   cache: {
     enabled: true,

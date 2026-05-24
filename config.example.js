@@ -136,6 +136,10 @@ export default {
     crossfadeOffset: 0,
     allowStreamSeek: false,
     maxSeekPosition: 0,
+    stickyQueue: false,
+    stickyQueueFile: '',
+    normalization: false,
+    normalizationTarget: -14,
   },
 
   // ── Cache ───────────────────────────────────────────────────────────
@@ -171,6 +175,7 @@ export default {
     message: 'Too many requests, please try again later.',
     sendHeaders: true,
     trustProxy: false,
+    perUser: false,
   },
 
   // ── Security ────────────────────────────────────────────────────────

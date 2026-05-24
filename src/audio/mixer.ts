@@ -9,6 +9,7 @@ export interface FilterConfig {
   distortion?: { sinOffset?: number; sinScale?: number; cosOffset?: number; cosScale?: number; tanOffset?: number; tanScale?: number }
   channelMix?: { leftToLeft?: number; leftToRight?: number; rightToLeft?: number; rightToRight?: number }
   lowPass?: { smoothing?: number }
+  normalization?: { enabled: boolean; target?: number }
 }
 
 export interface ProcessedFilters {
@@ -22,6 +23,7 @@ export interface ProcessedFilters {
   distortion: Required<NonNullable<FilterConfig['distortion']>>
   channelMix: Required<NonNullable<FilterConfig['channelMix']>>
   lowPass: Required<NonNullable<FilterConfig['lowPass']>>
+  normalization: { enabled: boolean; target: number; gain: number }
 }
 
 const DEFAULTS: ProcessedFilters = {
@@ -35,6 +37,7 @@ const DEFAULTS: ProcessedFilters = {
   distortion: { sinOffset: 0, sinScale: 1, cosOffset: 0, cosScale: 1, tanOffset: 0, tanScale: 1 },
   channelMix: { leftToLeft: 1, leftToRight: 0, rightToLeft: 0, rightToRight: 1 },
   lowPass: { smoothing: 1 },
+  normalization: { enabled: false, target: -14, gain: 1.0 },
 }
 
 export class AudioMixer {
@@ -59,6 +62,10 @@ export class AudioMixer {
     if (opts.distortion) Object.assign(this.#filters.distortion, opts.distortion)
     if (opts.channelMix) Object.assign(this.#filters.channelMix, opts.channelMix)
     if (opts.lowPass) Object.assign(this.#filters.lowPass, opts.lowPass)
+    if (opts.normalization !== undefined) {
+      this.#filters.normalization.enabled = opts.normalization.enabled ?? false
+      if (opts.normalization.target !== undefined) this.#filters.normalization.target = opts.normalization.target
+    }
   }
 
   getFilters(): FilterConfig {
@@ -73,6 +80,7 @@ export class AudioMixer {
       distortion: { ...this.#filters.distortion },
       channelMix: { ...this.#filters.channelMix },
       lowPass: { ...this.#filters.lowPass },
+      normalization: { ...this.#filters.normalization },
     }
   }
 
@@ -95,6 +103,25 @@ export class AudioMixer {
         if (s > 32767) s = 32767
         if (s < -32768) s = -32768
         samples[i] = s | 0
+      }
+    }
+
+    // Normalization (dynamic gain based on RMS loudness)
+    if (f.normalization.enabled) {
+      let sumSq = 0
+      for (let i = 0; i < len; i++) sumSq += samples[i] * samples[i]
+      const rms = Math.sqrt(sumSq / len)
+      const targetLevel = 32768 * Math.pow(10, f.normalization.target / 20)
+      const targetGain = rms > 0 ? targetLevel / rms : 1.0
+      const clampedGain = Math.max(0.1, Math.min(10, targetGain))
+      f.normalization.gain += (clampedGain - f.normalization.gain) * 0.1
+      if (Math.abs(f.normalization.gain - 1) > 0.01) {
+        for (let i = 0; i < len; i++) {
+          let s = samples[i] * f.normalization.gain
+          if (s > 32767) s = 32767
+          if (s < -32768) s = -32768
+          samples[i] = s | 0
+        }
       }
     }
 

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  sonata:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sonata
+    restart: unless-stopped
+    ports:
+      - "2333:2333"
+    volumes:
+      - ./config.js:/app/config.js:ro
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2333/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: sonata-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis-data:

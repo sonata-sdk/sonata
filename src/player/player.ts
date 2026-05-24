@@ -17,7 +17,7 @@ export interface PlayerEventHandlers {
 export class Player {
   readonly guildId: string
   readonly events = new PlayerEvents()
-  #queue = new Queue()
+  #queue: Queue
   #state = State.Stopped
   #volume = 100
   #position = 0
@@ -28,9 +28,10 @@ export class Player {
   #events: PlayerEventHandlers
   #loopMode: 'none' | 'track' | 'queue' = 'none'
 
-  constructor(guildId: string, events: PlayerEventHandlers) {
+  constructor(guildId: string, events: PlayerEventHandlers, stickyFile = '') {
     this.guildId = guildId
     this.#events = events
+    this.#queue = new Queue(stickyFile)
   }
 
   play(track?: Track | null) {

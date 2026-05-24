@@ -10,15 +10,25 @@ export class RateLimiter {
   #maxTokens: number
   #refillRate: number
   #refillInterval: number
+  #perUser: boolean
 
-  constructor(maxTokens = 50, refillInterval = 1000) {
+  constructor(maxTokens = 50, refillInterval = 1000, perUser = false) {
     this.#maxTokens = maxTokens
     this.#refillRate = maxTokens
     this.#refillInterval = refillInterval
+    this.#perUser = perUser
   }
 
   check(req: IncomingMessage, res: ServerResponse): boolean {
-    const key = req.headers['authorization'] ?? req.socket.remoteAddress ?? 'unknown'
+    let key: string
+    if (this.#perUser) {
+      const auth = req.headers['authorization']
+      const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
+      const userId = url.searchParams.get('userId')
+      key = userId || auth || (req.socket.remoteAddress ?? 'unknown')
+    } else {
+      key = req.headers['authorization'] ?? req.socket.remoteAddress ?? 'unknown'
+    }
     const now = Date.now()
     let bucket = this.#buckets.get(key)
 

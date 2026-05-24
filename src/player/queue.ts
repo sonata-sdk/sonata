@@ -1,3 +1,5 @@
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 import type { Track } from '../types/index.js'
 
 export type QueueEventType = 'add' | 'remove' | 'clear' | 'shuffle'
@@ -13,15 +15,59 @@ export class Queue extends EventTarget {
   #tracks: Track[] = []
   #history: Track[] = []
   #current: Track | null = null
+  #stickyFile = ''
+  #stickyDirtyTimer: ReturnType<typeof setTimeout> | null = null
+
+  constructor(stickyFile = '') {
+    super()
+    if (stickyFile) {
+      this.#stickyFile = stickyFile
+      this.#restore()
+    }
+  }
+
+  setStickyFile(path: string) {
+    this.#stickyFile = path
+    this.#restore()
+  }
+
+  #restore() {
+    if (!this.#stickyFile || !existsSync(this.#stickyFile)) return
+    try {
+      const raw = readFileSync(this.#stickyFile, 'utf-8')
+      const data = JSON.parse(raw)
+      if (data.current) this.#current = data.current
+      if (Array.isArray(data.queue)) this.#tracks = data.queue
+      if (Array.isArray(data.history)) this.#history = data.history
+    } catch {}
+  }
+
+  #save() {
+    if (!this.#stickyFile) return
+    if (this.#stickyDirtyTimer) clearTimeout(this.#stickyDirtyTimer)
+    this.#stickyDirtyTimer = setTimeout(() => {
+      try {
+        const dir = dirname(this.#stickyFile)
+        if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+        writeFileSync(this.#stickyFile, JSON.stringify({
+          current: this.#current,
+          queue: this.#tracks,
+          history: this.#history,
+        }, null, 2), 'utf-8')
+      } catch {}
+    }, 100)
+  }
 
   enqueue(track: Track) {
     this.#tracks.push(track)
     this.#emit('add', { track, index: this.#tracks.length - 1 })
+    this.#save()
   }
 
   dequeue(): Track | null {
     const track = this.#tracks.shift() ?? null
     if (track) this.#emit('remove', { track, index: 0 })
+    this.#save()
     return track
   }
 
@@ -35,12 +81,14 @@ export class Queue extends EventTarget {
       this.#tracks.splice(index, 0, track)
       this.#emit('add', { track, index })
     }
+    this.#save()
   }
 
   remove(index: number): Track | null {
     if (index < 0 || index >= this.#tracks.length) return null
     const [track] = this.#tracks.splice(index, 1)
     if (track) this.#emit('remove', { track, index })
+    this.#save()
     return track ?? null
   }
 
@@ -49,6 +97,7 @@ export class Queue extends EventTarget {
     if (index === -1) return false
     this.#tracks.splice(index, 1)
     this.#emit('remove', { track, index })
+    this.#save()
     return true
   }
 
@@ -57,12 +106,14 @@ export class Queue extends EventTarget {
     if (toIndex < 0 || toIndex >= this.#tracks.length) return
     const [track] = this.#tracks.splice(fromIndex, 1)
     this.#tracks.splice(toIndex, 0, track)
+    this.#save()
   }
 
   swap(i: number, j: number) {
     if (i < 0 || i >= this.#tracks.length) return
     if (j < 0 || j >= this.#tracks.length) return
     ;[this.#tracks[i], this.#tracks[j]] = [this.#tracks[j], this.#tracks[i]]
+    this.#save()
   }
 
   clear() {
@@ -70,6 +121,7 @@ export class Queue extends EventTarget {
     this.#history.push(...this.#tracks)
     this.#tracks = []
     this.#emit('clear', { tracks })
+    this.#save()
   }
 
   shuffle() {
@@ -78,6 +130,7 @@ export class Queue extends EventTarget {
       [this.#tracks[i], this.#tracks[j]] = [this.#tracks[j], this.#tracks[i]]
     }
     this.#emit('shuffle', { tracks: [...this.#tracks] })
+    this.#save()
   }
 
   get(index: number): Track | undefined {
@@ -100,6 +153,7 @@ export class Queue extends EventTarget {
     if (maxSize < this.#tracks.length) {
       this.#tracks.length = maxSize
     }
+    this.#save()
   }
 
   get duration(): number {
