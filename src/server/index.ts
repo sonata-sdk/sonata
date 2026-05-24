@@ -21,6 +21,7 @@ export class Server {
   #started = Date.now()
   #requestCount = 0
   #password: string
+  #preHandlers: ((req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>)[] = []
 
   constructor(opts: { level?: string; format?: string; password?: string }) {
     this.#logger = pino({
@@ -42,6 +43,10 @@ export class Server {
     this.#routes.push({ method, pattern: new RegExp(`^${regexStr}$`), paramNames, handler })
   }
 
+  onPreHandle(fn: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>) {
+    this.#preHandlers.push(fn)
+  }
+
   ws(path: string) { this.#wsUpgradePath = path }
 
   listen(port: number, host: string, cb?: () => void) {
@@ -61,11 +66,17 @@ export class Server {
 
   stats() { return { uptime: Date.now() - this.#started, requests: this.#requestCount } }
 
-  #handle(req: IncomingMessage, res: ServerResponse) {
+  async #handle(req: IncomingMessage, res: ServerResponse) {
     this.#requestCount++
     const start = Date.now()
     res.setHeader('Content-Type', 'application/json')
     res.setHeader('Server', 'Sonata/0.1.0')
+
+    // Pre-handlers (CORS, IP filter, etc)
+    for (const fn of this.#preHandlers) {
+      const handled = await fn(req, res)
+      if (handled) return
+    }
 
     if (this.#password) {
       const auth = req.headers['authorization']

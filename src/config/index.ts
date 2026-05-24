@@ -8,6 +8,12 @@ const DEFAULTS: Config = {
     host: '0.0.0.0',
     port: 2333,
     password: 'youshallnotpass',
+    tokens: [],
+    ipWhitelist: [],
+    ipBlacklist: [],
+    cors: true,
+    dashboard: '/dashboard',
+    versionPath: '/version',
     maxBodySize: 1_048_576,
     socketTimeout: 30_000,
     trustProxy: false,
@@ -16,14 +22,22 @@ const DEFAULTS: Config = {
     level: 'info',
     format: 'text',
     colorize: true,
-    excludePaths: ['/health', '/metrics'],
+    excludePaths: ['/health', '/metrics', '/dashboard', '/version'],
   },
   sources: {
     youtube: { enabled: true, clientProfiles: ['WEB', 'MUSIC', 'ANDROID', 'IOS', 'TV'] },
     soundcloud: { enabled: true, clientId: '' },
     spotify: { enabled: false, clientId: '', clientSecret: '', market: 'US' },
-    http: false,
-    local: false,
+    bandcamp: { enabled: true },
+    twitch: { enabled: true },
+    vimeo: { enabled: true },
+    deezer: { enabled: true },
+    apple: { enabled: true },
+    nico: { enabled: true },
+    mixcloud: { enabled: true },
+    podcast: { enabled: true },
+    http: true,
+    local: true,
   },
   lavalink: {
     apiVersion: 4,
@@ -40,11 +54,29 @@ const DEFAULTS: Config = {
   queue: {
     maxHistorySize: 100,
     defaultVolume: 100,
+    maxSize: 0,
+    crossfade: 0,
+  },
+  player: {
+    autoPlay: true,
+    replaygain: false,
+    eventHistory: 50,
+  },
+  cache: {
+    enabled: true,
+    ttl: 300_000,
+    maxSize: 500,
+    redis: '',
   },
   metrics: {
     enabled: true,
     path: '/metrics',
     prefix: 'sonata',
+  },
+  security: {
+    rateLimit: false,
+    maxRequests: 100,
+    windowMs: 60_000,
   },
   rateLimiting: {
     enabled: false,
@@ -59,20 +91,18 @@ const DEFAULTS: Config = {
     enabled: false,
     nodes: [],
   },
+  shutdownDelay: 10_000,
 }
 
 export async function loadConfig(path?: string): Promise<Config> {
   const cfg = structuredClone(DEFAULTS) as Config
-
   const configPath = path ?? resolve(process.cwd(), 'config.js')
-
   if (existsSync(configPath)) {
     const url = pathToFileURL(configPath).href
     const mod = await import(url)
     const userConfig = mod.default ?? mod
     deepMerge(cfg, userConfig)
   }
-
   return cfg
 }
 

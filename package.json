@@ -9,7 +9,7 @@
     "sonata": "bin/sonata.js"
   },
   "scripts": {
-    "build": "npm run build:native && tsc",
+    "build": "tsc",
     "build:native": "node-gyp rebuild",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
@@ -19,10 +19,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "node-addon-api": "^8.8.0",
+    "opusscript": "^0.1.1",
     "pino": "^9.0.0",
     "prom-client": "^15.0.0",
-    "tweetnacl": "^1.0.3",
     "ws": "^8.18.0",
     "zod": "^3.23.0"
   },

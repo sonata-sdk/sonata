@@ -9,6 +9,14 @@ interface ResolverConfig {
   youtube: { enabled: boolean; clientProfiles?: string[]; proxy?: string }
   soundcloud: { enabled: boolean; clientId?: string }
   spotify: { enabled: boolean; clientId: string; clientSecret: string; market?: string }
+  bandcamp?: boolean
+  twitch?: boolean
+  vimeo?: boolean
+  deezer?: boolean
+  apple?: boolean
+  nico?: boolean
+  mixcloud?: boolean
+  podcast?: boolean
   http?: boolean
   local?: boolean
 }
@@ -50,23 +58,36 @@ export class Resolver {
 
   async resolveTrackAsync(encoded: string): Promise<Track | null> {
     const track = await this.#sourceManager.resolveTrack(encoded)
-
     if (track && (track as any).needsResolve) {
       return this.#mirror.resolve(track)
     }
-
     return track
   }
 
   #registerSources(config: ResolverConfig) {
-    if (config.youtube?.enabled) {
-      this.#sourceManager.register(new YouTubeSource(config.youtube))
-    }
-    if (config.soundcloud?.enabled) {
-      this.#sourceManager.register(new SoundCloudSource(config.soundcloud))
-    }
+    if (config.youtube?.enabled) this.#sourceManager.register(new YouTubeSource(config.youtube))
+    if (config.soundcloud?.enabled) this.#sourceManager.register(new SoundCloudSource(config.soundcloud))
     if (config.spotify?.enabled && config.spotify.clientId && config.spotify.clientSecret) {
       this.#sourceManager.register(new SpotifySource(config.spotify.clientId, config.spotify.clientSecret))
     }
+    this.#registerOptional(config.http, './http/index.js', 'HTTPSource')
+    this.#registerOptional(config.local, './local/index.js', 'LocalSource')
+    this.#registerOptional(config.bandcamp, './bandcamp/index.js', 'BandcampSource')
+    this.#registerOptional(config.twitch, './twitch/index.js', 'TwitchSource')
+    this.#registerOptional(config.vimeo, './vimeo/index.js', 'VimeoSource')
+    this.#registerOptional(config.deezer, './deezer/index.js', 'DeezerSource')
+    this.#registerOptional(config.apple, './apple/index.js', 'AppleMusicSource')
+    this.#registerOptional(config.nico, './nico/index.js', 'NicoNicoSource')
+    this.#registerOptional(config.mixcloud, './mixcloud/index.js', 'MixcloudSource')
+    this.#registerOptional(config.podcast, './podcast/index.js', 'PodcastSource')
+  }
+
+  async #registerOptional(enabled: boolean | undefined, path: string, className: string) {
+    if (!enabled) return
+    try {
+      const mod = await import(path)
+      const SourceClass = mod[className]
+      if (SourceClass) this.#sourceManager.register(new SourceClass())
+    } catch {}
   }
 }

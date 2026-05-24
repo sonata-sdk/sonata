@@ -4,6 +4,7 @@ import { SessionManager } from './session.js'
 import { Resolver } from '../resolving/index.js'
 import { Server } from '../server/index.js'
 import { VoiceConnection } from '../player/voice.js'
+import { TrackCache } from '../cache/index.js'
 import type { VoiceState } from '../types/index.js'
 
 export class LavalinkAPI {
@@ -11,11 +12,13 @@ export class LavalinkAPI {
   #resolver: Resolver
   #sessions: SessionManager
   #started: number
+  #cache: TrackCache | null
 
-  constructor(pm: PlayerManager, resolver: Resolver, sessions: SessionManager) {
+  constructor(pm: PlayerManager, resolver: Resolver, sessions: SessionManager, cache: TrackCache | null = null) {
     this.#pm = pm
     this.#resolver = resolver
     this.#sessions = sessions
+    this.#cache = cache
     this.#started = Date.now()
   }
 
@@ -44,7 +47,15 @@ export class LavalinkAPI {
     const identifier = url.searchParams.get('identifier')
     if (!identifier) return this.#json(res, 400, { error: 'Missing identifier' })
 
-    this.#resolver.resolveAsync(identifier).then(result => this.#json(res, 200, result))
+    if (this.#cache) {
+      const cached = this.#cache.get(identifier)
+      if (cached) return this.#json(res, 200, { loadType: cached.length === 1 ? 'track' : 'search', tracks: cached })
+    }
+
+    this.#resolver.resolveAsync(identifier).then(result => {
+      if (this.#cache && result.tracks.length > 0) this.#cache.set(identifier, result.tracks)
+      this.#json(res, 200, result)
+    })
   }
 
   #decodeTrack(req: IncomingMessage, res: ServerResponse) {

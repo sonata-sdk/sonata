@@ -142,22 +142,25 @@ describe('Encoder', () => {
 })
 
 describe('AudioMixer', () => {
-  it('sets volume', () => {
+  it('sets volume via setFilters', () => {
     const mixer = new AudioMixer()
-    mixer.setVolume(50)
-    expect(mixer.volume).toBe(50)
+    mixer.setFilters({ volume: 50 })
+    const f = mixer.process()
+    expect(f.volume).toBe(0.5)
   })
 
-  it('applies equalizer bands', () => {
+  it('applies equalizer bands via setFilters', () => {
     const mixer = new AudioMixer()
-    mixer.setEqualizer([
-      { band: 0, gain: 0.5 },
-      { band: 1, gain: -0.3 },
-    ])
+    mixer.setFilters({
+      equalizer: [
+        { band: 0, gain: 0.5 },
+        { band: 1, gain: -0.3 },
+      ],
+    })
     const result = mixer.process()
     expect(result.equalizer[0]).toBe(0.5)
     expect(result.equalizer[1]).toBe(-0.3)
-    expect(result.equalizer[14]).toBe(0) // untouched
+    expect(result.equalizer[14]).toBe(0)
   })
 })
 
