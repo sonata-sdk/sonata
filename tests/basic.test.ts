@@ -171,7 +171,8 @@ describe('AudioMixer', () => {
 
 describe('Resolver', () => {
   it('returns empty when all sources are disabled', async () => {
-    const resolver = new Resolver({
+    const resolver = new Resolver()
+    await resolver.init({
       youtube: { enabled: false },
       soundcloud: { enabled: false },
       spotify: { enabled: false, clientId: '', clientSecret: '' },
@@ -181,7 +182,8 @@ describe('Resolver', () => {
   })
 
   it('returns search for text queries with YouTube enabled', async () => {
-    const resolver = new Resolver({
+    const resolver = new Resolver()
+    await resolver.init({
       youtube: { enabled: true },
       soundcloud: { enabled: false },
       spotify: { enabled: false, clientId: '', clientSecret: '' },

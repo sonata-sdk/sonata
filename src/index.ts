@@ -19,7 +19,8 @@ import { VERSION } from './version.js'
 const cfg = await loadConfig(process.argv[2])
 const logger = createLogger(cfg.logging)
 
-const resolver = new Resolver({
+const resolver = new Resolver()
+await resolver.init({
   youtube: cfg.sources.youtube,
   soundcloud: cfg.sources.soundcloud,
   spotify: cfg.sources.spotify,

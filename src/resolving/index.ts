@@ -1,7 +1,4 @@
 import { AudioSourceManager } from './manager.js'
-import { YouTubeSource } from './youtube/index.js'
-import { SoundCloudSource } from './soundcloud/index.js'
-import { SpotifySource } from './spotify/index.js'
 import { MirrorResolver } from './mirror.js'
 import type { Track, LoadTracksResult } from '../types/index.js'
 
@@ -26,9 +23,12 @@ export class Resolver {
   #sourceManager = new AudioSourceManager()
   #mirror: MirrorResolver
 
-  constructor(config: ResolverConfig) {
+  constructor() {
     this.#mirror = new MirrorResolver(this.#sourceManager)
-    this.#registerSources(config)
+  }
+
+  async init(config: ResolverConfig) {
+    await this.#registerSources(config)
   }
 
   get sourceManager() { return this.#sourceManager }
@@ -87,23 +87,30 @@ export class Resolver {
     return track
   }
 
-  #registerSources(config: ResolverConfig) {
-    if (config.youtube?.enabled) this.#sourceManager.register(new YouTubeSource(config.youtube))
-    if (config.soundcloud?.enabled) this.#sourceManager.register(new SoundCloudSource(config.soundcloud))
-    if (config.spotify?.enabled && config.spotify.clientId && config.spotify.clientSecret) {
-      this.#sourceManager.register(new SpotifySource(config.spotify.clientId, config.spotify.clientSecret))
+  async #registerSources(config: ResolverConfig) {
+    if (config.youtube?.enabled) {
+      const mod = await import('./youtube/index.js')
+      this.#sourceManager.register(new mod.YouTubeSource(config.youtube))
     }
-    this.#registerOptional(config.http, './http/index.js', 'HTTPSource')
-    this.#registerOptional(config.local, './local/index.js', 'LocalSource')
-    this.#registerOptional(config.bandcamp, './bandcamp/index.js', 'BandcampSource')
-    this.#registerOptional(config.twitch, './twitch/index.js', 'TwitchSource')
-    this.#registerOptional(config.vimeo, './vimeo/index.js', 'VimeoSource')
-    this.#registerOptional(config.deezer, './deezer/index.js', 'DeezerSource')
-    this.#registerOptional(config.apple, './apple/index.js', 'AppleMusicSource')
-    this.#registerOptional(config.nico, './nico/index.js', 'NicoNicoSource')
-    this.#registerOptional(config.mixcloud, './mixcloud/index.js', 'MixcloudSource')
-    this.#registerOptional(config.podcast, './podcast/index.js', 'PodcastSource')
-    this.#registerOptional(config.tiktok, './tiktok/index.js', 'TikTokSource')
+    if (config.soundcloud?.enabled) {
+      const mod = await import('./soundcloud/index.js')
+      this.#sourceManager.register(new mod.SoundCloudSource(config.soundcloud))
+    }
+    if (config.spotify?.enabled && config.spotify.clientId && config.spotify.clientSecret) {
+      const mod = await import('./spotify/index.js')
+      this.#sourceManager.register(new mod.SpotifySource(config.spotify.clientId, config.spotify.clientSecret))
+    }
+    await this.#registerOptional(config.http, './http/index.js', 'HTTPSource')
+    await this.#registerOptional(config.local, './local/index.js', 'LocalSource')
+    await this.#registerOptional(config.bandcamp, './bandcamp/index.js', 'BandcampSource')
+    await this.#registerOptional(config.twitch, './twitch/index.js', 'TwitchSource')
+    await this.#registerOptional(config.vimeo, './vimeo/index.js', 'VimeoSource')
+    await this.#registerOptional(config.deezer, './deezer/index.js', 'DeezerSource')
+    await this.#registerOptional(config.apple, './apple/index.js', 'AppleMusicSource')
+    await this.#registerOptional(config.nico, './nico/index.js', 'NicoNicoSource')
+    await this.#registerOptional(config.mixcloud, './mixcloud/index.js', 'MixcloudSource')
+    await this.#registerOptional(config.podcast, './podcast/index.js', 'PodcastSource')
+    await this.#registerOptional(config.tiktok, './tiktok/index.js', 'TikTokSource')
   }
 
   async #registerOptional(enabled: boolean | undefined, path: string, className: string) {
