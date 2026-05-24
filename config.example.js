@@ -24,7 +24,7 @@ export default {
 
   // ── Logging ─────────────────────────────────────────────────────────
   logging: {
-    level: 'normal',        // trace | verbose | debug | normal | warn | error
+    level: 'trace',         // trace | verbose | debug | normal | warn | error
     format: 'text',         // text | json
     colorize: true,
     showPid: true,
