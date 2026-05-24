@@ -47,9 +47,10 @@ const DEFAULTS: Config = {
     nico: { enabled: true, quality: 'best', timeout: 10_000 },
     mixcloud: { enabled: true, quality: 'best', timeout: 10_000 },
     podcast: { enabled: true, maxEpisodes: 50, timeout: 10_000 },
+    jiosaavn: { enabled: true, quality: 'high', timeout: 10_000 },
     http: true,
     local: true,
-    priority: ['youtube', 'soundcloud', 'spotify', 'bandcamp', 'twitch', 'vimeo', 'deezer', 'apple', 'nico', 'mixcloud', 'podcast', 'http', 'local'],
+    priority: ['youtube', 'soundcloud', 'spotify', 'bandcamp', 'twitch', 'vimeo', 'deezer', 'apple', 'nico', 'mixcloud', 'podcast', 'jiosaavn', 'http', 'local'],
     requestTimeout: 10_000,
   },
   lavalink: {

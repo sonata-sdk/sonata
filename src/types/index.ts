@@ -297,6 +297,7 @@ export interface Config {
     mixcloud?: { enabled: boolean; quality?: string; timeout?: number }
     podcast?: { enabled: boolean; maxEpisodes?: number; userAgent?: string; timeout?: number }
     tiktok?: { enabled: boolean; quality?: string; timeout?: number }
+    jiosaavn?: { enabled: boolean; quality?: 'high' | 'medium' | 'low'; timeout?: number }
     http?: boolean | { timeout?: number; retryCount?: number; userAgent?: string; followRedirects?: boolean; maxRedirects?: number }
     local?: boolean | { basePath?: string; allowedExtensions?: string[]; maxFileSize?: number }
     /** Source priority ordering (first match wins) */

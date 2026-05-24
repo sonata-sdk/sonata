@@ -15,6 +15,7 @@ interface ResolverConfig {
   mixcloud?: boolean
   podcast?: boolean
   tiktok?: boolean
+  jiosaavn?: boolean
   http?: boolean
   local?: boolean
 }
@@ -111,6 +112,7 @@ export class Resolver {
     await this.#registerOptional(config.mixcloud, './mixcloud/index.js', 'MixcloudSource')
     await this.#registerOptional(config.podcast, './podcast/index.js', 'PodcastSource')
     await this.#registerOptional(config.tiktok, './tiktok/index.js', 'TikTokSource')
+    await this.#registerOptional(config.jiosaavn, './jiosaavn/index.js', 'JioSaavnSource')
   }
 
   async #registerOptional(enabled: boolean | undefined, path: string, className: string) {
