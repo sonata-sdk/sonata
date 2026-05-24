@@ -1,8 +1,6 @@
 import OpusScript from 'opusscript'
-import voiceLib from '@performanc/voice'
+import { joinVoiceChannel } from '@sonata-sdk/voice'
 import type { Logger } from '../utils/logger.js'
-
-const { joinVoiceChannel } = voiceLib
 
 const OPUS_FRAME_SIZE = 960
 const PCM_FRAME_SIZE = OPUS_FRAME_SIZE * 2 * 2
@@ -17,7 +15,7 @@ export interface VoiceConnectOptions {
 }
 
 export class DiscordVoice extends EventTarget {
-  #connection: any = null
+  #connection: ReturnType<typeof joinVoiceChannel> | null = null
   #opts: VoiceConnectOptions | null = null
   #readyEmitted = false
   #encoder: any = null
@@ -54,11 +52,10 @@ export class DiscordVoice extends EventTarget {
       const status = newState.status
       const reason = newState.reason
       const code = newState.code
-      const closeReason = newState.closeReason
-      this.#logger?.debug('voice', `stateChange: ${_oldState?.status} -> ${status} (reason=${reason}, code=${code}, closeReason=${closeReason})`)
+      this.#logger?.debug('voice', `stateChange: ${_oldState?.status} -> ${status} (reason=${reason}, code=${code})`)
       if (status === 'connected') {
         this.connected = true
-        this.ping = this.#connection.ping ?? 0
+        this.ping = this.#connection?.ping ?? 0
         if (!this.#readyEmitted) {
           this.#readyEmitted = true
           this.dispatchEvent(new CustomEvent('ready'))
@@ -66,14 +63,6 @@ export class DiscordVoice extends EventTarget {
       } else if (status === 'disconnected' || status === 'destroyed') {
         this.connected = false
         this.#readyEmitted = false
-      }
-    })
-
-    this.#connection.on('playerStateChange', (_oldState: any, newState: any) => {
-      if (newState.status === 'idle' && _oldState.status === 'playing') {
-        this.dispatchEvent(new CustomEvent('end'))
-      } else if (newState.status === 'playing' && _oldState.status !== 'playing') {
-        this.dispatchEvent(new CustomEvent('start'))
       }
     })
 
@@ -88,7 +77,7 @@ export class DiscordVoice extends EventTarget {
     const cleanEndpoint = endpoint.replace(/^wss:\/\//, '').replace(/\/\?v=\d+$/, '')
     this.#logger?.debug('voice', `feedVoiceUpdate: endpoint=${cleanEndpoint} sessionId=${sessionId}`)
 
-    this.#connection.voiceStateUpdate({ session_id: sessionId })
+    this.#connection.voiceStateUpdate({ sessionId })
     this.#connection.voiceServerUpdate({ token, endpoint: cleanEndpoint })
     this.#logger?.debug('voice', `calling connect()...`)
     this.#connection.connect()
@@ -112,9 +101,9 @@ export class DiscordVoice extends EventTarget {
         if (!this.#hasSpoken) {
           this.#hasSpoken = true
           this.#logger?.debug('voice', `first audio chunk, setting speaking`)
-          try { c._setSpeaking(1 << 0) } catch (e) { this.#logger?.error('voice', `_setSpeaking error: ${e}`) }
+          try { c.setSpeaking(1 << 0) } catch (e) { this.#logger?.error('voice', `setSpeaking error: ${e}`) }
         }
-        c.sendAudioChunk(opus)
+        c.sendAudioFrame(opus)
       } else {
         this.#logger?.debug('voice', `opus encode returned empty`)
         return 0
@@ -128,8 +117,7 @@ export class DiscordVoice extends EventTarget {
 
   stopSpeaking() {
     if (this.#connection) {
-      this.#connection.stop()
-      this.#connection._setSpeaking(0)
+      this.#connection.setSpeaking(0)
     }
     this.#hasSpoken = false
   }
@@ -142,7 +130,6 @@ export class DiscordVoice extends EventTarget {
     }
     if (this.#connection) {
       this.#connection.destroy()
-      this.#connection.removeAllListeners()
       this.#connection = null
     }
     this.connected = false
