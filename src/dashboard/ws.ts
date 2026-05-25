@@ -1,11 +1,11 @@
-import { WebSocket } from 'ws'
+import { WSConnection } from '@sonata-sdk/ws/connection'
 import { PlayerManager } from '../player/manager.js'
 import { State } from '../player/player.js'
 
 export function createDashboardWS(pm: PlayerManager) {
-  return (ws: WebSocket) => {
+  return (ws: WSConnection) => {
     const sendState = () => {
-      if (ws.readyState !== WebSocket.OPEN) return
+      if (!ws.connected) return
       const players = pm.all().map(p => ({
         guildId: p.guildId,
         track: p.track ? {

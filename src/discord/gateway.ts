@@ -1,4 +1,4 @@
-import WebSocket from 'ws'
+import { ResumableWS } from '@sonata-sdk/ws'
 
 interface GatewayEvent {
   op: number
@@ -10,7 +10,7 @@ interface GatewayEvent {
 export class DiscordGateway extends EventTarget {
   #token: string
   #intents: number
-  #ws: WebSocket | null = null
+  #ws: ResumableWS | null = null
   #sessionId = ''
   #sequence = 0
   #heartbeatInterval = 0
@@ -28,14 +28,18 @@ export class DiscordGateway extends EventTarget {
   get connected() { return this.#connected }
 
   connect() {
-    this.#ws = new WebSocket('wss://gateway.discord.gg/?v=10&encoding=json')
+    this.#ws = new ResumableWS('wss://gateway.discord.gg/?v=10&encoding=json', {
+      maxReconnectAttempts: Infinity,
+      reconnectDelay: 5000,
+      queueWhileDisconnected: true,
+    })
 
     this.#ws.on('open', () => {
       this.#connected = true
     })
 
     this.#ws.on('message', (data) => {
-      const evt: GatewayEvent = JSON.parse(data.toString())
+      const evt: GatewayEvent = JSON.parse(data as string)
       this.#handle(evt)
     })
 
@@ -43,12 +47,13 @@ export class DiscordGateway extends EventTarget {
       this.#connected = false
       if (this.#heartbeatTimer) clearInterval(this.#heartbeatTimer)
       this.dispatchEvent(new CustomEvent('close', { detail: { code } }))
-      setTimeout(() => this.connect(), 5000)
     })
 
     this.#ws.on('error', (err) => {
       this.dispatchEvent(new CustomEvent('error', { detail: err }))
     })
+
+    this.#ws.connect().catch(() => {})
   }
 
   close() {
@@ -97,7 +102,7 @@ export class DiscordGateway extends EventTarget {
   }
 
   #send(op: number, d: any) {
-    if (this.#ws?.readyState === WebSocket.OPEN) {
+    if (this.#ws?.connected) {
       this.#ws.send(JSON.stringify({ op, d }))
     }
   }
@@ -110,6 +115,5 @@ export class DiscordGateway extends EventTarget {
 
   #reconnect() {
     this.#ws?.close(4000)
-    setTimeout(() => this.connect(), 2000)
   }
 }

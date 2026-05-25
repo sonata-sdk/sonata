@@ -1,5 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
-import { WebSocketServer, WebSocket } from 'ws'
+import { WebSocketServer } from '@sonata-sdk/ws/server'
 import { createLogger, Logger } from '../utils/logger.js'
 import type { HttpMethod } from '../types/index.js'
 
@@ -32,7 +32,7 @@ export class Server {
   noAuth(path: string) { this.#noAuthPaths.add(path) }
 
   get logger() { return this.#logger }
-  get wss() { return this.#wss }
+  get wss() { return this.#wss as unknown as WebSocketServer }
 
   handle(method: HttpMethod, path: string, handler: Handler) {
     const paramNames: string[] = []
@@ -69,7 +69,7 @@ export class Server {
           socket.destroy()
           return
         }
-        wsCfg.wss.handleUpgrade(req, socket, head, (ws) => wsCfg.wss.emit('connection', ws, req))
+        wsCfg.wss.handleUpgrade(req, socket as any, head as Buffer, (ws) => wsCfg.wss.emit('connection', ws, req))
       } else socket.destroy()
     })
     this.#server.listen(port, host, () => {

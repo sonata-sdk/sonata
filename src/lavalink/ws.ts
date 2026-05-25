@@ -1,4 +1,4 @@
-import { WebSocket } from 'ws'
+import { WSConnection } from '@sonata-sdk/ws/connection'
 import { PlayerManager } from '../player/manager.js'
 import { SessionManager } from './session.js'
 import { VoiceConnection } from '../player/voice.js'
@@ -8,7 +8,7 @@ import { decodeTrack } from '../player/encoder.js'
 import type { Track, PlayerState } from '../types/index.js'
 import type { Logger } from '../utils/logger.js'
 
-interface WSClient { ws: WebSocket; sessionId: string; resumed: boolean; userId?: string }
+interface WSClient { ws: WSConnection; sessionId: string; resumed: boolean; userId?: string }
 interface PendingPlay { track: Track; client: WSClient; startTime: number }
 
 export class LavalinkWS {
@@ -46,7 +46,7 @@ export class LavalinkWS {
     this.#logger = logger ?? null
   }
 
-  handleConnection(ws: WebSocket, resumeSessionId?: string, userId = '') {
+  handleConnection(ws: WSConnection, resumeSessionId?: string, userId = '') {
     let sessionId: string
     let resumed = false
 
@@ -74,8 +74,6 @@ export class LavalinkWS {
         if (c && c === client) this.#clients.delete(sessionId)
       }, 60000)
     })
-
-    ws.on('ping', () => ws.pong())
 
     this.#startHeartbeat(ws, sessionId)
   }
@@ -314,10 +312,10 @@ export class LavalinkWS {
     this.#voices.delete(guildId)
   }
 
-  #startHeartbeat(ws: WebSocket, sessionId: string) {
+  #startHeartbeat(ws: WSConnection, sessionId: string) {
     const interval = setInterval(() => {
       const client = this.#clients.get(sessionId)
-      if (!client || client.ws.readyState !== WebSocket.OPEN) {
+      if (!client || !client.ws.connected) {
         clearInterval(interval)
         return
       }
@@ -327,21 +325,21 @@ export class LavalinkWS {
     ws.on('close', () => clearInterval(interval))
   }
 
-  #send(ws: WebSocket, op: string, data: any) {
-    if (ws.readyState === WebSocket.OPEN) {
+  #send(ws: WSConnection, op: string, data: any) {
+    if (ws.connected) {
       ws.send(JSON.stringify({ op, ...data }))
     }
   }
 
   #broadcast(client: WSClient, op: string, data: any) {
-    if (client.ws.readyState === WebSocket.OPEN) {
+    if (client.ws.connected) {
       client.ws.send(JSON.stringify({ op, ...data }))
     }
   }
 
   #broadcastAll(op: string, data: any) {
     for (const c of this.#clients.values()) {
-      if (c.ws.readyState === WebSocket.OPEN) {
+      if (c.ws.connected) {
         c.ws.send(JSON.stringify({ op, ...data }))
       }
     }
