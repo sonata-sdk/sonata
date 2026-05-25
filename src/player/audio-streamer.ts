@@ -226,9 +226,12 @@ export class AudioStreamer extends EventTarget {
     this.dispatchEvent(new CustomEvent('start', { detail: { track: this.#currentTrack } }))
 
     const isDeezer = this.#currentTrack.source === 'deezer' && uri !== this.#currentTrack.info.uri
+    const isJioSaavn = this.#currentTrack.source === 'jiosaavn'
 
     if (isDeezer) {
       await this.#startDeezerStream(uri)
+    } else if (isJioSaavn) {
+      await this.#startMp3Stream(uri)
     } else {
       this.#demuxer = new WebmOpusDemuxer()
       this.#demuxer.on('data', (opusPacket: Buffer) => {
@@ -271,6 +274,46 @@ export class AudioStreamer extends EventTarget {
     this.#positionInterval = setInterval(() => {
       this.#seekPosition = this.position
     }, 1000)
+  }
+
+  async #startMp3Stream(uri: string) {
+    try {
+      const mod = await import('@sonata-sdk/decoder')
+      const { detectFormat, createDecoder } = mod
+
+      const raw = await new Promise<Buffer>((resolve, reject) => {
+        const opts: https.RequestOptions = { headers: { 'User-Agent': UA } }
+        if (this.#proxyAgent) (opts as any).agent = this.#proxyAgent
+        https.get(uri, opts, (res) => {
+          if (res.statusCode !== 200) {
+            reject(new Error(`HTTP ${res.statusCode}`))
+            return
+          }
+          const chunks: Buffer[] = []
+          res.on('data', (c: Buffer) => chunks.push(c))
+          res.on('end', () => resolve(Buffer.concat(chunks)))
+        }).on('error', reject)
+      })
+
+      const data = new Uint8Array(raw)
+      let fmt = detectFormat(data)
+      if (!fmt) {
+        this.#logger?.error('streamer', 'unknown audio format for MP3 stream')
+        this.#onEnd('loadFailed')
+        return
+      }
+
+      const decoder = await createDecoder(fmt)
+      const { channelData, samplesDecoded } = await decoder.decode(data)
+      decoder.free()
+
+      const pcm = float32ToInt16(channelData, samplesDecoded)
+      this.#pcmBuffer.push(pcm)
+      this.#streamEnded = true
+    } catch (err) {
+      this.#logger?.error('streamer', `MP3 stream error: ${(err as Error).message}`)
+      this.#onEnd('loadFailed')
+    }
   }
 
   async #startDeezerStream(uri: string) {
@@ -456,7 +499,10 @@ export class AudioStreamer extends EventTarget {
       const processed = this.#mixer.apply(pcm, SAMPLE_RATE)
       frame = Buffer.from(processed.buffer as ArrayBuffer)
     }
-    this.#voice.sendPCM(frame)
+    try {
+      const opus = this.#getOpusDecoder().encode(frame, FRAME_SAMPLES)
+      this.#voice.sendOpus(Buffer.from(opus))
+    } catch {}
   }
 
   #finishCrossfade() {
@@ -511,7 +557,10 @@ export class AudioStreamer extends EventTarget {
         const processed = this.#mixer.apply(pcm, SAMPLE_RATE)
         frame = Buffer.from(processed.buffer as ArrayBuffer)
       }
-      this.#voice.sendPCM(frame)
+      try {
+        const opus = this.#getOpusDecoder().encode(frame, FRAME_SAMPLES)
+        this.#voice.sendOpus(Buffer.from(opus))
+      } catch {}
     }
   }
 

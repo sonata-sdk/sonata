@@ -10,6 +10,8 @@ export function encodeTrack(track: Track): string {
     d: track.info.duration,
     u: track.info.uri,
     s: track.source,
+    ar: track.info.artworkUrl || undefined,
+    ud: track.userData || undefined,
   })
   return Buffer.from(data).toString('base64')
 }
@@ -27,12 +29,13 @@ export function decodeTrack(encoded: string, logger?: Logger): Track | null {
         author: data.a ?? 'Unknown',
         duration: data.d ?? 0,
         uri: data.u ?? '',
-        artworkUrl: '',
+        artworkUrl: data.ar ?? '',
         sourceName: data.s ?? 'unknown',
         isStream: false,
         position: 0,
       },
       source: data.s ?? 'unknown',
+      userData: data.ud || undefined,
     }
   } catch {}
   // Try lavaclient v4 binary format

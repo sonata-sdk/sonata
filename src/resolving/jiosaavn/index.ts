@@ -52,15 +52,20 @@ interface JioSaavnSearchResult {
   results: JioSaavnSong[]
 }
 
-async function apiCall(params: Record<string, string>): Promise<any | null> {
+async function apiCall(params: Record<string, string>, timeout = 10000): Promise<any | null> {
   const qs = new URLSearchParams({ __call: '', _format: 'json', _marker: '0', cc: 'us', ...params })
-  const res = await fetch(`${API_BASE}?${qs}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' },
-  })
-  if (!res.ok) return null
-  const text = await res.text()
-  if (!text || text === 'null') return null
-  try { return JSON.parse(text) } catch { return null }
+  try {
+    const res = await fetch(`${API_BASE}?${qs}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36' },
+      signal: AbortSignal.timeout(timeout),
+    })
+    if (!res.ok) return null
+    const text = await res.text()
+    if (!text || text === 'null') return null
+    try { return JSON.parse(text) } catch { return null }
+  } catch {
+    return null
+  }
 }
 
 function extractToken(url: string): { type: string; token: string } | null {
@@ -115,9 +120,10 @@ export class JioSaavnSource implements AudioSource {
 
   async resolveTrack(identifier: string): Promise<Track | null> {
     try {
-      const res = await apiCall({ __call: 'song.getDetails', pids: identifier })
+      const decodedId = Buffer.from(identifier, 'base64url').toString()
+      const res = await apiCall({ __call: 'song.getDetails', pids: decodedId })
       if (!res) return null
-      const song: JioSaavnSong = res[identifier] || res
+      const song: JioSaavnSong = res[decodedId] || res
       if (!song?.id) return null
       return this.#make(song)
     } catch {
