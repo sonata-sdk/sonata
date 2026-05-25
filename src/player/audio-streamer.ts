@@ -316,8 +316,14 @@ export class AudioStreamer extends EventTarget {
         const size = ((data[6] & 0x7f) << 21) | ((data[7] & 0x7f) << 14) | ((data[8] & 0x7f) << 7) | (data[9] & 0x7f)
         detectOffset = 10 + size
       }
-      const fmt = detectFormat(data.subarray(detectOffset))
+      let fmt = detectFormat(data.subarray(detectOffset))
       if (!fmt) {
+        const fallback = this.#currentTrack?.userData?.fallbackUrl as string | undefined
+        if (fallback && fallback !== uri) {
+          this.#logger?.debug('streamer', `format not detected, retrying with fallbackUrl: ${fallback.substring(0, 60)}`)
+          await this.#startMp3Stream(fallback)
+          return
+        }
         this.#logger?.error('streamer', 'unknown audio format for MP3 stream')
         this.#onEnd('loadFailed')
         return
@@ -331,6 +337,12 @@ export class AudioStreamer extends EventTarget {
       this.#pcmBuffer.push(pcm)
       this.#streamEnded = true
     } catch (err) {
+      const fallback = this.#currentTrack?.userData?.fallbackUrl as string | undefined
+      if (fallback && fallback !== uri) {
+        this.#logger?.debug('streamer', `MP3 stream error, retrying with fallbackUrl: ${(err as Error).message}`)
+        await this.#startMp3Stream(fallback)
+        return
+      }
       this.#logger?.error('streamer', `MP3 stream error: ${(err as Error).message}`)
       this.#onEnd('loadFailed')
     }

@@ -18,7 +18,12 @@ function decryptMediaUrl(encrypted: string, key: string): string | null {
       const idx = url.indexOf(ext)
       if (idx !== -1) url = url.slice(0, idx + ext.length)
     }
-    return url.replace(/^http:/, 'https:')
+    url = url.replace(/^http:/, 'https:')
+    // Try to convert AAC URL to MP3 (decoder only supports MP3/FLAC)
+    if (url.includes('aac.saavncdn.com') && url.endsWith('.mp4')) {
+      url = url.replace('aac.saavncdn.com', 'mp3.saavncdn.com').replace(/_\d+\.mp4$/, '_320.mp3')
+    }
+    return url
   } catch {
     return null
   }
@@ -182,11 +187,14 @@ export class JioSaavnSource implements AudioSource {
       ?? t.music
       ?? 'Unknown'
     let audioUrl = ''
+    let fallbackUrl = ''
     if (t.encrypted_media_url && this.#decryptionKey) {
       audioUrl = decryptMediaUrl(t.encrypted_media_url, this.#decryptionKey) ?? ''
     }
     if (!audioUrl) {
       audioUrl = t.vlink ?? t.media_preview_url ?? ''
+    } else {
+      fallbackUrl = t.vlink ?? t.media_preview_url ?? ''
     }
 
     return {
@@ -203,7 +211,7 @@ export class JioSaavnSource implements AudioSource {
         position: 0,
       },
       source: 'jiosaavn',
-      userData: audioUrl ? { audioUrl } : undefined,
+      userData: audioUrl ? { audioUrl, fallbackUrl: fallbackUrl || undefined } : undefined,
     }
   }
 }
