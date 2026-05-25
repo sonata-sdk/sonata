@@ -533,6 +533,13 @@ export interface Config {
     faviconUrl?: string
     footerText?: string
   }
+  /** Proxy configuration for audio streaming */
+  proxy?: {
+    /** SOCKS5 proxy URL (e.g. socks5://127.0.0.1:40000) */
+    socks?: string
+    /** HTTP proxy URL */
+    http?: string
+  }
   /** Custom resolver behavior */
   resolving?: {
     /** Strict mode (reject unknown sources) */

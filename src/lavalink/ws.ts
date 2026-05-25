@@ -25,7 +25,9 @@ export class LavalinkWS {
   #logger: Logger | null
   #youtubeConfig: any
 
-  constructor(pm: PlayerManager, sessions: SessionManager, cfg?: { queue?: { crossfade?: number; crossfadeFadeIn?: number; crossfadeFadeOut?: number }; player?: { normalization?: boolean; normalizationTarget?: number }; youtube?: any }, logger?: Logger) {
+  #proxy: { socks?: string } | null = null
+
+  constructor(pm: PlayerManager, sessions: SessionManager, cfg?: { queue?: { crossfade?: number; crossfadeFadeIn?: number; crossfadeFadeOut?: number }; player?: { normalization?: boolean; normalizationTarget?: number }; proxy?: { socks?: string }; youtube?: any }, logger?: Logger) {
     this.pm = pm
     this.sessions = sessions
     if (cfg?.queue?.crossfade && cfg.queue.crossfade > 0) {
@@ -36,6 +38,7 @@ export class LavalinkWS {
       }
     }
     this.#youtubeConfig = cfg?.youtube || {}
+    if (cfg?.proxy?.socks) this.#proxy = { socks: cfg.proxy.socks }
     if (cfg?.player?.normalization) {
       this.#normalizationEnabled = true
       this.#normalizationTarget = cfg.player.normalizationTarget ?? -14
@@ -109,12 +112,16 @@ export class LavalinkWS {
         const existing = this.#voices.get(guildId)
         if (existing) existing.close()
 
+        const existingStreamer = this.#streamers.get(guildId)
+        if (existingStreamer) existingStreamer.stop()
+
         const vc = new VoiceConnection(guildId)
         vc.update(sessionId, event.token, event.endpoint)
         p.setVoice(vc)
         vc.connect()
 
         const dv = new DiscordVoice()
+        if (this.#logger) dv.setLogger(this.#logger)
         const userId = client.userId ?? ''
         const channelId = msg.channelId ?? guildId
         dv.connect({ guildId, userId, sessionId, token: event.token, endpoint: event.endpoint, channelId })
@@ -122,7 +129,7 @@ export class LavalinkWS {
 
         this.#voices.set(guildId, dv)
 
-        const streamer = new AudioStreamer(dv)
+        const streamer = new AudioStreamer(dv, this.#proxy ?? undefined)
         if (this.#logger) streamer.setLogger(this.#logger)
         if (this.#crossfade) streamer.setCrossfade(this.#crossfade)
         if (this.#normalizationEnabled) streamer.setNormalization(true, this.#normalizationTarget)

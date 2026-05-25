@@ -3,8 +3,6 @@ import { Transform, type TransformCallback } from 'node:stream'
 const TOO_SHORT = Symbol('TOO_SHORT')
 const INVALID_VINT = Symbol('INVALID_VINT')
 
-const OPUS_HEAD = Buffer.from([0x4f, 0x70, 0x75, 0x73, 0x48, 0x65, 0x61, 0x64])
-
 function readVintLength(buf: Buffer, index: number): number | typeof TOO_SHORT | typeof INVALID_VINT {
   if (index < 0 || index >= buf.length) return TOO_SHORT
   const firstByte = buf[index]
@@ -32,8 +30,6 @@ function readVint(buf: Buffer, start: number, end: number): bigint | typeof TOO_
   return value
 }
 
-// EBML IDs we care about
-const EBML = 0x1a45dfa3n
 const SEGMENT = 0x18538067n
 const CLUSTER = 0x1f43b675n
 const TRACKS = 0x1654ae6bn
@@ -44,24 +40,32 @@ const CODEC_ID = 0x86n
 const SIMPLE_BLOCK = 0xa3n
 const BLOCK_GROUP = 0xa0n
 const BLOCK = 0xa1n
-const TIMECODE = 0xe7n
 
 const A_OPUS = 'A_OPUS'
 
 function readEbmlId(buf: Buffer, offset: number): { id: bigint; len: number } | typeof TOO_SHORT | typeof INVALID_VINT {
   const len = readVintLength(buf, offset)
   if (len === TOO_SHORT || len === INVALID_VINT) return len
-  const val = readVint(buf, offset, offset + len)
-  if (val === TOO_SHORT) return TOO_SHORT
-  return { id: val, len }
+  let value = 0n
+  for (let i = 0; i < len; i++) {
+    const b = buf[offset + i]
+    if (b === undefined) return TOO_SHORT
+    value = (value << 8n) | BigInt(b)
+  }
+  return { id: value, len }
 }
 
 function readEbmlSize(buf: Buffer, offset: number): { size: bigint; totalLen: number } | typeof TOO_SHORT | typeof INVALID_VINT {
-  const len = readVintLength(buf, offset)
-  if (len === TOO_SHORT || len === INVALID_VINT) return len
-  const size = readVint(buf, offset, offset + len)
-  if (size === TOO_SHORT) return TOO_SHORT
-  return { size, totalLen: len }
+  const totalLen = readVintLength(buf, offset)
+  if (totalLen === TOO_SHORT || totalLen === INVALID_VINT) return totalLen
+  const value = readVint(buf, offset, offset + totalLen)
+  if (value === TOO_SHORT) return value
+  return { size: value, totalLen }
+}
+
+function isUnknownSizeValue(size: bigint, totalLen: number): boolean {
+  const allOnes = (1n << BigInt(8 * totalLen - 1)) - 1n
+  return size === allOnes
 }
 
 function isMasterElement(id: bigint): boolean {
@@ -69,210 +73,96 @@ function isMasterElement(id: bigint): boolean {
 }
 
 export class WebmOpusDemuxer extends Transform {
-  #buffer: Buffer[] = []
-  #bufferLen = 0
-  #segmentSize: bigint | null = null
-  #segmentRead = 0n
-  #clusterSize: bigint | null = null
-  #clusterRead = 0n
-  #audioTrackNum: number | null = null
+  #buf: Buffer[] = []
+  #bufLen = 0
   #foundOpus = false
+  #audioTrackNum: number | null = null
   #inCluster = false
-  #inSegment = false
 
   constructor() {
     super({ readableObjectMode: true })
   }
 
-  #ensureBuffer(minSize: number): Buffer {
-    if (this.#bufferLen >= minSize) {
-      const buf = this.#buffer.length === 1 ? this.#buffer[0] : Buffer.concat(this.#buffer, this.#bufferLen)
-      return buf
-    }
-    return Buffer.alloc(0)
+  #compact(): Buffer {
+    if (this.#buf.length <= 1) return this.#buf[0] || Buffer.alloc(0)
+    const c = Buffer.concat(this.#buf, this.#bufLen)
+    this.#buf = [c]
+    return c
   }
 
-  #consume(n: number): void {
-    let remaining = n
-    while (remaining > 0 && this.#buffer.length > 0) {
-      const chunk = this.#buffer[0]
-      if (chunk.length <= remaining) {
-        remaining -= chunk.length
-        this.#bufferLen -= chunk.length
-        this.#buffer.shift()
+  #skip(n: number): void {
+    let r = n
+    while (r > 0 && this.#buf.length > 0) {
+      const c = this.#buf[0]
+      if (c.length <= r) {
+        r -= c.length
+        this.#bufLen -= c.length
+        this.#buf.shift()
       } else {
-        this.#buffer[0] = chunk.subarray(remaining)
-        this.#bufferLen -= remaining
-        remaining = 0
+        this.#buf[0] = c.subarray(r)
+        this.#bufLen -= r
+        r = 0
       }
     }
-  }
-
-  #readTag(): { id: bigint; idLen: number; size: bigint; sizeLen: number; data: Buffer | null } | typeof TOO_SHORT | typeof INVALID_VINT | null {
-    if (this.#bufferLen < 2) return TOO_SHORT
-
-    const buf = this.#ensureBuffer(this.#bufferLen)
-
-    let offset = 0
-    const ebmlId = readEbmlId(buf, offset)
-    if (ebmlId === TOO_SHORT) return TOO_SHORT
-    if (ebmlId === INVALID_VINT) {
-      this.#consume(1)
-      return null
-    }
-    offset += ebmlId.len
-
-    if (offset >= buf.length) return TOO_SHORT
-
-    const sizeInfo = readEbmlSize(buf, offset)
-    if (sizeInfo === TOO_SHORT) return TOO_SHORT
-    if (sizeInfo === INVALID_VINT) {
-      this.#consume(1)
-      return null
-    }
-    offset += sizeInfo.totalLen
-
-    const totalHeaderLen = offset
-    const dataLen = Number(sizeInfo.size)
-
-    // If data size is unknown (all 1s), read til end of parent
-    const isUnknownSize = sizeInfo.size === (1n << BigInt(7 * sizeInfo.totalLen)) - 1n
-
-    const totalLen = isUnknownSize ? buf.length : totalHeaderLen + dataLen
-    if (buf.length < totalLen) return TOO_SHORT
-
-    let data: Buffer | null = null
-    if (!isMasterElement(ebmlId.id) && !isUnknownSize) {
-      data = buf.subarray(totalHeaderLen, totalHeaderLen + dataLen)
-    }
-
-    const result = { id: ebmlId.id, idLen: ebmlId.len, size: sizeInfo.size, sizeLen: sizeInfo.totalLen, data }
-
-    // Consume all bytes including the element data
-    const consumeLen = isUnknownSize ? buf.length : totalHeaderLen + dataLen
-    this.#consume(consumeLen)
-
-    return result
   }
 
   override _transform(chunk: Buffer, _encoding: BufferEncoding, done: TransformCallback): void {
-    this.#buffer.push(chunk)
-    this.#bufferLen += chunk.length
+    this.#buf.push(chunk)
+    this.#bufLen += chunk.length
 
-    while (true) {
-      const tag = this.#readTag()
-      if (tag === TOO_SHORT) break
-      if (tag === INVALID_VINT) continue
-      if (tag === null) continue
+    while (this.#bufLen > 0) {
+      const buf = this.#compact()
+      if (buf.length < 2) break
 
-      const { id, size, data } = tag
+      const ebmlId = readEbmlId(buf, 0)
+      if (ebmlId === TOO_SHORT) break
+      if (ebmlId === INVALID_VINT) { this.#skip(1); continue }
 
-      if (id === EBML) {
-        // EBML header, skip
+      const sizeInfo = readEbmlSize(buf, ebmlId.len)
+      if (sizeInfo === TOO_SHORT) break
+      if (sizeInfo === INVALID_VINT) { this.#skip(1); continue }
+
+      const id = ebmlId.id
+      const headerLen = ebmlId.len + sizeInfo.totalLen
+      const isUnk = isUnknownSizeValue(sizeInfo.size, sizeInfo.totalLen)
+      const dataLen = isUnk ? 0 : Number(sizeInfo.size)
+      const totalLen = headerLen + dataLen
+      const isMaster = isMasterElement(id)
+
+      if (!isMaster && !isUnk && buf.length < totalLen) break
+
+      if (isMaster) {
+        this.#skip(headerLen)
+        if (id === CLUSTER) this.#inCluster = true
         continue
       }
 
-      if (id === SEGMENT) {
-        this.#inSegment = true
-        this.#segmentSize = size
-        this.#segmentRead = 0n
-        continue
-      }
+      this.#skip(totalLen)
 
-      if (id === TRACKS && data) {
-        // Parse tracks to find the Opus audio track
-        this.#parseTracks(data)
-        continue
-      }
-
-      if (id === CLUSTER) {
-        this.#inCluster = true
-        this.#clusterSize = size
-        this.#clusterRead = 0n
-        continue
-      }
-
-      if (id === SIMPLE_BLOCK && this.#audioTrackNum !== null && data && this.#inCluster) {
-        this.#emitBlock(data)
-        continue
-      }
-
-      if (id === BLOCK && this.#audioTrackNum !== null && data && this.#inCluster) {
-        this.#emitBlock(data)
-        continue
+      if (id === TRACK_NUMBER && this.#audioTrackNum === null) {
+        let val = 0n
+        for (let i = headerLen; i < headerLen + dataLen; i++) {
+          val = (val << 8n) | BigInt(buf[i])
+        }
+        this.#audioTrackNum = Number(val)
+      } else if (id === CODEC_ID) {
+        const codec = buf.subarray(headerLen, headerLen + dataLen).toString()
+        if (codec === A_OPUS) this.#foundOpus = true
+      } else if ((id === SIMPLE_BLOCK || id === BLOCK) && this.#audioTrackNum !== null && this.#inCluster) {
+        const block = buf.subarray(headerLen, headerLen + dataLen)
+        if (block.length >= 4) {
+          const vlen = readVintLength(block, 0)
+          if (typeof vlen === 'number' && block.length > vlen + 3) {
+            const dec = readVint(block, 0, vlen)
+            const match = typeof dec !== 'symbol' && Number(dec) === this.#audioTrackNum
+            if (match) {
+              this.push(block.subarray(vlen + 3))
+            }
+          }
+        }
       }
     }
 
     done()
-  }
-
-  #emitBlock(data: Buffer): void {
-    if (data.length < 4) return
-    const trackNum = (data[0] & 0x0f)
-    if (trackNum !== this.#audioTrackNum) return
-    // Skip block header (track number + timestamp(2) + flags(1) = 4 bytes)
-    const opusData = data.subarray(4)
-    if (opusData.length > 0) {
-      this.push(opusData)
-    }
-  }
-
-  #parseTracks(data: Buffer): void {
-    let offset = 0
-    if (offset >= data.length) return
-    const { idLen, sizeLen } = this.#readIdSize(data, offset)
-    if (idLen === -1) return
-    offset += idLen + sizeLen
-    // This re-uses the same buffer, need to parse manually
-    // Simpler: iterate through track entries
-    let inTrack = false
-    let trackNum = 0
-    let trackType = 0
-    let codec = ''
-
-    while (offset < data.length) {
-      if (data[offset] === undefined) break
-      const tmp = readVintLength(data, offset)
-      if (typeof tmp !== 'number') break
-      const tid = readVint(data, offset, offset + tmp)
-      offset += tmp
-      if (tid === TOO_SHORT) break
-      const tmp2 = readVintLength(data, offset)
-      if (typeof tmp2 !== 'number') break
-      const tsize = readVint(data, offset, offset + tmp2)
-      offset += tmp2
-      if (tsize === TOO_SHORT) break
-      const tsizeN = Number(tsize)
-
-      if (tid === TRACK_ENTRY) {
-        if (inTrack && this.#foundOpus && trackType === 2 && codec === A_OPUS) {
-          this.#audioTrackNum = trackNum
-          return
-        }
-        inTrack = true
-        trackNum = 0
-        trackType = 0
-        codec = ''
-      } else if (inTrack) {
-        if (tid === TRACK_NUMBER && data[offset] !== undefined) {
-          trackNum = data[offset]
-        } else if (tid === TRACK_TYPE && data[offset] !== undefined) {
-          trackType = data[offset]
-        } else if (tid === CODEC_ID) {
-          const end = Math.min(offset + tsizeN, data.length)
-          codec = data.subarray(offset, end).toString()
-          if (codec === A_OPUS) this.#foundOpus = true
-        }
-      }
-      offset += tsizeN
-    }
-  }
-
-  #readIdSize(buf: Buffer, offset: number): { idLen: number; sizeLen: number } {
-    const idLen = readVintLength(buf, offset)
-    if (typeof idLen !== 'number') return { idLen: -1, sizeLen: -1 }
-    const sizeLen = readVintLength(buf, offset + idLen)
-    if (typeof sizeLen !== 'number') return { idLen: -1, sizeLen: -1 }
-    return { idLen, sizeLen }
   }
 }

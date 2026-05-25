@@ -60,14 +60,14 @@ export class DeezerSource implements AudioSource {
         const res = await fetch(`${API_BASE}/album/${id}`)
         if (!res.ok) return []
         const data: DeezerAlbum = await res.json()
-        return (data.tracks?.data ?? []).slice(0, 50).map((t) => this.#make(t))
+        return (data.tracks?.data ?? []).slice(0, 50).map(t => this.#make(t))
       }
 
       if (type === 'playlist') {
         const res = await fetch(`${API_BASE}/playlist/${id}`)
         if (!res.ok) return []
         const data: DeezerPlaylist = await res.json()
-        return (data.tracks?.data ?? []).slice(0, 50).map((t) => this.#make(t))
+        return (data.tracks?.data ?? []).slice(0, 50).map(t => this.#make(t))
       }
 
       return []

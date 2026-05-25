@@ -3,7 +3,7 @@ import { MirrorResolver } from './mirror.js'
 import type { Track, LoadTracksResult } from '../types/index.js'
 
 interface ResolverConfig {
-  youtube: { enabled: boolean; clientProfiles?: string[]; proxy?: string; apiKey?: string; clientName?: string; timeout?: number; maxResults?: number; fetchPlayerJS?: boolean }
+  youtube: { enabled: boolean; clientProfiles?: string[]; proxy?: string; apiKey?: string; clientName?: string; timeout?: number; maxResults?: number; fetchPlayerJS?: boolean; oauth?: { getOAuthToken?: boolean; refreshToken?: string }; cipher?: { url?: string; token?: string }; poToken?: { service?: string; token?: string }; playerUrl?: string }
   soundcloud: { enabled: boolean; clientId?: string; apiUrl?: string; resolveRedirects?: boolean; timeout?: number }
   spotify: { enabled: boolean; clientId: string; clientSecret: string; market?: string; country?: string; maxPlaylistTracks?: number; resolverFlavor?: string; retryCount?: number }
   bandcamp?: boolean

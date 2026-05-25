@@ -1,3 +1,5 @@
+import https from 'node:https'
+import { SocksProxyAgent } from 'socks-proxy-agent'
 import type { YouTubeFormat as YTFormat } from './cipher.js'
 import { extractStreamUrl, selectBestAudioFormat, resolveUrlWithCipher } from './cipher.js'
 import { getOAuthAccessToken } from './oauth.js'
@@ -96,19 +98,57 @@ export interface YouTubeClientConfig {
 export class InnerTubeClient {
   #profiles: ClientProfile[]
   #config?: YouTubeClientConfig
+  #agent: SocksProxyAgent | null = null
 
   constructor(clientProfiles?: string[], private proxy?: string, config?: YouTubeClientConfig) {
     this.#config = config
     this.#profiles = clientProfiles?.length
       ? clientProfiles.map(name => CLIENTS[name]).filter(Boolean)
       : [CLIENTS.ANDROID_VR, CLIENTS.ANDROID, CLIENTS.IOS, CLIENTS.WEB, CLIENTS.TV, CLIENTS.MUSIC]
+    if (proxy) {
+      try { this.#agent = new SocksProxyAgent(proxy) } catch {}
+    }
+  }
+
+  async #fetch(url: string, options: RequestInit = {}): Promise<Response> {
+    if (!this.#agent) return fetch(url, options)
+    const urlObj = new URL(url)
+    const headers = (options.headers as Record<string, string>) ?? {}
+    const body = options.body as string | undefined
+    const isPost = options.method === 'POST' || (!options.method && body)
+    return new Promise((resolve, reject) => {
+      const reqOpts: https.RequestOptions = {
+        hostname: urlObj.hostname,
+        port: urlObj.port || 443,
+        path: urlObj.pathname + urlObj.search,
+        method: isPost ? 'POST' : 'GET',
+        headers,
+        agent: this.#agent! as any,
+      }
+      const req = https.request(reqOpts, (res) => {
+        const chunks: Buffer[] = []
+        res.on('data', (c: Buffer) => chunks.push(c))
+        res.on('end', () => {
+          const body = Buffer.concat(chunks)
+          resolve(new Response(body, {
+            status: res.statusCode,
+            statusText: res.statusMessage,
+            headers: new Headers(res.headers as Record<string, string>),
+          }))
+        })
+      })
+      req.on('error', reject)
+      if (body) req.write(body)
+      req.end()
+    })
   }
 
   async search(query: string): Promise<InnerTubeSearchResult[]> {
     for (const client of this.#profiles) {
       try {
-        return await this.#searchWithClient(query, client)
-      } catch { continue }
+        const results = await this.#searchWithClient(query, client)
+        if (results.length > 0) return results
+      } catch { }
     }
     return []
   }
@@ -116,8 +156,9 @@ export class InnerTubeClient {
   async getVideo(videoId: string): Promise<InnerTubeVideo | null> {
     for (const client of this.#profiles) {
       try {
-        return await this.#getVideoWithClient(videoId, client)
-      } catch { continue }
+        const result = await this.#getVideoWithClient(videoId, client)
+        if (result) return result
+      } catch { }
     }
     return null
   }
@@ -164,7 +205,7 @@ export class InnerTubeClient {
       racyCheckOk: true,
     }
 
-    const res = await fetch(`${BASE_URL}/search`, {
+    const res = await this.#fetch(`${BASE_URL}/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'User-Agent': client.userAgent },
       body: JSON.stringify(body),
@@ -209,7 +250,7 @@ export class InnerTubeClient {
       }
     }
 
-    const res = await fetch(`${BASE_URL}/player`, {
+    const res = await this.#fetch(`${BASE_URL}/player`, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -222,6 +263,8 @@ export class InnerTubeClient {
     if (playStatus !== 'OK') {
       throw new Error(`InnerTube player not OK: ${playStatus}`)
     }
+
+
 
     const hasFormats = (data?.streamingData?.formats?.length ?? 0) > 0
       || (data?.streamingData?.adaptiveFormats?.length ?? 0) > 0
@@ -245,7 +288,7 @@ export class InnerTubeClient {
       },
     }
 
-    const res = await fetch(`${BASE_URL}/browse`, {
+    const res = await this.#fetch(`${BASE_URL}/browse`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'User-Agent': client.userAgent },
       body: JSON.stringify(body),
@@ -270,7 +313,7 @@ export class InnerTubeClient {
       },
     }
 
-    const res = await fetch(`${BASE_URL}/next`, {
+    const res = await this.#fetch(`${BASE_URL}/next`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'User-Agent': client.userAgent },
       body: JSON.stringify(body),
@@ -298,7 +341,7 @@ export class InnerTubeClient {
       racyCheckOk: true,
     }
 
-    const res = await fetch(`${BASE_URL}/search`, {
+    const res = await this.#fetch(`${BASE_URL}/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'User-Agent': client.userAgent },
       body: JSON.stringify(body),
@@ -379,11 +422,32 @@ export class InnerTubeClient {
   #parseSearchResults(data: any): InnerTubeSearchResult[] {
     const results: InnerTubeSearchResult[] = []
 
+    const extractTile = (item: any) => {
+      const tr = item?.tileRenderer
+      if (!tr) return false
+      const header = tr?.header?.tileHeaderRenderer
+      if (!header) return false
+      const vid = tr?.onTap?.watchEndpoint?.videoId || tr?.navigationEndpoint?.watchEndpoint?.videoId
+      if (!vid) return false
+      // from metadata or from onTap
+      const meta = tr?.metadata?.tileMetadataRenderer
+      const dur = header?.thumbnailOverlays?.[0]?.thumbnailOverlayTimeStatusRenderer?.text?.simpleText ?? '0:00'
+      results.push({
+        videoId: vid,
+        title: meta?.title?.simpleText ?? meta?.title?.runs?.[0]?.text ?? 'Unknown',
+        author: meta?.subtitle?.simpleText ?? meta?.subtitle?.runs?.[0]?.text ?? 'Unknown',
+        duration: this.#parseDuration(dur),
+        thumbnail: header?.thumbnail?.thumbnails?.[header.thumbnail.thumbnails.length - 1]?.url ?? '',
+      })
+      return true
+    }
+
     const tryExtract = (contents: any[]) => {
       if (!contents) return false
       for (const section of contents) {
         const items = section?.itemSectionRenderer?.contents ?? []
         for (const item of items) {
+          if (extractTile(item)) continue
           const lockup = item?.lockupViewModel
           if (lockup && lockup.contentId && lockup.contentType !== 'LOCKUP_CONTENT_TYPE_PLAYLIST') {
             const meta = lockup?.metadata?.lockupMetadataViewModel
@@ -413,6 +477,32 @@ export class InnerTubeClient {
             thumbnail: video?.thumbnail?.thumbnails?.[video.thumbnail.thumbnails.length - 1]?.url ?? '',
           })
         }
+        // TVHTML5 shelfRenderer format
+        const shelf = section?.shelfRenderer
+        if (shelf) {
+          const content = shelf?.content
+          const list = content?.horizontalListRenderer || content?.verticalListRenderer
+          if (list?.items) {
+            for (const item of list.items) {
+              if (extractTile(item)) continue
+              const lockup = item?.lockupViewModel
+              if (lockup && lockup.contentId && lockup.contentType !== 'LOCKUP_CONTENT_TYPE_PLAYLIST') {
+                const meta = lockup?.metadata?.lockupMetadataViewModel
+                const contentMeta = meta?.metadata?.contentMetadataViewModel
+                const rows = contentMeta?.metadataRows ?? []
+                const durationText = rows.map((r: any) => r.metadataParts?.map((p: any) => p?.text?.content).join('')).join(' ') ?? ''
+                results.push({
+                  videoId: lockup.contentId,
+                  title: meta?.title?.content ?? 'Unknown',
+                  author: rows[0]?.metadataParts?.[0]?.text?.content ?? 'Unknown',
+                  duration: this.#parseDuration(durationText),
+                  thumbnail: lockup?.contentImage?.lockupContentImageViewModel?.contentThumbnailViewModel?.image?.sources?.[0]?.url ?? '',
+                })
+                continue
+              }
+            }
+          }
+        }
       }
       return results.length > 0
     }
@@ -421,8 +511,9 @@ export class InnerTubeClient {
       if (tryExtract(data?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents)) return results
       const sections = data?.contents?.sectionListRenderer?.contents
       if (sections) {
-        const last = sections[sections.length - 1]
-        if (tryExtract([last])) return results
+        for (const section of sections) {
+          if (tryExtract([section])) return results
+        }
       }
     } catch {}
     return results

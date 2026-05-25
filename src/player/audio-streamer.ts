@@ -1,8 +1,10 @@
 import https from 'node:https'
 import http from 'node:http'
+import { SocksProxyAgent } from 'socks-proxy-agent'
 import { DiscordVoice } from '../discord/voice.js'
 import { AudioMixer } from '../audio/mixer.js'
 import { WebmOpusDemuxer } from './webm-demuxer.js'
+import { decryptDeezerBuffer } from './blowfish.js'
 import type { Track } from '../types/index.js'
 import type { Logger } from '../utils/logger.js'
 import { createRequire } from 'node:module'
@@ -18,10 +20,24 @@ const FRAME_SAMPLES = 960
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
 
+const PREBUFFER_FRAMES = 96 // ~2 seconds of audio pre-buffer
+
 interface CrossfadeConfig {
   duration: number
   fadeIn: number
   fadeOut: number
+}
+
+function float32ToInt16(channelData: Float32Array[], samplesDecoded: number): Buffer {
+  const channels = channelData.length
+  const buf = Buffer.alloc(samplesDecoded * channels * 2)
+  for (let s = 0; s < samplesDecoded; s++) {
+    for (let c = 0; c < channels; c++) {
+      const val = Math.max(-1, Math.min(1, channelData[c][s] ?? 0))
+      buf.writeInt16LE(Math.round(val * 32767), (s * channels + c) * 2)
+    }
+  }
+  return buf
 }
 
 function applyFade(buf: Buffer, sampleCount: number, totalFadeSamples: number, fadeIn: boolean): Buffer {
@@ -46,6 +62,7 @@ export class AudioStreamer extends EventTarget {
   #nextTrack: Track | null = null
   #playing = false
   #paused = false
+  #prebuffering = true
   #position = 0
   #startTime = 0
   #seekPosition = 0
@@ -69,11 +86,17 @@ export class AudioStreamer extends EventTarget {
   #streamEnded = false
   #nextStreamEnded = false
 
-  constructor(voice: DiscordVoice) {
+  #proxyAgent: SocksProxyAgent | null = null
+
+  constructor(voice: DiscordVoice, proxy?: { socks?: string }) {
     super()
     this.#voice = voice
     this.#mixer = new AudioMixer()
+    if (proxy?.socks) {
+      try { this.#proxyAgent = new SocksProxyAgent(proxy.socks) } catch {}
+    }
     voice.addEventListener('ready', () => {
+      this.#logger?.debug('streamer', `voice ready, currentTrack=${!!this.#currentTrack} playing=${this.#playing}`)
       if (this.#currentTrack && !this.#playing) this.#startStream()
     })
   }
@@ -128,7 +151,7 @@ export class AudioStreamer extends EventTarget {
     this.#nextDemuxer = new WebmOpusDemuxer()
     this.#nextDemuxer.on('data', (opusPacket: Buffer) => {
       try {
-        const pcm = this.#getOpusDecoder().decode(opusPacket)
+          const pcm = this.#getOpusDecoder().decode(opusPacket)
         this.#nextPcmBuffer.push(Buffer.from(pcm))
       } catch {}
     })
@@ -137,13 +160,11 @@ export class AudioStreamer extends EventTarget {
     })
     this.#nextDemuxer.on('error', () => {})
 
-    const opts = new URL(uri)
-    const req = (opts.protocol === 'https:' ? https : http).get(opts, {
-      headers: {
-        'User-Agent': UA,
-        'Referer': 'https://www.youtube.com',
-      },
-    }, (res) => {
+    const xfOpts = { headers: { 'User-Agent': UA, 'Referer': 'https://www.youtube.com' } } as any
+    if (this.#proxyAgent) xfOpts.agent = this.#proxyAgent
+    const parsedUrl = new URL(uri)
+    const mod = parsedUrl.protocol === 'https:' ? https : http
+    const req = mod.get(uri, xfOpts, (res: http.IncomingMessage) => {
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.destroy()
         this.#startHttpsStream(res.headers.location, true)
@@ -185,7 +206,7 @@ export class AudioStreamer extends EventTarget {
     this.#startStream()
   }
 
-  #startStream() {
+  async #startStream() {
     if (!this.#currentTrack) return
 
     const uri = this.#currentTrack.userData?.audioUrl as string ?? this.#currentTrack.info.uri
@@ -194,46 +215,55 @@ export class AudioStreamer extends EventTarget {
       return
     }
 
-    this.#logger?.debug('streamer', `starting HTTP stream for ${uri}`)
+    this.#logger?.debug('streamer', `starting HTTP stream for ${uri?.substring(0, 80)}`)
 
     this.#playing = true
+    this.#prebuffering = true
     this.#startTime = Date.now()
     this.#streamEnded = false
     this.#pcmBuffer = []
 
     this.dispatchEvent(new CustomEvent('start', { detail: { track: this.#currentTrack } }))
 
-    this.#demuxer = new WebmOpusDemuxer()
-    this.#demuxer.on('data', (opusPacket: Buffer) => {
-      if (this.#paused) return
-      try {
-        const pcm = this.#getOpusDecoder().decode(opusPacket)
-        this.#pcmBuffer.push(Buffer.from(pcm))
-      } catch {}
-    })
-    this.#demuxer.on('end', () => {
-      this.#logger?.debug('streamer', `demuxer stream ended`)
-      this.#streamEnded = true
-    })
-    this.#demuxer.on('error', () => {})
+    const isDeezer = this.#currentTrack.source === 'deezer' && uri !== this.#currentTrack.info.uri
 
-    this.#startHttpsStream(uri, false)
+    if (isDeezer) {
+      await this.#startDeezerStream(uri)
+    } else {
+      this.#demuxer = new WebmOpusDemuxer()
+      this.#demuxer.on('data', (opusPacket: Buffer) => {
+        if (this.#paused) return
+        this.#voice.sendOpus(opusPacket)
+      })
+      this.#demuxer.on('end', () => {
+        this.#logger?.debug('streamer', `demuxer stream ended`)
+        this.#streamEnded = true
+      })
+      this.#demuxer.on('error', () => {})
+      this.#startHttpsStream(uri, false)
+    }
 
+    this.#logger?.debug('streamer', 'starting sendInterval')
+    this.#prebuffering = true
     this.#sendInterval = setInterval(() => {
       if (this.#paused || !this.#playing) return
-      if (this.#pcmBuffer.length === 0) {
-        if (this.#streamEnded) {
-          if (this.#isCrossfading) {
-            this.#finishCrossfade()
-          } else {
-            this.#onEnd('finished')
-          }
+      if (this.#prebuffering) {
+        // Pre-buffer handled by connection's internal queue
+        // Just wait for the stream to buffer enough
+        this.#prebuffering = false
+        return
+      }
+      if (this.#pcmBuffer.length === 0 && this.#streamEnded) {
+        if (this.#isCrossfading) {
+          this.#finishCrossfade()
+        } else {
+          this.#onEnd('finished')
         }
         return
       }
       if (this.#isCrossfading && this.#nextPcmBuffer.length > 0) {
         this.#sendCrossfadeFrame()
-      } else {
+      } else if (this.#pcmBuffer.length > 0) {
         this.#sendNextFrame()
       }
     }, FRAME_DURATION)
@@ -243,13 +273,65 @@ export class AudioStreamer extends EventTarget {
     }, 1000)
   }
 
+  async #startDeezerStream(uri: string) {
+    try {
+      const mod = await import('@sonata-sdk/decoder')
+      const { detectFormat, createDecoder } = mod
+
+      const raw = await new Promise<Buffer>((resolve, reject) => {
+        const opts: https.RequestOptions = { headers: { 'User-Agent': UA } }
+        if (this.#proxyAgent) (opts as any).agent = this.#proxyAgent
+        https.get(uri, opts, (res) => {
+          if (res.statusCode !== 200) {
+            reject(new Error(`HTTP ${res.statusCode}`))
+            return
+          }
+          const chunks: Buffer[] = []
+          res.on('data', (c: Buffer) => chunks.push(c))
+          res.on('end', () => resolve(Buffer.concat(chunks)))
+        }).on('error', reject)
+      })
+
+      const trackId = this.#currentTrack!.info.identifier
+
+      let data: Uint8Array
+      let fmt = detectFormat(new Uint8Array(raw))
+
+      if (fmt) {
+        data = new Uint8Array(raw)
+      } else {
+        const decrypted = decryptDeezerBuffer(raw, trackId)
+        data = new Uint8Array(decrypted)
+        fmt = detectFormat(data)
+        if (!fmt) {
+          this.#logger?.error('streamer', 'unknown deezer audio format')
+          this.#onEnd('loadFailed')
+          return
+        }
+      }
+
+      const decoder = await createDecoder(fmt)
+      const { channelData, samplesDecoded } = await decoder.decode(data)
+      decoder.free()
+
+      const pcm = float32ToInt16(channelData, samplesDecoded)
+      this.#pcmBuffer.push(pcm)
+      this.#streamEnded = true
+    } catch (err) {
+      this.#logger?.error('streamer', `Deezer stream error: ${(err as Error).message}`)
+      this.#onEnd('loadFailed')
+    }
+  }
+
   #startHttpsStream(uri: string, isNext: boolean) {
-    const req = https.get(uri, {
+    const opts: https.RequestOptions & { agent?: any } = {
       headers: {
         'User-Agent': UA,
         'Referer': 'https://www.youtube.com',
       },
-    }, (res) => {
+    }
+    if (this.#proxyAgent) opts.agent = this.#proxyAgent
+    const req = https.get(uri, opts, (res) => {
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.destroy()
         this.#startHttpsStream(res.headers.location, isNext)
@@ -260,8 +342,17 @@ export class AudioStreamer extends EventTarget {
         if (!isNext) this.#onEnd('loadFailed')
         return
       }
+      this.#logger?.debug('streamer', `HTTP 200 for ${uri?.substring(0, 80)}...`)
       const targetDemuxer = isNext ? this.#nextDemuxer : this.#demuxer
-      if (targetDemuxer) res.pipe(targetDemuxer)
+      if (targetDemuxer) {
+        let httpBytes = 0
+        res.on('data', (c: Buffer) => {
+          httpBytes += c.length
+          if (httpBytes % 65536 < c.length) this.#logger?.debug('streamer', `HTTP received ${httpBytes} bytes total`)
+        })
+        res.on('end', () => this.#logger?.debug('streamer', `HTTP response ended, total=${httpBytes} bytes`))
+        res.pipe(targetDemuxer)
+      }
     })
     req.on('error', (err) => {
       this.#logger?.error('streamer', `HTTP error: ${err.message}`)

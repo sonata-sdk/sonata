@@ -21,7 +21,7 @@ const logger = createLogger(cfg.logging)
 
 const resolver = new Resolver()
 await resolver.init({
-  youtube: cfg.sources.youtube,
+  youtube: { ...cfg.sources.youtube, proxy: cfg.proxy?.socks || cfg.sources.youtube?.proxy },
   soundcloud: cfg.sources.soundcloud,
   spotify: cfg.sources.spotify,
   bandcamp: cfg.sources.bandcamp?.enabled,
@@ -89,7 +89,8 @@ const pm = new PlayerManager({
   },
 }, Boolean(cfg.player?.stickyQueue), cfg.player?.stickyQueueFile ?? '')
 
-const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player, youtube: cfg.sources?.youtube }, logger)
+if (cfg.proxy?.socks) logger.info('proxy', `SOCKS5 proxy: ${cfg.proxy.socks}`)
+const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player, proxy: cfg.proxy, youtube: cfg.sources?.youtube }, logger)
 
 // Auto-leave (voice activity detection)
 if (cfg.player?.autoLeaveMs && cfg.player.autoLeaveMs > 0) {

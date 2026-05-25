@@ -161,6 +161,10 @@ const DEFAULTS: Config = {
     electionStrategy: 'manual',
   },
   shutdownDelay: 10_000,
+  proxy: {
+    socks: '',
+    http: '',
+  },
   dashboard: {
     title: 'Sonata',
     theme: 'dark',
