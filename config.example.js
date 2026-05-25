@@ -100,7 +100,7 @@ export default {
     bandcamp:  { enabled: true, quality: 'high',  timeout: 10_000 },
     twitch:    { enabled: true, quality: 'source', timeout: 10_000 },
     vimeo:     { enabled: true, quality: 'best',   timeout: 10_000 },
-    deezer:    { enabled: true, quality: 'MP3_320', timeout: 10_000 },
+    deezer:    { enabled: true, quality: 'MP3_320', timeout: 10_000, arl: '', proxy: '' },
     apple:     { enabled: true, quality: 'high',    timeout: 10_000, storefront: 'us' },
     nico:      { enabled: true, quality: 'best',    timeout: 10_000 },
     mixcloud:  { enabled: true, quality: 'best',    timeout: 10_000 },

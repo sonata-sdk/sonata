@@ -27,7 +27,7 @@ await resolver.init({
   bandcamp: cfg.sources.bandcamp?.enabled,
   twitch: cfg.sources.twitch?.enabled,
   vimeo: cfg.sources.vimeo?.enabled,
-  deezer: cfg.sources.deezer?.enabled,
+  deezer: cfg.sources.deezer,
   apple: cfg.sources.apple?.enabled,
   nico: cfg.sources.nico?.enabled,
   mixcloud: cfg.sources.mixcloud?.enabled,

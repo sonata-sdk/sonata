@@ -9,7 +9,7 @@ interface ResolverConfig {
   bandcamp?: boolean
   twitch?: boolean
   vimeo?: boolean
-  deezer?: boolean
+  deezer?: { enabled: boolean; arl?: string; proxy?: string }
   apple?: boolean
   nico?: boolean
   mixcloud?: boolean
