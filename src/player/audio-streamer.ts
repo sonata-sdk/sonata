@@ -85,6 +85,7 @@ export class AudioStreamer extends EventTarget {
   #nextDemuxer: WebmOpusDemuxer | null = null
   #streamEnded = false
   #nextStreamEnded = false
+  #pcmSource = false
 
   #proxyAgent: SocksProxyAgent | null = null
 
@@ -98,6 +99,11 @@ export class AudioStreamer extends EventTarget {
     voice.addEventListener('ready', () => {
       this.#logger?.debug('streamer', `voice ready, currentTrack=${!!this.#currentTrack} playing=${this.#playing}`)
       if (this.#currentTrack && !this.#playing) this.#startStream()
+    })
+    voice.addEventListener('finished', () => {
+      if (!this.#playing) return
+      this.#logger?.debug('streamer', 'voice finished')
+      this.#onEnd('finished')
     })
   }
 
@@ -222,6 +228,7 @@ export class AudioStreamer extends EventTarget {
     this.#startTime = Date.now()
     this.#streamEnded = false
     this.#pcmBuffer = []
+    this.#pcmSource = false
 
     this.dispatchEvent(new CustomEvent('start', { detail: { track: this.#currentTrack } }))
 
@@ -229,8 +236,10 @@ export class AudioStreamer extends EventTarget {
     const isJioSaavn = this.#currentTrack.source === 'jiosaavn'
 
     if (isDeezer) {
+      this.#pcmSource = true
       await this.#startDeezerStream(uri)
     } else if (isJioSaavn) {
+      this.#pcmSource = true
       await this.#startMp3Stream(uri)
     } else {
       this.#demuxer = new WebmOpusDemuxer()
@@ -259,6 +268,8 @@ export class AudioStreamer extends EventTarget {
       if (this.#pcmBuffer.length === 0 && this.#streamEnded) {
         if (this.#isCrossfading) {
           this.#finishCrossfade()
+        } else if (this.#pcmSource) {
+          this.#voice.finishBuffering()
         } else {
           this.#onEnd('finished')
         }
@@ -282,9 +293,9 @@ export class AudioStreamer extends EventTarget {
       const { detectFormat, createDecoder } = mod
 
       const raw = await new Promise<Buffer>((resolve, reject) => {
-        const opts: https.RequestOptions = { headers: { 'User-Agent': UA } }
+        const opts: https.RequestOptions = { headers: { 'User-Agent': UA }, timeout: 15000 }
         if (this.#proxyAgent) (opts as any).agent = this.#proxyAgent
-        https.get(uri, opts, (res) => {
+        const req = https.get(uri, opts, (res) => {
           if (res.statusCode !== 200) {
             reject(new Error(`HTTP ${res.statusCode}`))
             return
@@ -292,11 +303,20 @@ export class AudioStreamer extends EventTarget {
           const chunks: Buffer[] = []
           res.on('data', (c: Buffer) => chunks.push(c))
           res.on('end', () => resolve(Buffer.concat(chunks)))
-        }).on('error', reject)
+        })
+        req.on('error', reject)
+        req.on('timeout', () => { req.destroy(); reject(new Error('timeout')) })
       })
 
+      this.#logger?.debug('streamer', `MP3 download complete: ${raw.length} bytes`)
       const data = new Uint8Array(raw)
-      let fmt = detectFormat(data)
+      // Skip ID3v2 header for format detection (MP3 sync word comes after metadata)
+      let detectOffset = 0
+      if (data.length >= 10 && data[0] === 0x49 && data[1] === 0x44 && data[2] === 0x33) {
+        const size = ((data[6] & 0x7f) << 21) | ((data[7] & 0x7f) << 14) | ((data[8] & 0x7f) << 7) | (data[9] & 0x7f)
+        detectOffset = 10 + size
+      }
+      const fmt = detectFormat(data.subarray(detectOffset))
       if (!fmt) {
         this.#logger?.error('streamer', 'unknown audio format for MP3 stream')
         this.#onEnd('loadFailed')

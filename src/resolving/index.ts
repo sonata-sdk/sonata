@@ -15,7 +15,7 @@ interface ResolverConfig {
   mixcloud?: boolean
   podcast?: boolean
   tiktok?: boolean
-  jiosaavn?: boolean
+  jiosaavn?: { enabled: boolean; decryptionKey?: string }
   http?: boolean
   local?: boolean
 }
@@ -115,12 +115,19 @@ export class Resolver {
     await this.#registerOptional(config.jiosaavn, './jiosaavn/index.js', 'JioSaavnSource')
   }
 
-  async #registerOptional(enabled: boolean | undefined, path: string, className: string) {
-    if (!enabled) return
+  async #registerOptional(enabled: boolean | { enabled: boolean } | undefined, path: string, className: string) {
+    const isEnabled = typeof enabled === 'object' ? enabled.enabled : enabled
+    if (!isEnabled) return
     try {
       const mod = await import(path)
       const SourceClass = mod[className]
-      if (SourceClass) this.#sourceManager.register(new SourceClass())
+      if (SourceClass) {
+        const instance = typeof enabled === 'object' ? new SourceClass(enabled) : new SourceClass()
+        if (typeof enabled === 'object' && typeof instance.configure === 'function') {
+          instance.configure(enabled)
+        }
+        this.#sourceManager.register(instance)
+      }
     } catch {}
   }
 }

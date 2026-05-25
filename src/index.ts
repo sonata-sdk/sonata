@@ -33,7 +33,7 @@ await resolver.init({
   mixcloud: cfg.sources.mixcloud?.enabled,
   podcast: cfg.sources.podcast?.enabled,
   tiktok: cfg.sources.tiktok?.enabled,
-  jiosaavn: cfg.sources.jiosaavn?.enabled,
+  jiosaavn: cfg.sources.jiosaavn,
   http: cfg.sources.http === true || typeof cfg.sources.http === 'object',
   local: cfg.sources.local === true || typeof cfg.sources.local === 'object',
 })

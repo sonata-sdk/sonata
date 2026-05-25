@@ -1,8 +1,28 @@
+import { createDecipheriv } from 'node:crypto'
 import type { Track } from '../../types/index.js'
 import type { AudioSource } from '../manager.js'
 
 const JIOSAAVN_REGEX = /^https?:\/\/(?:www\.)?jiosaavn\.com\//
 const API_BASE = 'https://www.jiosaavn.com/api.php'
+
+function decryptMediaUrl(encrypted: string, key: string): string | null {
+  if (!key) return null
+  try {
+    const desKey = Buffer.from(key, 'utf8')
+    const buf = Buffer.from(encrypted, 'base64')
+    const decipher = createDecipheriv('des-ecb', desKey, null)
+    decipher.setAutoPadding(true)
+    const dec = Buffer.concat([decipher.update(buf), decipher.final()])
+    let url = dec.toString('utf8')
+    for (const ext of ['.mp4', '.m4a']) {
+      const idx = url.indexOf(ext)
+      if (idx !== -1) url = url.slice(0, idx + ext.length)
+    }
+    return url.replace(/^http:/, 'https:')
+  } catch {
+    return null
+  }
+}
 
 interface JioSaavnSong {
   id: string
@@ -13,6 +33,7 @@ interface JioSaavnSong {
   perma_url?: string
   media_preview_url?: string
   vlink?: string
+  encrypted_media_url?: string
   duration?: string
   primary_artists?: string
   singers?: string
@@ -82,6 +103,15 @@ function extractToken(url: string): { type: string; token: string } | null {
 
 export class JioSaavnSource implements AudioSource {
   name = 'jiosaavn'
+  #decryptionKey = ''
+
+  constructor(config?: { decryptionKey?: string }) {
+    if (config?.decryptionKey) this.#decryptionKey = config.decryptionKey
+  }
+
+  configure(config: { decryptionKey?: string }) {
+    if (config?.decryptionKey) this.#decryptionKey = config.decryptionKey
+  }
 
   matches(url: string): boolean {
     return JIOSAAVN_REGEX.test(url)
@@ -151,7 +181,13 @@ export class JioSaavnSource implements AudioSource {
       ?? t.more_info?.music
       ?? t.music
       ?? 'Unknown'
-    const audioUrl = t.vlink ?? t.media_preview_url ?? ''
+    let audioUrl = ''
+    if (t.encrypted_media_url && this.#decryptionKey) {
+      audioUrl = decryptMediaUrl(t.encrypted_media_url, this.#decryptionKey) ?? ''
+    }
+    if (!audioUrl) {
+      audioUrl = t.vlink ?? t.media_preview_url ?? ''
+    }
 
     return {
       encoded: Buffer.from(t.id).toString('base64url'),

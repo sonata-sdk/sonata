@@ -78,6 +78,9 @@ export class DiscordVoice extends EventTarget {
     })
     this.#connection.on('playerStateChange', (_old: any, state: any) => {
       this.#logger?.debug('voice', `playerStateChange: ${_old?.status} -> ${state.status} (${state.reason})`)
+      if (state.status === 'idle' && state.reason === 'finished') {
+        this.dispatchEvent(new CustomEvent('finished'))
+      }
     })
     this.#connection.on('error', (err: any) => {
       this.#logger?.error('voice', `Error: ${err?.message ?? err}`)
@@ -109,6 +112,12 @@ export class DiscordVoice extends EventTarget {
       ;(this.#connection as any).play(this.#opusStream)
     }
     this.#opusStream.pushFrame(opus)
+  }
+
+  finishBuffering() {
+    if (this.#opusStream) {
+      ;(this.#connection as any)._markAsStoppable()
+    }
   }
 
   stopSpeaking() {
