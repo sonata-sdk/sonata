@@ -21,6 +21,7 @@
   "dependencies": {
     "@performanc/voice": "github:PerformanC/voice",
     "@snazzah/davey": "^0.1.11",
+    "@sonata-sdk/decoder": "^0.1.0",
     "@sonata-sdk/voice": "^0.1.1",
     "opusscript": "^0.1.1",
     "pino": "^9.0.0",
