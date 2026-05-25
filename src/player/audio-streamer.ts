@@ -1,12 +1,22 @@
-import { spawn, ChildProcess } from 'node:child_process'
+import https from 'node:https'
+import http from 'node:http'
 import { DiscordVoice } from '../discord/voice.js'
 import { AudioMixer } from '../audio/mixer.js'
+import { WebmOpusDemuxer } from './webm-demuxer.js'
 import type { Track } from '../types/index.js'
 import type { Logger } from '../utils/logger.js'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+const OpusScript = require('opusscript') as typeof import('opusscript')
 
 const SAMPLE_RATE = 48000
 const FRAME_DURATION = 20
 const FRAME_SIZE = 960 * 2 * 2
+const CHANNELS = 2
+const FRAME_SAMPLES = 960
+
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
 
 interface CrossfadeConfig {
   duration: number
@@ -31,8 +41,6 @@ function applyFade(buf: Buffer, sampleCount: number, totalFadeSamples: number, f
 }
 
 export class AudioStreamer extends EventTarget {
-  #proc: ChildProcess | null = null
-  #nextProc: ChildProcess | null = null
   #voice: DiscordVoice
   #currentTrack: Track | null = null
   #nextTrack: Track | null = null
@@ -52,6 +60,14 @@ export class AudioStreamer extends EventTarget {
   #crossfadingOut = false
   #mixer: AudioMixer | null = null
   #logger: Logger | null = null
+
+  #opusDecoder: InstanceType<typeof OpusScript> | null = null
+  #httpReq: http.ClientRequest | null = null
+  #demuxer: WebmOpusDemuxer | null = null
+  #nextHttpReq: http.ClientRequest | null = null
+  #nextDemuxer: WebmOpusDemuxer | null = null
+  #streamEnded = false
+  #nextStreamEnded = false
 
   constructor(voice: DiscordVoice) {
     super()
@@ -89,6 +105,13 @@ export class AudioStreamer extends EventTarget {
     }
   }
 
+  #getOpusDecoder(): InstanceType<typeof OpusScript> {
+    if (!this.#opusDecoder) {
+      this.#opusDecoder = new OpusScript(SAMPLE_RATE, CHANNELS, OpusScript.Application.AUDIO)
+    }
+    return this.#opusDecoder
+  }
+
   #beginCrossfade() {
     if (!this.#nextTrack || this.#isCrossfading) return
     this.#logger?.debug('streamer', `beginning crossfade to "${this.#nextTrack.info.title}"`)
@@ -96,33 +119,44 @@ export class AudioStreamer extends EventTarget {
     this.#crossfadeStart = Date.now()
     this.#crossfadingOut = true
 
-    const uri = this.#nextTrack.info.uri
+    const uri = this.#nextTrack.userData?.audioUrl as string ?? this.#nextTrack.info.uri
     if (!uri) return
 
-    const args = [
-      '-reconnect', '1',
-      '-reconnect_streamed', '1',
-      '-reconnect_delay_max', '5',
-      '-i', uri,
-      '-f', 's16le',
-      '-ar', '48000',
-      '-ac', '2',
-      '-loglevel', 'quiet',
-      'pipe:1',
-    ]
+    this.#nextStreamEnded = false
+    this.#nextPcmBuffer = []
 
-    this.#nextProc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'ignore'] })
-    this.#nextProc.on('error', () => {})
-    const stdout = this.#nextProc.stdout
-    if (!stdout) {
-      this.#nextProc = null
-      return
-    }
-    stdout.on('data', (chunk: Buffer) => {
-      this.#nextPcmBuffer.push(chunk)
+    this.#nextDemuxer = new WebmOpusDemuxer()
+    this.#nextDemuxer.on('data', (opusPacket: Buffer) => {
+      try {
+        const pcm = this.#getOpusDecoder().decode(opusPacket)
+        this.#nextPcmBuffer.push(Buffer.from(pcm))
+      } catch {}
     })
-    stdout.on('end', () => {})
-    this.#nextProc.on('exit', () => { this.#nextProc = null })
+    this.#nextDemuxer.on('end', () => {
+      this.#nextStreamEnded = true
+    })
+    this.#nextDemuxer.on('error', () => {})
+
+    const opts = new URL(uri)
+    const req = (opts.protocol === 'https:' ? https : http).get(opts, {
+      headers: {
+        'User-Agent': UA,
+        'Referer': 'https://www.youtube.com',
+      },
+    }, (res) => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.destroy()
+        this.#startHttpsStream(res.headers.location, true)
+        return
+      }
+      if (res.statusCode !== 200) {
+        this.#logger?.error('streamer', `crossfade HTTP ${res.statusCode} for ${uri}`)
+        return
+      }
+      res.pipe(this.#nextDemuxer!)
+    })
+    req.on('error', () => {})
+    this.#nextHttpReq = req
   }
 
   async play(track: Track, startTime = 0) {
@@ -160,62 +194,35 @@ export class AudioStreamer extends EventTarget {
       return
     }
 
-    const args = [
-      '-reconnect', '1',
-      '-reconnect_streamed', '1',
-      '-reconnect_delay_max', '5',
-      '-i', uri,
-      '-f', 's16le',
-      '-ar', '48000',
-      '-ac', '2',
-      '-loglevel', 'quiet',
-      'pipe:1',
-    ]
-
-    if (this.#seekPosition > 0) {
-      args.unshift('-ss', String(this.#seekPosition / 1000))
-    }
-
-    this.#logger?.debug('streamer', `starting ffmpeg`)
-
-    this.#proc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'ignore'] })
-    this.#proc.on('error', (e) => this.#logger?.error('streamer', `ffmpeg error: ${e.message}`))
-
-    const stdout = this.#proc.stdout
-    if (!stdout) {
-      this.#onEnd('loadFailed')
-      return
-    }
+    this.#logger?.debug('streamer', `starting HTTP stream for ${uri}`)
 
     this.#playing = true
     this.#startTime = Date.now()
+    this.#streamEnded = false
+    this.#pcmBuffer = []
+
     this.dispatchEvent(new CustomEvent('start', { detail: { track: this.#currentTrack } }))
 
-    this.#pcmBuffer = []
-    let feedDone = false
-
-    stdout.on('data', (chunk: Buffer) => {
+    this.#demuxer = new WebmOpusDemuxer()
+    this.#demuxer.on('data', (opusPacket: Buffer) => {
       if (this.#paused) return
-      this.#pcmBuffer.push(chunk)
+      try {
+        const pcm = this.#getOpusDecoder().decode(opusPacket)
+        this.#pcmBuffer.push(Buffer.from(pcm))
+      } catch {}
     })
+    this.#demuxer.on('end', () => {
+      this.#logger?.debug('streamer', `demuxer stream ended`)
+      this.#streamEnded = true
+    })
+    this.#demuxer.on('error', () => {})
 
-    stdout.on('end', () => {
-      this.#logger?.debug('streamer', `ffmpeg done, total PCM buffered`)
-      feedDone = true
-    })
-
-    this.#proc.on('exit', (code, signal) => {
-      this.#logger?.debug('streamer', `ffmpeg exit: code=${code} signal=${signal}`)
-      feedDone = true
-      if (code !== 0 && this.#playing) {
-        this.#onEnd('loadFailed')
-      }
-    })
+    this.#startHttpsStream(uri, false)
 
     this.#sendInterval = setInterval(() => {
       if (this.#paused || !this.#playing) return
       if (this.#pcmBuffer.length === 0) {
-        if (feedDone) {
+        if (this.#streamEnded) {
           if (this.#isCrossfading) {
             this.#finishCrossfade()
           } else {
@@ -234,6 +241,37 @@ export class AudioStreamer extends EventTarget {
     this.#positionInterval = setInterval(() => {
       this.#seekPosition = this.position
     }, 1000)
+  }
+
+  #startHttpsStream(uri: string, isNext: boolean) {
+    const req = https.get(uri, {
+      headers: {
+        'User-Agent': UA,
+        'Referer': 'https://www.youtube.com',
+      },
+    }, (res) => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.destroy()
+        this.#startHttpsStream(res.headers.location, isNext)
+        return
+      }
+      if (res.statusCode !== 200) {
+        this.#logger?.error('streamer', `HTTP ${res.statusCode} for ${uri}`)
+        if (!isNext) this.#onEnd('loadFailed')
+        return
+      }
+      const targetDemuxer = isNext ? this.#nextDemuxer : this.#demuxer
+      if (targetDemuxer) res.pipe(targetDemuxer)
+    })
+    req.on('error', (err) => {
+      this.#logger?.error('streamer', `HTTP error: ${err.message}`)
+      if (!isNext) this.#onEnd('loadFailed')
+    })
+    if (isNext) {
+      this.#nextHttpReq = req
+    } else {
+      this.#httpReq = req
+    }
   }
 
   #sendCrossfadeFrame() {
@@ -334,10 +372,7 @@ export class AudioStreamer extends EventTarget {
     this.#isCrossfading = false
     this.#nextPcmBuffer = []
 
-    if (this.#proc) {
-      this.#proc.kill('SIGKILL')
-      this.#proc = null
-    }
+    this.#cleanupHttp(false)
 
     const oldTrack = this.#currentTrack
     if (this.#nextTrack) {
@@ -345,8 +380,12 @@ export class AudioStreamer extends EventTarget {
       this.#nextTrack = null
       this.#seekPosition = 0
       this.#startTime = Date.now()
-      this.#proc = this.#nextProc
-      this.#nextProc = null
+      this.#demuxer = this.#nextDemuxer
+      this.#nextDemuxer = null
+      this.#httpReq = this.#nextHttpReq
+      this.#nextHttpReq = null
+      this.#streamEnded = this.#nextStreamEnded
+      this.#nextStreamEnded = false
       this.#pcmBuffer = [...this.#nextPcmBuffer]
       this.#nextPcmBuffer = []
 
@@ -389,12 +428,6 @@ export class AudioStreamer extends EventTarget {
     this.#paused = true
     this.#seekPosition = this.position
     this.#voice.stopSpeaking()
-    if (this.#proc) {
-      this.#proc.kill('SIGSTOP')
-    }
-    if (this.#nextProc) {
-      this.#nextProc.kill('SIGSTOP')
-    }
     this.dispatchEvent(new CustomEvent('pause'))
   }
 
@@ -402,12 +435,6 @@ export class AudioStreamer extends EventTarget {
     if (!this.#paused) return
     this.#paused = false
     this.#startTime = Date.now()
-    if (this.#proc) {
-      this.#proc.kill('SIGCONT')
-    }
-    if (this.#nextProc) {
-      this.#nextProc.kill('SIGCONT')
-    }
     this.dispatchEvent(new CustomEvent('resume'))
   }
 
@@ -415,13 +442,9 @@ export class AudioStreamer extends EventTarget {
     this.#seekPosition = Math.max(0, position)
     this.#startTime = Date.now()
     this.#isCrossfading = false
-    if (this.#nextProc) {
-      this.#nextProc.kill('SIGKILL')
-      this.#nextProc = null
-    }
+    this.#cleanupHttp(true)
     this.#nextPcmBuffer = []
     this.#nextTrack = null
-    this.#proc?.kill('SIGKILL')
     if (this.#currentTrack) {
       this.#startStream()
     }
@@ -440,30 +463,15 @@ export class AudioStreamer extends EventTarget {
     this.#nextTrack = null
     this.#isCrossfading = false
 
-    if (this.#sendInterval) {
-      clearInterval(this.#sendInterval)
-      this.#sendInterval = null
-    }
-    if (this.#positionInterval) {
-      clearInterval(this.#positionInterval)
-      this.#positionInterval = null
-    }
-    if (this.#proc) {
-      this.#proc.kill('SIGKILL')
-      this.#proc = null
-    }
-    if (this.#nextProc) {
-      this.#nextProc.kill('SIGKILL')
-      this.#nextProc = null
-    }
+    this.#clearIntervals()
+    this.#cleanupHttp(false)
+    this.#cleanupHttp(true)
     this.#pcmBuffer = []
     this.#nextPcmBuffer = []
     this.#voice.stopSpeaking()
   }
 
-  #onEnd(reason: string) {
-    this.#playing = false
-
+  #clearIntervals() {
     if (this.#sendInterval) {
       clearInterval(this.#sendInterval)
       this.#sendInterval = null
@@ -472,14 +480,30 @@ export class AudioStreamer extends EventTarget {
       clearInterval(this.#positionInterval)
       this.#positionInterval = null
     }
-    if (this.#proc) {
-      this.#proc.kill('SIGKILL')
-      this.#proc = null
+  }
+
+  #cleanupHttp(isNext: boolean) {
+    const req = isNext ? this.#nextHttpReq : this.#httpReq
+    const demuxer = isNext ? this.#nextDemuxer : this.#demuxer
+
+    if (req) {
+      req.destroy()
+      if (isNext) this.#nextHttpReq = null
+      else this.#httpReq = null
     }
-    if (this.#nextProc) {
-      this.#nextProc.kill('SIGKILL')
-      this.#nextProc = null
+    if (demuxer) {
+      demuxer.destroy()
+      if (isNext) this.#nextDemuxer = null
+      else this.#demuxer = null
     }
+  }
+
+  #onEnd(reason: string) {
+    this.#playing = false
+
+    this.#clearIntervals()
+    this.#cleanupHttp(false)
+    this.#cleanupHttp(true)
 
     this.#voice.stopSpeaking()
 

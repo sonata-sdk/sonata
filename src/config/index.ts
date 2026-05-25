@@ -36,7 +36,7 @@ const DEFAULTS: Config = {
     showPid: true,
   },
   sources: {
-    youtube: { enabled: true, clientProfiles: ['WEB', 'MUSIC', 'ANDROID', 'IOS', 'TV'], apiKey: '', clientName: '', timeout: 10_000, maxResults: 20, fetchPlayerJS: false },
+    youtube: { enabled: true, clientProfiles: ['WEB', 'MUSIC', 'ANDROID', 'IOS', 'TV'], apiKey: '', clientName: '', timeout: 10_000, maxResults: 20, fetchPlayerJS: false, playerUrl: 'https://www.youtube.com/s/player/c2f7551f/player_embed.vflset/en_US/base.js', oauth: { getOAuthToken: false }, cipher: { url: '', token: '' }, poToken: { service: '', token: '' }, clients: { settings: {} } },
     soundcloud: { enabled: true, clientId: '', apiUrl: 'https://api.soundcloud.com', resolveRedirects: true, timeout: 10_000 },
     spotify: { enabled: false, clientId: '', clientSecret: '', market: 'US', country: 'US', maxPlaylistTracks: 200, resolverFlavor: 'auto', retryCount: 2 },
     bandcamp: { enabled: true, quality: 'high', timeout: 10_000 },

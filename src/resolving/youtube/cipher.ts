@@ -22,7 +22,6 @@ export function extractStreamUrl(format: YouTubeFormat): string | null {
 
   if (!url) return null
 
-  // If there's a signature, append it
   if (sig) {
     const decodedSig = decodeSignature(sig)
     const separator = url.includes('?') ? '&' : '?'
@@ -35,7 +34,6 @@ export function extractStreamUrl(format: YouTubeFormat): string | null {
 export function selectBestAudioFormat(formats: YouTubeFormat[]): YouTubeFormat | null {
   if (!formats || formats.length === 0) return null
 
-  // Filter audio-only formats (opus, mp4a)
   const audioFormats = formats.filter(f => {
     const mime = f.mimeType ?? ''
     return mime.includes('audio') &&
@@ -44,7 +42,6 @@ export function selectBestAudioFormat(formats: YouTubeFormat[]): YouTubeFormat |
 
   if (audioFormats.length === 0) return null
 
-  // Sort by bitrate descending, prefer opus
   audioFormats.sort((a, b) => {
     const aOpus = a.mimeType.includes('opus') ? 100 : 0
     const bOpus = b.mimeType.includes('opus') ? 100 : 0
@@ -55,8 +52,6 @@ export function selectBestAudioFormat(formats: YouTubeFormat[]): YouTubeFormat |
 }
 
 function decodeSignature(sig: string): string {
-  // Simple approach: reverse + some transformations
-  // Real implementations need to mimic the JS from YouTube's player.js
   return sig.split('').reverse().join('')
 }
 
@@ -64,8 +59,66 @@ export function getYouTubeStreamUrl(videoId: string, format: YouTubeFormat): str
   const url = extractStreamUrl(format)
   if (!url) return null
 
-  // Add range and other required params
   const urlObj = new URL(url)
   urlObj.searchParams.set('ratebypass', 'yes')
   return urlObj.toString()
+}
+
+export async function resolveUrlWithCipher(
+  streamUrl: string,
+  cipherUrl: string,
+  playerUrl: string,
+  token?: string,
+): Promise<string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'Sonata/1.0 (https://github.com/sonata-sdk/sonata)',
+  }
+  if (token) headers['Authorization'] = token
+
+  const res = await fetch(`${cipherUrl.replace(/\/+$/, '')}/resolve_url`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ stream_url: streamUrl, player_url: playerUrl }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Cipher service returned ${res.status}`)
+  }
+
+  const data = await res.json() as { resolved_url?: string; message?: string }
+  if (!data.resolved_url) {
+    throw new Error(`Cipher service: ${data.message || 'no resolved_url'}`)
+  }
+
+  return data.resolved_url
+}
+
+export async function fetchCipherSts(
+  playerUrl: string,
+  cipherUrl: string,
+  token?: string,
+): Promise<string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'Sonata/1.0 (https://github.com/sonata-sdk/sonata)',
+  }
+  if (token) headers['Authorization'] = token
+
+  const res = await fetch(`${cipherUrl.replace(/\/+$/, '')}/get_sts`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ player_url: playerUrl }),
+  })
+
+  if (!res.ok) {
+    throw new Error(`Cipher STS service returned ${res.status}`)
+  }
+
+  const data = await res.json() as { sts?: string; message?: string }
+  if (!data.sts) {
+    throw new Error(`Cipher STS: ${data.message || 'no sts'}`)
+  }
+
+  return data.sts
 }

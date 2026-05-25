@@ -48,6 +48,9 @@ export class DiscordVoice extends EventTarget {
 
     this.#logger?.debug('voice', `Connection object created, initial state=${this.#connection.state?.status}`)
 
+    this.#connection.on('ready', () => {
+      this.#logger?.debug('voice', 'connection ready event')
+    })
     this.#connection.on('stateChange', (_oldState: any, newState: any) => {
       const status = newState.status
       const reason = newState.reason
@@ -58,6 +61,7 @@ export class DiscordVoice extends EventTarget {
         this.ping = this.#connection?.ping ?? 0
         if (!this.#readyEmitted) {
           this.#readyEmitted = true
+          this.#logger?.debug('voice', 'dispatching ready event')
           this.dispatchEvent(new CustomEvent('ready'))
         }
       } else if (status === 'disconnected' || status === 'destroyed') {

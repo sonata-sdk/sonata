@@ -256,12 +256,36 @@ export interface Config {
       maxResults?: number
       /** Fetch and parse player.js for cipher decoding */
       fetchPlayerJS?: boolean
-      /** Use OAuth for authenticated requests */
+      /** Explicit player script URL for cipher service */
+      playerUrl?: string
+      /** OAuth configuration for authenticated clients (TVHTML5) */
       oauth?: {
-        enabled: boolean
+        /** Set to true to trigger the device code flow on next startup */
+        getOAuthToken?: boolean
+        /** Refresh token from a previous OAuth device flow */
         refreshToken?: string
-        clientId?: string
-        clientSecret?: string
+      }
+      /** Remote cipher service configuration */
+      cipher?: {
+        /** URL of the remote cipher service (e.g. https://cipher.kikkia.dev/api) */
+        url?: string
+        /** Optional bearer token for the cipher service */
+        token?: string
+      }
+      /** Proof-of-origin token configuration */
+      poToken?: {
+        /** URL of the poToken service */
+        service?: string
+        /** Pre-obtained poToken value */
+        token?: string
+      }
+      /** Per-client settings (e.g. TV refresh token) */
+      clients?: {
+        settings?: {
+          TV?: {
+            refreshToken?: string | string[]
+          }
+        }
       }
     }
     soundcloud: {

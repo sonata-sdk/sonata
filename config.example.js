@@ -48,6 +48,37 @@ export default {
       timeout: 10_000,
       maxResults: 20,
       fetchPlayerJS: false,
+      // --
+      // OAuth (device code flow) for TVHTML5 client.
+      // Set getOAuthToken to true, start the server, visit the URL, enter the code,
+      // then paste the refresh token below and set getOAuthToken back to false.
+      // WARNING: Do NOT use your main Google account. Use a secondary/burner account!
+      oauth: {
+        getOAuthToken: false,
+        refreshToken: '',
+      },
+      // --
+      // Remote cipher service for resolving YouTube playback URLs.
+      // Resolves the 'n' parameter and signature timestamps.
+      cipher: {
+        url: '',
+        token: '',
+      },
+      // Proof-of-origin token service (optional).
+      poToken: {
+        service: '',
+        token: '',
+      },
+      // Per-client settings (e.g. TV refresh tokens).
+      clients: {
+        settings: {
+          TV: {
+            refreshToken: [],
+          },
+        },
+      },
+      // Explicit player script URL for cipher/STS resolution.
+      playerUrl: 'https://www.youtube.com/s/player/c2f7551f/player_embed.vflset/en_US/base.js',
     },
     soundcloud: {
       enabled: true,

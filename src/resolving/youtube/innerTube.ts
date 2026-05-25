@@ -1,5 +1,6 @@
 import type { YouTubeFormat as YTFormat } from './cipher.js'
-import { extractStreamUrl, selectBestAudioFormat } from './cipher.js'
+import { extractStreamUrl, selectBestAudioFormat, resolveUrlWithCipher } from './cipher.js'
+import { getOAuthAccessToken } from './oauth.js'
 
 type YouTubeFormat = YTFormat
 
@@ -47,6 +48,13 @@ const CLIENTS: Record<string, ClientProfile> = {
     clientVersion: '7.20260113.16.00',
     userAgent: 'Mozilla/5.0 (Fuchsia) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36,gzip(gfe)',
   },
+  MUSIC: {
+    name: 'WEB_REMIX',
+    key: '',
+    clientName: 'WEB_REMIX',
+    clientVersion: '1.20250304.01.00',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36,gzip(gfe)',
+  },
 }
 
 const BASE_URL = 'https://youtubei.googleapis.com/youtubei/v1'
@@ -77,13 +85,23 @@ interface InnerTubePlaylistSearchResult {
   videoCount: number
 }
 
+export interface YouTubeClientConfig {
+  refreshToken?: string | string[]
+  oauth?: { getOAuthToken?: boolean; refreshToken?: string }
+  cipher?: { url?: string; token?: string }
+  poToken?: { service?: string; token?: string }
+  playerUrl?: string
+}
+
 export class InnerTubeClient {
   #profiles: ClientProfile[]
+  #config?: YouTubeClientConfig
 
-  constructor(clientProfiles?: string[], private proxy?: string) {
+  constructor(clientProfiles?: string[], private proxy?: string, config?: YouTubeClientConfig) {
+    this.#config = config
     this.#profiles = clientProfiles?.length
       ? clientProfiles.map(name => CLIENTS[name]).filter(Boolean)
-      : [CLIENTS.ANDROID_VR, CLIENTS.ANDROID, CLIENTS.IOS, CLIENTS.WEB, CLIENTS.TV]
+      : [CLIENTS.ANDROID_VR, CLIENTS.ANDROID, CLIENTS.IOS, CLIENTS.WEB, CLIENTS.TV, CLIENTS.MUSIC]
   }
 
   async search(query: string): Promise<InnerTubeSearchResult[]> {
@@ -159,28 +177,57 @@ export class InnerTubeClient {
   }
 
   async #getVideoWithClient(videoId: string, client: ClientProfile): Promise<InnerTubeVideo> {
-    const body = {
-      videoId,
-      context: {
-        client: {
-          clientName: client.clientName,
-          clientVersion: client.clientVersion,
-          hl: 'en',
-          gl: 'US',
-        },
+    const context: any = {
+      client: {
+        clientName: client.clientName,
+        clientVersion: client.clientVersion,
+        hl: 'en',
+        gl: 'US',
       },
+    }
+
+    if (client.clientName === 'TVHTML5') {
+      context.thirdParty = { embedUrl: 'https://www.youtube.com' }
+    }
+
+    const body: any = {
+      videoId,
+      context,
       contentCheckOk: true,
       racyCheckOk: true,
     }
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': client.userAgent,
+    }
+
+    if (client.clientName === 'TVHTML5' && this.#config?.oauth?.refreshToken) {
+      const token = await getOAuthAccessToken(this.#config.oauth.refreshToken as string)
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+    }
+
     const res = await fetch(`${BASE_URL}/player`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': client.userAgent },
+      headers,
       body: JSON.stringify(body),
     })
 
     if (!res.ok) throw new Error(`InnerTube player failed: ${res.status}`)
     const data = await res.json()
+
+    const playStatus = data?.playabilityStatus?.status
+    if (playStatus !== 'OK') {
+      throw new Error(`InnerTube player not OK: ${playStatus}`)
+    }
+
+    const hasFormats = (data?.streamingData?.formats?.length ?? 0) > 0
+      || (data?.streamingData?.adaptiveFormats?.length ?? 0) > 0
+    if (!hasFormats) {
+      throw new Error('InnerTube player returned no streaming formats')
+    }
 
     return this.#parseVideoResponse(data, videoId)
   }
@@ -268,9 +315,6 @@ export class InnerTubeClient {
     try {
       const secondary = data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results ?? []
       for (const item of secondary) {
-        // Skip non-video items (reelShelfRenderer = Shorts, etc)
-        if (item?.reelShelfRenderer) continue
-        // New format: lockupViewModel
         const lockup = item?.lockupViewModel
         if (lockup && lockup.contentId) {
           const meta = lockup?.metadata?.lockupMetadataViewModel
@@ -286,7 +330,6 @@ export class InnerTubeClient {
           })
           continue
         }
-        // Old format: compactVideoRenderer
         const video = item?.compactVideoRenderer
         if (!video?.videoId) continue
         const len = video?.lengthText?.simpleText ?? video?.lengthText?.runs?.[0]?.text ?? '0:00'
@@ -309,7 +352,6 @@ export class InnerTubeClient {
       for (const section of contents) {
         const items = section?.itemSectionRenderer?.contents ?? []
         for (const item of items) {
-          // New format: lockupViewModel
           const lockup = item?.lockupViewModel
           if (lockup?.contentType === 'LOCKUP_CONTENT_TYPE_PLAYLIST' && lockup?.contentId) {
             results.push({
@@ -320,7 +362,6 @@ export class InnerTubeClient {
             })
             continue
           }
-          // Old format: playlistRenderer
           const playlist = item?.playlistRenderer
           if (!playlist) continue
           results.push({
@@ -343,7 +384,6 @@ export class InnerTubeClient {
       for (const section of contents) {
         const items = section?.itemSectionRenderer?.contents ?? []
         for (const item of items) {
-          // New format: lockupViewModel (video type)
           const lockup = item?.lockupViewModel
           if (lockup && lockup.contentId && lockup.contentType !== 'LOCKUP_CONTENT_TYPE_PLAYLIST') {
             const meta = lockup?.metadata?.lockupMetadataViewModel
@@ -359,7 +399,6 @@ export class InnerTubeClient {
             })
             continue
           }
-          // Old formats
           const video = item?.videoRenderer || item?.compactVideoRenderer
           if (!video) continue
           const videoId = video?.videoId
@@ -385,11 +424,11 @@ export class InnerTubeClient {
         const last = sections[sections.length - 1]
         if (tryExtract([last])) return results
       }
-    } catch { /* parse errors are non-fatal */ }
+    } catch {}
     return results
   }
 
-  #parseVideoResponse(data: any, videoId: string): InnerTubeVideo {
+  async #parseVideoResponse(data: any, videoId: string): Promise<InnerTubeVideo> {
     const details = data?.videoDetails ?? {}
     const formats: YouTubeFormat[] = [
       ...(data?.streamingData?.formats ?? []),
@@ -397,7 +436,21 @@ export class InnerTubeClient {
     ]
 
     const best = selectBestAudioFormat(formats)
-    const streamUrl = best ? extractStreamUrl(best) : null
+    let streamUrl = best ? extractStreamUrl(best) : null
+
+    if (streamUrl && this.#config?.cipher?.url) {
+      try {
+        const playerUrl = this.#config.playerUrl || 'https://www.youtube.com/s/player/c2f7551f/player_embed.vflset/en_US/base.js'
+        streamUrl = await resolveUrlWithCipher(
+          streamUrl,
+          this.#config.cipher.url,
+          playerUrl,
+          this.#config.cipher.token,
+        )
+      } catch {
+        // fall through with original URL
+      }
+    }
 
     return {
       videoId,
@@ -419,7 +472,6 @@ export class InnerTubeClient {
         const contents = tab?.tabRenderer?.content?.sectionListRenderer?.contents ?? []
         for (const section of contents) {
           let items: any[] = []
-          // playlistVideoListRenderer may be directly in section or wrapped in itemSectionRenderer
           if (section?.playlistVideoListRenderer?.contents) {
             items = section.playlistVideoListRenderer.contents
           } else if (section?.itemSectionRenderer?.contents) {
@@ -431,7 +483,6 @@ export class InnerTubeClient {
             }
           }
           for (const item of items) {
-            // New format: lockupViewModel
             const lockup = item?.lockupViewModel
             if (lockup && lockup.contentId) {
               const meta = lockup?.metadata?.lockupMetadataViewModel
@@ -447,7 +498,6 @@ export class InnerTubeClient {
               })
               continue
             }
-            // Old format
             const video = item?.playlistVideoRenderer ?? item?.videoRenderer
             if (!video?.videoId) continue
 
@@ -462,7 +512,7 @@ export class InnerTubeClient {
           }
         }
       }
-    } catch { /* ignore */ }
+    } catch {}
     return results
   }
 

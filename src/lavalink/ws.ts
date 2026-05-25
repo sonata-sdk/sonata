@@ -23,8 +23,9 @@ export class LavalinkWS {
   #normalizationEnabled = false
   #normalizationTarget = -14
   #logger: Logger | null
+  #youtubeConfig: any
 
-  constructor(pm: PlayerManager, sessions: SessionManager, cfg?: { queue?: { crossfade?: number; crossfadeFadeIn?: number; crossfadeFadeOut?: number }; player?: { normalization?: boolean; normalizationTarget?: number } }, logger?: Logger) {
+  constructor(pm: PlayerManager, sessions: SessionManager, cfg?: { queue?: { crossfade?: number; crossfadeFadeIn?: number; crossfadeFadeOut?: number }; player?: { normalization?: boolean; normalizationTarget?: number }; youtube?: any }, logger?: Logger) {
     this.pm = pm
     this.sessions = sessions
     if (cfg?.queue?.crossfade && cfg.queue.crossfade > 0) {
@@ -34,6 +35,7 @@ export class LavalinkWS {
         fadeOut: cfg.queue.crossfadeFadeOut || cfg.queue.crossfade,
       }
     }
+    this.#youtubeConfig = cfg?.youtube || {}
     if (cfg?.player?.normalization) {
       this.#normalizationEnabled = true
       this.#normalizationTarget = cfg.player.normalizationTarget ?? -14
@@ -268,12 +270,7 @@ export class LavalinkWS {
       const resolved = await this.#resolveStreamUrl(track)
       this.#logger?.debug('ws', `streamAudio: resolved=${resolved}`)
       if (!resolved) {
-        this.#broadcast(client, 'event', {
-          type: 'TrackExceptionEvent',
-          guildId,
-          error: 'Failed to resolve stream URL',
-        })
-        return
+        this.#logger?.warn('ws', `streamAudio: failed to resolve stream URL for ${track.info.identifier}, trying original URI`)
       }
     }
 
@@ -284,7 +281,7 @@ export class LavalinkWS {
   async #resolveStreamUrl(track: Track): Promise<string | null> {
     if (track.source === 'youtube') {
       const { InnerTubeClient } = await import('../resolving/youtube/innerTube.js')
-      const client = new InnerTubeClient()
+      const client = new InnerTubeClient(undefined, undefined, this.#youtubeConfig)
       try {
         const video = await client.getVideo(track.info.identifier)
         if (video?.streamUrl) {

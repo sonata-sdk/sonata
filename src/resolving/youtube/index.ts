@@ -1,4 +1,5 @@
-import { InnerTubeClient } from './innerTube.js'
+import { InnerTubeClient, type YouTubeClientConfig } from './innerTube.js'
+import { acquireYouTubeRefreshToken } from './oauth.js'
 import type { Track } from '../../types/index.js'
 import type { AudioSource } from '../manager.js'
 
@@ -11,8 +12,14 @@ export class YouTubeSource implements AudioSource {
   name = 'youtube'
   #client: InnerTubeClient
 
-  constructor(config?: { clientProfiles?: string[]; proxy?: string }) {
-    this.#client = new InnerTubeClient(config?.clientProfiles, config?.proxy)
+  constructor(config?: { clientProfiles?: string[]; proxy?: string } & YouTubeClientConfig) {
+    this.#client = new InnerTubeClient(config?.clientProfiles, config?.proxy, config)
+
+    if (config?.oauth?.getOAuthToken) {
+      acquireYouTubeRefreshToken().catch(err => {
+        console.error('OAuth token acquisition failed:', err)
+      })
+    }
   }
 
   matches(url: string): boolean {

@@ -89,7 +89,7 @@ const pm = new PlayerManager({
   },
 }, Boolean(cfg.player?.stickyQueue), cfg.player?.stickyQueueFile ?? '')
 
-const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player }, logger)
+const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player, youtube: cfg.sources?.youtube }, logger)
 
 // Auto-leave (voice activity detection)
 if (cfg.player?.autoLeaveMs && cfg.player.autoLeaveMs > 0) {
