@@ -8,6 +8,7 @@
     <img src="https://img.shields.io/github/last-commit/sonata-sdk/sonata?color=green" alt="Last Commit" />
     <img src="https://img.shields.io/github/languages/code-size/sonata-sdk/sonata?color=orange" alt="Code Size" />
     <img src="https://img.shields.io/badge/node-20%2B-339933?logo=node.js" alt="Node" />
+    <a href="https://sonata.enerthya.website"><img src="https://img.shields.io/badge/docs-sonata.enerthya.website-818cf8?style=flat-square" alt="Docs" /></a>
   </p>
   <p>
     <a href="#-features">Features</a> •
@@ -310,6 +311,7 @@ npm run dev         # Watch mode with auto-reload
 
 - [**@sonata-sdk/plugin-sdk**](https://github.com/sonata-sdk/sonata-sdk-packages) — TypeScript SDK for building Sonata plugins
 - [**sonata-sdk-packages**](https://github.com/sonata-sdk/sonata-sdk-packages) — Monorepo of official Sonata SDK packages
+- [**Docs**](https://sonata.enerthya.website) — Package documentation website
 
 ---
 
