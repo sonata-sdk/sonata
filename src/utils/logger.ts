@@ -13,28 +13,22 @@ const LEVEL_MAP: Record<string, Level> = {
 
 const RESET = '\x1b[0m'
 
-const LEVEL_STYLES: Record<Level, { bg: string; fg: string }> = {
-  trace:   { bg: '\x1b[100m', fg: '\x1b[90m' },
-  verbose: { bg: '\x1b[46m',  fg: '\x1b[30m' },
-  debug:   { bg: '\x1b[44m',  fg: '\x1b[97m' },
-  normal:  { bg: '\x1b[42m',  fg: '\x1b[30m' },
-  warn:    { bg: '\x1b[43m',  fg: '\x1b[30m' },
-  error:   { bg: '\x1b[41m',  fg: '\x1b[97m' },
+const LEVEL_STYLES: Record<Level, string> = {
+  trace:   '\x1b[100m \x1b[30mTRACE\x1b[0m',
+  verbose: '\x1b[46m \x1b[30mVERBOSE\x1b[0m',
+  debug:   '\x1b[44m \x1b[97mDEBUG\x1b[0m',
+  normal:  '\x1b[42m \x1b[30mINFO\x1b[0m',
+  warn:    '\x1b[43m \x1b[30mWARN\x1b[0m',
+  error:   '\x1b[41m \x1b[97mERROR\x1b[0m',
 }
 
-function levelTag(level: Level): string {
-  const s = LEVEL_STYLES[level]
-  const label = level === 'normal' ? 'INFO' : level.toUpperCase()
-  return `${s.bg}${s.fg} ${label} ${RESET}`
-}
-
-function shortTime(): string {
+function timestamp(): string {
   const d = new Date()
-  return `\x1b[2m${[
+  return `[${[
     String(d.getHours()).padStart(2, '0'),
     String(d.getMinutes()).padStart(2, '0'),
     String(d.getSeconds()).padStart(2, '0'),
-  ].join(':')}.${String(d.getMilliseconds()).padStart(3, '0')}\x1b[22m`
+  ].join(':')}.${String(d.getMilliseconds()).padStart(3, '0')}]`
 }
 
 function normalizeLevel(level: string): number {
@@ -97,8 +91,9 @@ export class Logger {
       }).join(' ')
       fullMsg = `${msg} ${extras}`
     }
+    const levelStyle = LEVEL_STYLES[level]
     const modPart = module ? `\x1b[1m${module}\x1b[22m >` : ''
-    return `${shortTime()} ${levelTag(level)} ${modPart} ${fullMsg}`
+    return `${timestamp()} ${levelStyle} >:${modPart} ${fullMsg}`
   }
 
   #fileLine(level: Level, module: string, msg: string, args: any[]): string {
@@ -114,7 +109,7 @@ export class Logger {
     }
     const label = level === 'normal' ? 'INFO' : level.toUpperCase()
     const modPart = module ? ` ${module} >` : ''
-    return `[${ts}] [${label}]${modPart} ${fullMsg}`
+    return `[${ts}] [${label}] >:${modPart} ${fullMsg}`
   }
 
   #write(level: Level, module: string, msg: string, ...args: any[]) {
