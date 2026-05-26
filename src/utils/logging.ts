@@ -1,8 +1,23 @@
 import { VERSION, NAME } from '../version.js'
 import type { Logger } from './logger.js'
 
-const CHECK = '\u2705'
-const CROSS = '\u274C'
+const SOURCE_ICONS: Record<string, string> = {
+  youtube: '▶️',
+  soundcloud: '☁️',
+  spotify: '🎧',
+  bandcamp: '💿',
+  twitch: '📺',
+  vimeo: '🎬',
+  deezer: '🎵',
+  apple: '🍎',
+  nico: '📹',
+  mixcloud: '🌧️',
+  podcast: '🎤',
+  jiosaavn: '🎼',
+  http: '🌐',
+  local: '💾',
+  tiktok: '🎶',
+}
 
 export function logStartup(cfg: any, pluginCount: number, logger?: Logger) {
   const features: string[] = [
@@ -16,7 +31,8 @@ export function logStartup(cfg: any, pluginCount: number, logger?: Logger) {
     .filter(([k]) => !['priority', 'requestTimeout'].includes(k))
     .map(([name, src]: [string, any]) => {
       const enabled = typeof src === 'object' ? src.enabled : src
-      const icon = enabled ? CHECK : CROSS
+      const iconName = SOURCE_ICONS[name] || 'question'
+      const icon = enabled ? iconName : '🔴'
       return ` ${icon} ${name}`
     })
 
