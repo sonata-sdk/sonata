@@ -73,7 +73,7 @@ export class Server {
       } else socket.destroy()
     })
     this.#server.listen(port, host, () => {
-      this.#logger.info('http', `Sonata server started on ${host}:${port}`)
+      this.#logger.info('System', `Server listening on ${host}:${port}`)
       cb?.()
     })
   }

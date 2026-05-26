@@ -36,29 +36,41 @@ const SOURCE_ICONS: Record<string, string> = {
   tiktok: '🎶',
 }
 
-const BOX_W = 52
-
-function pad(s: string, w = BOX_W) {
-  return s + ' '.repeat(Math.max(0, w - s.length))
-}
-
-function fmt(s: string) {
-  return `\u2502 ${pad(s)} \u2502`
-}
-
 export function logBanner(cfg: any, logger?: Logger) {
   const git = getGitInfo()
 
-  const features: string[] = [
-    cfg.cache?.enabled && 'cache',
-    cfg.server.cors && 'cors',
-    cfg.server.dashboard && 'dashboard',
-    cfg.player?.autoPlay && 'autoplay',
-  ].filter(Boolean) as string[]
+  logger?.info('System', `Starting ${NAME} v${VERSION}`)
+  logger?.info('System', `Git ${git.branch}/${git.commit}${git.date ? ` (${git.date})` : ''}`)
+  logger?.info('System', `${process.version} ${process.platform} ${process.arch}`)
 
-  const cluster = cfg.clustering?.enabled ? `cluster:${cfg.clustering.nodes?.length ?? 0} nodes` : 'standalone'
-  const ratelimit = cfg.rateLimiting?.enabled ? `rate-limit: ${cfg.rateLimiting.maxRequests}/${cfg.rateLimiting.windowMs / 1000}s` : 'rate-limit: off'
-  const logFile = cfg.logging?.file?.enabled ? `log: ${cfg.logging.file.path}` : 'log: console'
+  logger?.info('System', `Listening on ${cfg.server.host}:${cfg.server.port} (Lavalink v${cfg.lavalink.apiVersion})`)
+
+  if (cfg.clustering?.enabled) {
+    logger?.info('Cluster', `Active (${cfg.clustering.nodes?.length ?? 0} node(s), ${cfg.clustering.electionStrategy} strategy)`)
+  } else {
+    logger?.info('Cluster', 'Standalone mode')
+  }
+
+  if (cfg.rateLimiting?.enabled) {
+    logger?.info('RateLimiter', `Active (${cfg.rateLimiting.maxRequests} req/${cfg.rateLimiting.windowMs / 1000}s)`)
+  }
+
+  if (cfg.server.compression) logger?.info('Server', 'HTTP compression enabled')
+  if (cfg.server.http2) logger?.info('Server', 'HTTP/2 enabled')
+  if (cfg.server.cors) logger?.info('Server', 'CORS enabled')
+  if (cfg.server.dashboard) logger?.info('Server', `Dashboard at ${cfg.server.dashboard}`)
+  if (cfg.cache?.enabled) logger?.info('Cache', `${cfg.cache.memoryOnly ? 'Memory-only' : 'Redis'} (TTL ${cfg.cache.ttl}ms, max ${cfg.cache.maxSize} entries)`)
+
+  if (cfg.player?.autoPlay) logger?.info('Player', 'AutoPlay enabled')
+  if (cfg.player?.replaygain) logger?.info('Player', 'ReplayGain enabled')
+  if (cfg.player?.normalization) logger?.info('Player', 'Loudness normalization enabled')
+  if (cfg.player?.stickyQueue) logger?.info('Player', `Sticky queue active (${cfg.player.stickyQueueFile})`)
+  if (cfg.queue?.shuffle) logger?.info('Queue', 'Shuffle enabled')
+
+  if (cfg.proxy?.socks) logger?.info('Proxy', `SOCKS5 ${cfg.proxy.socks}`)
+  if (cfg.proxy?.http) logger?.info('Proxy', `HTTP ${cfg.proxy.http}`)
+
+  if (cfg.logging?.file?.enabled) logger?.info('Logging', `File: ${cfg.logging.file.path}`)
 
   const sources = Object.entries(cfg.sources)
     .filter(([k]) => !['priority', 'requestTimeout', 'userAgent'].includes(k))
@@ -69,33 +81,25 @@ export function logBanner(cfg: any, logger?: Logger) {
       return ` ${icon} ${name}`
     })
 
-  logger?.info('system', `Starting ${NAME} v${VERSION} | ${process.version} ${process.platform} ${process.arch}`)
-  logger?.info('system', `Git ${git.branch}/${git.commit}${git.date ? ` (${git.date})` : ''}`)
+  const longest = Math.max(...sources.map(s => s.length), 0)
+  const boxW = Math.max(longest + 3, 40)
+  const h = '\u2500'
+  const pad = (s: string) => s + ' '.repeat(Math.max(0, boxW - s.length))
+  const fmt = (s: string) => `\u2502 ${pad(s)} \u2502`
 
-  logger?.info('startup', `\u250C${'\u2500'.repeat(BOX_W + 2)}\u2510`)
-  logger?.info('startup', fmt(`${NAME} v${VERSION}`))
-  logger?.info('startup', fmt(`Host: ${cfg.server.host}:${cfg.server.port}`))
-  logger?.info('startup', fmt(`Node: ${process.version} (${process.platform})`))
-  logger?.info('startup', fmt(`Lavalink: v${cfg.lavalink.apiVersion}`))
-  logger?.info('startup', fmt(cluster))
-  logger?.info('startup', fmt(ratelimit))
-  logger?.info('startup', fmt(logFile))
-  if (features.length > 0) logger?.info('startup', fmt(`Features: ${features.join(', ')}`))
-  logger?.info('startup', `\u251C${'\u2500'.repeat(BOX_W + 2)}\u2524`)
-
+  logger?.info('Sources', `\u250C${h.repeat(boxW + 2)}\u2510`)
   for (const line of sources) {
-    logger?.info('startup', fmt(pad(line, BOX_W - 1)))
+    logger?.info('Sources', fmt(line))
   }
-
-  logger?.info('startup', `\u2514${'\u2500'.repeat(BOX_W + 2)}\u2518`)
+  logger?.info('Sources', `\u2514${h.repeat(boxW + 2)}\u2518`)
 }
 
 export function logMemory(logger?: Logger) {
   const mem = process.memoryUsage()
-  logger?.debug('memory', `rss=${(mem.rss / 1024 / 1024).toFixed(1)}MB heap=${(mem.heapUsed / 1024 / 1024).toFixed(1)}/${(mem.heapTotal / 1024 / 1024).toFixed(1)}MB ext=${(mem.external / 1024 / 1024).toFixed(1)}MB`)
+  logger?.debug('Memory', `rss=${(mem.rss / 1024 / 1024).toFixed(1)}MB heap=${(mem.heapUsed / 1024 / 1024).toFixed(1)}/${(mem.heapTotal / 1024 / 1024).toFixed(1)}MB ext=${(mem.external / 1024 / 1024).toFixed(1)}MB`)
 }
 
 export function logPlayerAction(guildId: string, action: string, detail?: string, logger?: Logger) {
   const msg = `${guildId} ${action}${detail ? ` (${detail})` : ''}`
-  logger?.info('player', msg)
+  logger?.info('Player', msg)
 }

@@ -96,7 +96,7 @@ const pm = new PlayerManager({
     if (state.track && !state.paused) {
       const progress = formatTrackProgress(state.position, state.track.info.duration)
       const mem = Math.round(process.memoryUsage().rss / 1024 / 1024)
-      logger.info('player', `${progress} | players: ${pm.count()} | mem: ${mem}MB`)
+      logger.info('Player', `${progress} | players: ${pm.count()} | mem: ${mem}MB`)
     }
   },
   onQueueEnd: (p) => {
@@ -109,13 +109,13 @@ const pm = new PlayerManager({
   },
 }, Boolean(cfg.player?.stickyQueue), cfg.player?.stickyQueueFile ?? '')
 
-if (cfg.proxy?.socks) logger.info('proxy', `SOCKS5 proxy: ${cfg.proxy.socks}`)
+// proxy is logged in logBanner now
 const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player, proxy: cfg.proxy, youtube: cfg.sources?.youtube }, logger)
 
 // Auto-leave (voice activity detection)
 if (cfg.player?.autoLeaveMs && cfg.player.autoLeaveMs > 0) {
   pm.setAutoLeave(cfg.player.autoLeaveMs, (guildId) => {
-    logger.info('autoleave', `guild=${guildId} disconnected due to inactivity`)
+    logger.info('AutoLeave', `Guild ${guildId} disconnected due to inactivity`)
     wsHandler.cleanupGuild(guildId)
     pm.remove(guildId)
   })
@@ -241,7 +241,7 @@ if (cfg.server.versionPath) {
 // Graceful shutdown
 const shutdownDelay = cfg.shutdownDelay ?? 10_000
 async function shutdown() {
-  logger.info('system', 'Shutting down...')
+  logger.info('System', 'Shutting down...')
   pm.reset()
   await new Promise(r => setTimeout(r, 100))
   srv.close().then(() => process.exit(0))

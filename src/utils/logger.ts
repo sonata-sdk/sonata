@@ -91,9 +91,9 @@ export class Logger {
         return String(a)
       }).join(' ')}`
     }
-    const badge = BADGES[level](` ${LEVEL_LABELS[level]} `)
-    const mod = module ? chalk.bold(module) + ' ' : ''
-    return `${ts()} ${badge} \u203A${mod}\u203A ${fullMsg}`
+    const badge = BADGES[level](`[${LEVEL_LABELS[level]}]`)
+    const mod = module ? chalk.bold(`>: ${module} >`) : '>:'
+    return `${ts()} ${badge} ${mod} ${fullMsg}`
   }
 
   #write(level: Level, module: string, msg: string, ...args: any[]) {
@@ -114,7 +114,7 @@ export class Logger {
 
     if (this.#fileStream) {
       const label = LEVEL_LABELS[level]
-      const mod = module ? ` ${module} >` : ''
+      const mod = module ? ` >: ${module} >` : ' >:'
       const tsFull = new Date().toISOString()
       let fullMsg = msg
       if (args.length > 0) {
@@ -124,7 +124,7 @@ export class Logger {
           return String(a)
         }).join(' ')}`
       }
-      this.#fileStream.write(`[${tsFull}] [${label}] >:${mod} ${fullMsg}\n`)
+      this.#fileStream.write(`[${tsFull}] [${label}]${mod} ${fullMsg}\n`)
     }
   }
 

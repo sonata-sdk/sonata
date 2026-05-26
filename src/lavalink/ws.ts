@@ -57,11 +57,11 @@ export class LavalinkWS {
     if (resumeSessionId && this.sessions.get(resumeSessionId)) {
       sessionId = resumeSessionId
       resumed = true
-      this.#logger?.info('sessions', `Resumed session ${sessionId} for user=${userId || 'unknown'}`)
+      this.#logger?.info('Sessions', `Resumed session ${sessionId} for user=${userId || 'unknown'}`)
     } else {
       const session = this.sessions.create(false, '')
       sessionId = session.id
-      this.#logger?.info('sessions', `New session ${sessionId} for user=${userId || 'unknown'}`)
+      this.#logger?.info('Sessions', `New session ${sessionId} for user=${userId || 'unknown'}`)
     }
 
     const client: WSClient = { ws, sessionId, resumed, userId }
@@ -75,12 +75,12 @@ export class LavalinkWS {
     })
 
     ws.on('close', () => {
-      this.#logger?.info('sessions', `Session ${sessionId} disconnected, waiting 60s for resume`)
+      this.#logger?.info('Sessions', `Session ${sessionId} disconnected, waiting 60s for resume`)
       setTimeout(() => {
         const c = this.#clients.get(sessionId)
         if (c && c === client) {
           this.#clients.delete(sessionId)
-          this.#logger?.info('sessions', `Session ${sessionId} expired`)
+          this.#logger?.info('Sessions', `Session ${sessionId} expired`)
         }
       }, 60000)
     })
@@ -115,7 +115,7 @@ export class LavalinkWS {
         const { sessionId, event } = msg
         if (!event) return
 
-        this.#logger?.debug('ws', `voiceUpdate: guild=${guildId} endpoint=${event.endpoint}`)
+        this.#logger?.debug('WS', `voiceUpdate: guild=${guildId} endpoint=${event.endpoint}`)
 
         const existing = this.#voices.get(guildId)
         if (existing) existing.close()
@@ -164,7 +164,7 @@ export class LavalinkWS {
 
         // Process any pending play requests
         const pending = this.#pendingPlays.get(guildId)
-        this.#logger?.debug('ws', `voiceUpdate: pending=${pending?.length ?? 0} guild=${guildId}`)
+        this.#logger?.debug('WS', `voiceUpdate: pending=${pending?.length ?? 0} guild=${guildId}`)
         if (pending && pending.length > 0) {
           for (const req of pending) {
             this.#streamAudio(guildId, req.track, req.client, req.startTime)
@@ -175,10 +175,10 @@ export class LavalinkWS {
       }
 
       case 'play': {
-        this.#logger?.debug('ws', `play: guild=${guildId} track_raw="${msg.track?.substring(0, 40)}..."`)
+        this.#logger?.debug('WS', `play: guild=${guildId} track_raw="${msg.track?.substring(0, 40)}..."`)
         const track = msg.track ? decodeTrack(msg.track, this.#logger ?? undefined) : null
         if (!track) {
-          this.#logger?.debug('ws', `play: guild=${guildId} FAILED to decode track`)
+          this.#logger?.debug('WS', `play: guild=${guildId} FAILED to decode track`)
           this.#broadcast(client, 'event', {
             type: 'TrackExceptionEvent',
             guildId,
@@ -187,7 +187,7 @@ export class LavalinkWS {
           return
         }
 
-        this.#logger?.debug('ws', `play: guild=${guildId} track="${track.info.title}" voice=${this.#voices.has(guildId)}`)
+        this.#logger?.debug('WS', `play: guild=${guildId} track="${track.info.title}" voice=${this.#voices.has(guildId)}`)
         p.play(track)
 
         // If voice isn't set up yet, queue the play
@@ -211,7 +211,7 @@ export class LavalinkWS {
       }
 
       case 'stop': {
-        this.#logger?.info('player', `stop guild=${guildId}`)
+        this.#logger?.info('Player', `stop guild=${guildId}`)
         const streamer = this.#streamers.get(guildId)
         streamer?.stop()
         const t = p.track
@@ -230,11 +230,11 @@ export class LavalinkWS {
       case 'pause': {
         const streamer = this.#streamers.get(guildId)
         if (msg.pause !== false) {
-          this.#logger?.info('player', `pause guild=${guildId}`)
+          this.#logger?.info('Player', `pause guild=${guildId}`)
           streamer?.pause()
           p.pause()
         } else {
-          this.#logger?.info('player', `resume guild=${guildId}`)
+          this.#logger?.info('Player', `resume guild=${guildId}`)
           streamer?.resume()
           p.resume()
         }
@@ -242,7 +242,7 @@ export class LavalinkWS {
       }
 
       case 'seek': {
-        this.#logger?.info('player', `seek guild=${guildId} pos=${msg.position ?? 0}`)
+        this.#logger?.info('Player', `seek guild=${guildId} pos=${msg.position ?? 0}`)
         const streamer = this.#streamers.get(guildId)
         streamer?.seek(msg.position ?? 0)
         p.setPosition(msg.position ?? 0)
@@ -250,7 +250,7 @@ export class LavalinkWS {
       }
 
       case 'volume': {
-        this.#logger?.debug('player', `volume guild=${guildId} vol=${msg.volume ?? 100}`)
+        this.#logger?.debug('Player', `volume guild=${guildId} vol=${msg.volume ?? 100}`)
         const streamer = this.#streamers.get(guildId)
         streamer?.setVolume(msg.volume ?? 100)
         p.setVolume(msg.volume ?? 100)
@@ -258,7 +258,7 @@ export class LavalinkWS {
       }
 
       case 'destroy': {
-        this.#logger?.info('player', `destroy guild=${guildId}`)
+        this.#logger?.info('Player', `destroy guild=${guildId}`)
         this.#cleanup(guildId)
         p.stop()
         this.pm.remove(guildId)
@@ -275,7 +275,7 @@ export class LavalinkWS {
         const f = { ...msg }
         delete f.op
         delete f.guildId
-        this.#logger?.info('player', `filters guild=${guildId} keys=${Object.keys(f).join(',')}`)
+        this.#logger?.info('Player', `filters guild=${guildId} keys=${Object.keys(f).join(',')}`)
         p.setFilters(f)
         this.#streamers.get(guildId)?.setPlayerFilters(f)
         break
@@ -285,20 +285,20 @@ export class LavalinkWS {
 
   async #streamAudio(guildId: string, track: Track, client: WSClient, startTime = 0) {
     const streamer = this.#streamers.get(guildId)
-    this.#logger?.debug('ws', `streamAudio: guild=${guildId} hasStreamer=${!!streamer} uri=${track.info.uri}`)
+    this.#logger?.debug('WS', `streamAudio: guild=${guildId} hasStreamer=${!!streamer} uri=${track.info.uri}`)
     if (!streamer) return
 
     // Resolve streaming URL if needed (YouTube tracks have uri = watch page URL)
     if (!track.info.uri || track.info.uri.includes('youtube.com/watch?v=') || track.info.uri.includes('youtu.be/')) {
-      this.#logger?.debug('ws', `streamAudio: resolving stream URL for ${track.info.identifier}`)
+      this.#logger?.debug('WS', `streamAudio: resolving stream URL for ${track.info.identifier}`)
       const resolved = await this.#resolveStreamUrl(track)
-      this.#logger?.debug('ws', `streamAudio: resolved=${resolved}`)
+      this.#logger?.debug('WS', `streamAudio: resolved=${resolved}`)
       if (!resolved) {
-        this.#logger?.warn('ws', `streamAudio: failed to resolve stream URL for ${track.info.identifier}, trying original URI`)
+        this.#logger?.warn('WS', `streamAudio: failed to resolve stream URL for ${track.info.identifier}, trying original URI`)
       }
     }
 
-    this.#logger?.debug('ws', `streamAudio: calling streamer.play()`)
+    this.#logger?.debug('WS', `streamAudio: calling streamer.play()`)
     streamer.play(track, startTime)
   }
 
@@ -322,7 +322,7 @@ export class LavalinkWS {
   }
 
   #cleanup(guildId: string) {
-    this.#logger?.debug('ws', `cleanup guild=${guildId}`)
+    this.#logger?.debug('WS', `cleanup guild=${guildId}`)
     const streamer = this.#streamers.get(guildId)
     streamer?.stop()
     this.#streamers.delete(guildId)

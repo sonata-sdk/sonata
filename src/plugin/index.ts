@@ -106,7 +106,7 @@ export class PluginManager {
       }
     }
 
-    this.#logger.info('plugins', `Loaded ${this.#plugins.length} plugin(s)`)
+    this.#logger.info('Plugins', `Loaded ${this.#plugins.length} plugin(s)`)
   }
 
   register(plugin: Plugin, meta?: { source?: string }) {

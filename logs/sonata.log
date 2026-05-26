@@ -1,0 +1,45 @@
+[2026-05-26T02:42:10.171Z] [INFO] >: system > Starting sonata v4.0.0 | v22.22.2 linux x64
+[2026-05-26T02:42:10.171Z] [INFO] >: system > Git main/c9319e6 (2026-05-26T02:36:01+00:00)
+[2026-05-26T02:42:10.171Z] [INFO] >: startup > ┌──────────────────────────────────────────────────────┐
+[2026-05-26T02:42:10.172Z] [INFO] >: startup > │ sonata v4.0.0                                        │
+[2026-05-26T02:42:10.172Z] [INFO] >: startup > │ Host: 0.0.0.0:8080                                   │
+[2026-05-26T02:42:10.172Z] [INFO] >: startup > │ Node: v22.22.2 (linux)                               │
+[2026-05-26T02:42:10.172Z] [INFO] >: startup > │ Lavalink: v4                                         │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │ cluster:1 nodes                                      │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │ rate-limit: 100/60s                                  │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │ log: logs/sonata.log                                 │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │ Features: cache, cors, dashboard, autoplay           │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > ├──────────────────────────────────────────────────────┤
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │  ▶️ youtube                                          │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │  ☁️ soundcloud                                       │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │  🔴 spotify                                          │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │  💿 bandcamp                                         │
+[2026-05-26T02:42:10.173Z] [INFO] >: startup > │  📺 twitch                                           │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🎬 vimeo                                            │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🎵 deezer                                           │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🍎 apple                                            │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  📹 nico                                             │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🌧️ mixcloud                                        │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🎤 podcast                                          │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🎼 jiosaavn                                         │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🌐 http                                             │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  💾 local                                            │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > │  🔴 tiktok                                           │
+[2026-05-26T02:42:10.174Z] [INFO] >: startup > └──────────────────────────────────────────────────────┘
+[2026-05-26T02:42:10.184Z] [INFO] >: sources > Registered source: youtube
+[2026-05-26T02:42:10.185Z] [INFO] >: sources > Registered source: soundcloud
+[2026-05-26T02:42:10.196Z] [INFO] >: sources > Registered source: http
+[2026-05-26T02:42:10.197Z] [INFO] >: sources > Registered source: local
+[2026-05-26T02:42:10.197Z] [INFO] >: sources > Registered source: bandcamp
+[2026-05-26T02:42:10.198Z] [INFO] >: sources > Registered source: twitch
+[2026-05-26T02:42:10.199Z] [INFO] >: sources > Registered source: vimeo
+[2026-05-26T02:42:10.201Z] [INFO] >: sources > Registered source: deezer
+[2026-05-26T02:42:10.201Z] [INFO] >: sources > Registered source: apple
+[2026-05-26T02:42:10.202Z] [INFO] >: sources > Registered source: nico
+[2026-05-26T02:42:10.203Z] [INFO] >: sources > Registered source: mixcloud
+[2026-05-26T02:42:10.205Z] [INFO] >: sources > Registered source: podcast
+[2026-05-26T02:42:10.213Z] [INFO] >: sources > Registered source: jiosaavn
+[2026-05-26T02:42:10.214Z] [INFO] >: plugins > Loaded 0 plugin(s)
+[2026-05-26T02:42:10.219Z] [INFO] >: proxy > SOCKS5 proxy: socks5h://127.0.0.1:40000
+[2026-05-26T02:42:10.228Z] [INFO] >: http > Sonata server started on 0.0.0.0:8080
+[2026-05-26T02:45:55.752Z] [INFO] >: system > Shutting down...

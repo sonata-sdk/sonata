@@ -21,7 +21,7 @@ export class AudioSourceManager {
   register(source: AudioSource) {
     this.#sources = this.#sources.filter(s => s.name !== source.name)
     this.#sources.push(source)
-    this.#logger?.info('sources', `Registered source: ${source.name}`)
+    this.#logger?.info('Sources', `Registered source: ${source.name}`)
   }
 
   configure(config: AudioPlayerManagerConfiguration) {
@@ -37,17 +37,17 @@ export class AudioSourceManager {
   }
 
   async resolve(query: string): Promise<{ source: AudioSource; tracks: Track[] } | null> {
-    this.#logger?.debug('resolve', `Resolving: "${query.substring(0, 80)}"`)
+    this.#logger?.debug('Resolve', `"${query.substring(0, 80)}"`)
 
     const start = Date.now()
 
     for (const source of this.#sources) {
       if (source.matches(query)) {
-        this.#logger?.debug('resolve', `Trying ${source.name} (URL match)`)
+        this.#logger?.debug('Resolve', `Trying ${source.name} (URL match)`)
         const tracks = await source.resolve(query)
         if (tracks.length > 0) {
           const elapsed = Date.now() - start
-          this.#logger?.info('resolve', `Resolved "${query.substring(0, 40)}" via ${source.name} (${tracks.length} tracks, ${elapsed}ms)`)
+          this.#logger?.info('Resolve', `"${query.substring(0, 40)}" via ${source.name} (${tracks.length} tracks, ${elapsed}ms)`)
           return { source, tracks }
         }
       }
@@ -55,18 +55,18 @@ export class AudioSourceManager {
 
     for (const source of this.#sources) {
       try {
-        this.#logger?.debug('resolve', `Trying ${source.name} (search)`)
+        this.#logger?.debug('Resolve', `Trying ${source.name} (search)`)
         const startSearch = Date.now()
         const tracks = await source.resolve(query)
         if (tracks.length > 0) {
           const elapsed = Date.now() - start
-          this.#logger?.info('resolve', `Resolved "${query.substring(0, 40)}" via ${source.name} (${tracks.length} tracks, ${elapsed}ms)`)
+          this.#logger?.info('Resolve', `"${query.substring(0, 40)}" via ${source.name} (${tracks.length} tracks, ${elapsed}ms)`)
           return { source, tracks }
         }
       } catch { continue }
     }
 
-    this.#logger?.warn('resolve', `No results for "${query.substring(0, 80)}"`)
+    this.#logger?.warn('Resolve', `No results for "${query.substring(0, 80)}"`)
     return null
   }
 
