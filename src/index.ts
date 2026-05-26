@@ -1,24 +1,25 @@
-import { loadConfig } from './config/index.js'
-import { Server } from './server/index.js'
-import { PlayerManager } from './player/manager.js'
-import { SessionManager } from './lavalink/session.js'
-import { LavalinkAPI } from './lavalink/api.js'
-import { LavalinkWS } from './lavalink/ws.js'
-import { Resolver } from './resolving/index.js'
-import { PluginManager } from './plugin/index.js'
-import { Metrics } from './metrics/index.js'
-import { TrackCache } from './cache/index.js'
-import { AuthManager } from './middleware/auth.js'
-import { corsHandler } from './middleware/cors.js'
-import { dashboardHandler } from './dashboard/index.js'
-import { createLogger } from './utils/logger.js'
-import { logBanner, logMemory } from './utils/logging.js'
-import { showBanner, formatTrackProgress } from './console/index.js'
-import { VERSION } from './version.js'
+import { loadConfig } from '#config/index'
+import { Server } from '#server/index'
+import { PlayerManager } from '#player/manager'
+import { SessionManager } from '#lavalink/session'
+import { LavalinkAPI } from '#lavalink/api'
+import { LavalinkWS } from '#lavalink/ws'
+import { Resolver } from '#resolving/index'
+import { PluginManager } from '#plugin/index'
+import { Metrics } from '#metrics/index'
+import { TrackCache } from '#cache/index'
+import { AuthManager } from '#middleware/auth'
+import { corsHandler } from '#middleware/cors'
+import { dashboardHandler } from '#dashboard/index'
+import { createLogger } from '#utils/logger'
+import { logBanner, logMemory } from '#utils/logging'
+import { showBanner, formatTrackProgress } from '#console/index'
+import { VERSION } from '#version'
 
 const cfg = await loadConfig(process.argv[2])
 const logger = createLogger(cfg.logging)
 
+showBanner(cfg)
 logBanner(cfg, logger)
 
 const resolver = new Resolver()
@@ -255,6 +256,4 @@ if (process.env['NODE_ENV'] !== 'test') {
 }
 
 // Start
-srv.listen(cfg.server.port, cfg.server.host, () => {
-  showBanner(cfg)
-})
+srv.listen(cfg.server.port, cfg.server.host, () => {})

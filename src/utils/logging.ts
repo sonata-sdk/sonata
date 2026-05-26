@@ -39,9 +39,6 @@ const SOURCE_ICONS: Record<string, string> = {
 export function logBanner(cfg: any, logger?: Logger) {
   const git = getGitInfo()
 
-  logger?.info('System', `${NAME} v${VERSION}  ·  ${process.version} ${process.platform} ${process.arch}`)
-  logger?.info('System', `Git ${git.branch}/${git.commit}${git.date ? `  ·  ${git.date}` : ''}`)
-
   // Sources box — FIRST
   const sources = Object.entries(cfg.sources)
     .filter(([k]) => !['priority', 'requestTimeout', 'userAgent'].includes(k))
@@ -64,7 +61,9 @@ export function logBanner(cfg: any, logger?: Logger) {
   }
   logger?.info('Sources', `\u2514${h.repeat(boxW + 2)}\u2518`)
 
-  // Feature messages — AFTER banner
+  // System info right after banner
+  logger?.info('System', `${NAME} v${VERSION}  ·  ${process.version} ${process.platform} ${process.arch}`)
+  logger?.info('System', `Git ${git.branch}/${git.commit}${git.date ? `  ·  ${git.date}` : ''}`)
   logger?.info('System', `Listening on ${cfg.server.host}:${cfg.server.port}  (Lavalink v${cfg.lavalink.apiVersion})`)
 
   if (cfg.clustering?.enabled) {
