@@ -1,5 +1,29 @@
+import { execSync } from 'node:child_process'
 import { VERSION, NAME } from '../version.js'
 import type { Logger } from './logger.js'
+
+let _gitInfo: { branch: string; commit: string; date: string } | null = null
+
+export function getGitInfo() {
+  if (_gitInfo) return _gitInfo
+  try {
+    _gitInfo = {
+      branch: execSync('git rev-parse --abbrev-ref HEAD 2>/dev/null', { encoding: 'utf-8' }).trim(),
+      commit: execSync('git rev-parse --short HEAD 2>/dev/null', { encoding: 'utf-8' }).trim(),
+      date: execSync('git log -1 --format=%cI 2>/dev/null', { encoding: 'utf-8' }).trim(),
+    }
+  } catch {
+    _gitInfo = { branch: 'unknown', commit: 'unknown', date: '' }
+  }
+  return _gitInfo
+}
+
+export function logStartupBanner(logger?: Logger) {
+  const git = getGitInfo()
+  logger?.info('system', `Starting ${NAME} v${VERSION}`)
+  logger?.info('system', `Runtime: ${process.version} on ${process.platform} (${process.arch})`)
+  logger?.info('system', `Git branch: ${git.branch}, commit: ${git.commit}${git.date ? `, committed: ${git.date}` : ''}`)
+}
 
 const SOURCE_ICONS: Record<string, string> = {
   youtube: '▶️',

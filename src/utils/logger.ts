@@ -1,6 +1,7 @@
 import { createWriteStream, existsSync, mkdirSync, WriteStream } from 'node:fs'
 import { dirname } from 'node:path'
 import { inspect } from 'node:util'
+import chalk, { type ChalkInstance } from 'chalk'
 
 const LEVELS = ['trace', 'verbose', 'debug', 'normal', 'warn', 'error'] as const
 type Level = typeof LEVELS[number]
@@ -11,24 +12,13 @@ const LEVEL_MAP: Record<string, Level> = {
   fatal: 'error',
 }
 
-const RESET = '\x1b[0m'
-
-const LEVEL_STYLES: Record<Level, string> = {
-  trace:   '\x1b[100m \x1b[30mTRACE\x1b[0m',
-  verbose: '\x1b[46m \x1b[30mVERBOSE\x1b[0m',
-  debug:   '\x1b[44m \x1b[97mDEBUG\x1b[0m',
-  normal:  '\x1b[42m \x1b[30mINFO\x1b[0m',
-  warn:    '\x1b[43m \x1b[30mWARN\x1b[0m',
-  error:   '\x1b[41m \x1b[97mERROR\x1b[0m',
-}
-
-function timestamp(): string {
-  const d = new Date()
-  return `[${[
-    String(d.getHours()).padStart(2, '0'),
-    String(d.getMinutes()).padStart(2, '0'),
-    String(d.getSeconds()).padStart(2, '0'),
-  ].join(':')}.${String(d.getMilliseconds()).padStart(3, '0')}]`
+const LEVEL_LABELS: Record<Level, string> = {
+  trace: 'TRACE',
+  verbose: 'VERBOSE',
+  debug: 'DEBUG',
+  normal: 'INFO',
+  warn: 'WARN',
+  error: 'ERROR',
 }
 
 function normalizeLevel(level: string): number {
@@ -37,32 +27,43 @@ function normalizeLevel(level: string): number {
   return idx >= 0 ? idx : LEVELS.indexOf('normal')
 }
 
+function ts(): string {
+  const d = new Date()
+  return `[${[
+    String(d.getHours()).padStart(2, '0'),
+    String(d.getMinutes()).padStart(2, '0'),
+    String(d.getSeconds()).padStart(2, '0'),
+  ].join(':')}.${String(d.getMilliseconds()).padStart(3, '0')}]`
+}
+
+const BADGES: Record<Level, ChalkInstance> = {
+  trace: chalk.bgBlack.white,
+  verbose: chalk.bgCyan.black,
+  debug: chalk.bgBlue.white,
+  normal: chalk.bgGreen.black,
+  warn: chalk.bgYellow.black,
+  error: chalk.bgRed.white,
+}
+
 export class Logger {
   #levelIdx: number
   #format: string
-  #colorize: boolean
   #moduleLevels: Record<string, string>
   #fileCfg: any
   #fileStream: WriteStream | null = null
   #module: string
-  #showPid: boolean
 
   constructor(cfg: {
     level?: string
     format?: string
-    colorize?: boolean
-    timestampFormat?: string
     moduleLevels?: Record<string, string>
     file?: { enabled?: boolean; path?: string; maxSize?: number; maxFiles?: number; compress?: boolean }
     module?: string
-    showPid?: boolean
   }) {
     this.#levelIdx = normalizeLevel(cfg.level ?? 'normal')
     this.#format = cfg.format ?? 'text'
-    this.#colorize = cfg.colorize ?? true
     this.#moduleLevels = cfg.moduleLevels ?? {}
     this.#module = cfg.module ?? ''
-    this.#showPid = cfg.showPid ?? true
     this.#fileCfg = cfg.file ?? null
     if (this.#fileCfg?.enabled && this.#fileCfg.path) {
       const dir = dirname(this.#fileCfg.path)
@@ -81,68 +82,50 @@ export class Logger {
     return lvl >= this.#levelIdx
   }
 
-  #formatMsg(level: Level, module: string, msg: string, args: any[]): string {
+  #fmt(level: Level, module: string, msg: string, args: any[]): string {
     let fullMsg = msg
     if (args.length > 0) {
-      const extras = args.map(a => {
+      fullMsg = `${msg} ${args.map(a => {
         if (a instanceof Error) return a.stack ?? a.message
         if (typeof a === 'object') return inspect(a, { depth: 2, colors: false })
         return String(a)
-      }).join(' ')
-      fullMsg = `${msg} ${extras}`
+      }).join(' ')}`
     }
-    const levelStyle = LEVEL_STYLES[level]
-    const modPart = module ? `\x1b[1m${module}\x1b[22m >` : ''
-    return `${timestamp()} ${levelStyle} >:${modPart} ${fullMsg}`
-  }
-
-  #fileLine(level: Level, module: string, msg: string, args: any[]): string {
-    const ts = new Date().toISOString()
-    let fullMsg = msg
-    if (args.length > 0) {
-      const extras = args.map(a => {
-        if (a instanceof Error) return a.stack ?? a.message
-        if (typeof a === 'object') return JSON.stringify(a)
-        return String(a)
-      }).join(' ')
-      fullMsg = `${msg} ${extras}`
-    }
-    const label = level === 'normal' ? 'INFO' : level.toUpperCase()
-    const modPart = module ? ` ${module} >` : ''
-    return `[${ts}] [${label}] >:${modPart} ${fullMsg}`
+    const badge = BADGES[level](` ${LEVEL_LABELS[level]} `)
+    const mod = module ? chalk.bold(module) + ' ' : ''
+    return `${ts()} ${badge} \u203A${mod}\u203A ${fullMsg}`
   }
 
   #write(level: Level, module: string, msg: string, ...args: any[]) {
     if (!this.#shouldLog(level)) return
-    if (this.#format === 'json') {
-      const entry = {
-        timestamp: new Date().toISOString(),
-        pid: process.pid,
-        level: level === 'normal' ? 'info' : level,
-        module,
-        msg,
-        args: args.length > 0 ? args.map(a => a instanceof Error ? a.message : a) : undefined,
-      }
-      if (this.#colorize) {
-        process.stderr.write(JSON.stringify(entry) + '\n')
-      } else {
-        process.stderr.write(JSON.stringify(entry) + '\n')
-      }
-    } else {
-      const text = this.#formatMsg(level, module, msg, args)
-      if (this.#colorize) {
-        process.stderr.write(text + '\n')
-      } else {
-        process.stderr.write(this.#stripAnsi(text) + '\n')
-      }
-    }
-    if (this.#fileStream) {
-      this.#fileStream.write(this.#fileLine(level, module, msg, args) + '\n')
-    }
-  }
 
-  #stripAnsi(s: string): string {
-    return s.replace(/\x1b\[[\d;]+m/g, '')
+    if (this.#format === 'json') {
+      const entry = JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: LEVEL_LABELS[level],
+        module,
+        message: msg,
+        args: args.length > 0 ? args.map(a => a instanceof Error ? a.message : a) : undefined,
+      })
+      process.stderr.write(entry + '\n')
+    } else {
+      process.stderr.write(this.#fmt(level, module, msg, args) + '\n')
+    }
+
+    if (this.#fileStream) {
+      const label = LEVEL_LABELS[level]
+      const mod = module ? ` ${module} >` : ''
+      const tsFull = new Date().toISOString()
+      let fullMsg = msg
+      if (args.length > 0) {
+        fullMsg = `${msg} ${args.map(a => {
+          if (a instanceof Error) return a.stack ?? a.message
+          if (typeof a === 'object') return JSON.stringify(a)
+          return String(a)
+        }).join(' ')}`
+      }
+      this.#fileStream.write(`[${tsFull}] [${label}] >:${mod} ${fullMsg}\n`)
+    }
   }
 
   trace(module: string, msg: string, ...args: any[]) { this.#write('trace', module, msg, ...args) }
@@ -156,12 +139,9 @@ export class Logger {
     return new Logger({
       level: LEVELS[this.#levelIdx],
       format: this.#format,
-      colorize: this.#colorize,
-      timestampFormat: 'none',
       moduleLevels: this.#moduleLevels,
       file: this.#fileCfg,
       module,
-      showPid: false,
     })
   }
 }
@@ -170,10 +150,7 @@ export function createLogger(cfg: any): Logger {
   return new Logger({
     level: cfg.level ?? 'normal',
     format: cfg.format ?? 'text',
-    colorize: cfg.colorize ?? true,
-    timestampFormat: cfg.timestampFormat ?? 'iso',
     moduleLevels: cfg.moduleLevels ?? {},
     file: cfg.file ?? null,
-    showPid: cfg.showPid ?? true,
   })
 }
