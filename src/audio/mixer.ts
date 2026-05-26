@@ -9,6 +9,9 @@ export interface FilterConfig {
   distortion?: { sinOffset?: number; sinScale?: number; cosOffset?: number; cosScale?: number; tanOffset?: number; tanScale?: number }
   channelMix?: { leftToLeft?: number; leftToRight?: number; rightToLeft?: number; rightToRight?: number }
   lowPass?: { smoothing?: number }
+  highPass?: { smoothing?: number }
+  reverb?: { delay?: number; decay?: number; mix?: number }
+  limiter?: { threshold?: number; attack?: number; release?: number; ratio?: number }
   normalization?: { enabled: boolean; target?: number }
 }
 
@@ -23,6 +26,9 @@ export interface ProcessedFilters {
   distortion: Required<NonNullable<FilterConfig['distortion']>>
   channelMix: Required<NonNullable<FilterConfig['channelMix']>>
   lowPass: Required<NonNullable<FilterConfig['lowPass']>>
+  highPass: Required<NonNullable<FilterConfig['highPass']>>
+  reverb: Required<NonNullable<FilterConfig['reverb']>>
+  limiter: Required<NonNullable<FilterConfig['limiter']>>
   normalization: { enabled: boolean; target: number; gain: number }
 }
 
@@ -37,6 +43,9 @@ const DEFAULTS: ProcessedFilters = {
   distortion: { sinOffset: 0, sinScale: 1, cosOffset: 0, cosScale: 1, tanOffset: 0, tanScale: 1 },
   channelMix: { leftToLeft: 1, leftToRight: 0, rightToLeft: 0, rightToRight: 1 },
   lowPass: { smoothing: 1 },
+  highPass: { smoothing: 0 },
+  reverb: { delay: 0.05, decay: 0.3, mix: 0 },
+  limiter: { threshold: 1, attack: 0.002, release: 0.1, ratio: 20 },
   normalization: { enabled: false, target: -14, gain: 1.0 },
 }
 
@@ -62,6 +71,9 @@ export class AudioMixer {
     if (opts.distortion) Object.assign(this.#filters.distortion, opts.distortion)
     if (opts.channelMix) Object.assign(this.#filters.channelMix, opts.channelMix)
     if (opts.lowPass) Object.assign(this.#filters.lowPass, opts.lowPass)
+    if (opts.highPass) Object.assign(this.#filters.highPass, opts.highPass)
+    if (opts.reverb) Object.assign(this.#filters.reverb, opts.reverb)
+    if (opts.limiter) Object.assign(this.#filters.limiter, opts.limiter)
     if (opts.normalization !== undefined) {
       this.#filters.normalization.enabled = opts.normalization.enabled ?? false
       if (opts.normalization.target !== undefined) this.#filters.normalization.target = opts.normalization.target
@@ -80,6 +92,9 @@ export class AudioMixer {
       distortion: { ...this.#filters.distortion },
       channelMix: { ...this.#filters.channelMix },
       lowPass: { ...this.#filters.lowPass },
+      highPass: { ...this.#filters.highPass },
+      reverb: { ...this.#filters.reverb },
+      limiter: { ...this.#filters.limiter },
       normalization: { ...this.#filters.normalization },
     }
   }
@@ -203,6 +218,17 @@ export class AudioMixer {
       }
     }
 
+    // High Pass (1-pole)
+    if (f.highPass.smoothing > 0) {
+      let prev = 0
+      const c = f.highPass.smoothing
+      for (let i = 0; i < len; i++) {
+        const cur = samples[i]
+        samples[i] = cur - (prev + c * (cur - prev)) | 0
+        prev = prev + c * (cur - prev)
+      }
+    }
+
     // Distortion
     if (f.distortion.sinOffset !== 0 || f.distortion.tanOffset !== 0) {
       for (let i = 0; i < len; i++) {
@@ -221,6 +247,42 @@ export class AudioMixer {
         const mono = (samples[i] + samples[i + 1]) / 2
         samples[i] = Math.round(samples[i] * f.karaoke.monoLevel - mono * f.karaoke.level)
         samples[i + 1] = Math.round(samples[i + 1] * f.karaoke.monoLevel - mono * f.karaoke.level)
+      }
+    }
+
+    // Reverb (simple comb filter + all-pass)
+    if (f.reverb.mix > 0 && ch === 2) {
+      const delaySamples = Math.floor(f.reverb.delay * sampleRate)
+      if (delaySamples > 0 && delaySamples < len) {
+        const buf = new Float64Array(Math.max(delaySamples + 1, 2))
+        let wp = 0
+        for (let i = 0; i < len; i += 2) {
+          buf[wp] = (samples[i] + samples[i + 1]) / 2
+          const rp = (wp - delaySamples + buf.length) % buf.length
+          const wet = buf[rp] * f.reverb.decay
+          samples[i] = Math.max(-32768, Math.min(32767, Math.round(samples[i] * (1 - f.reverb.mix) + wet * f.reverb.mix)))
+          samples[i + 1] = Math.max(-32768, Math.min(32767, Math.round(samples[i + 1] * (1 - f.reverb.mix) + wet * f.reverb.mix)))
+          wp = (wp + 1) % buf.length
+        }
+      }
+    }
+
+    // Limiter (look-ahead with soft knee)
+    if (f.limiter.threshold < 1) {
+      const threshold = f.limiter.threshold * 32768
+      const attackSamples = Math.max(1, Math.floor(f.limiter.attack * sampleRate))
+      const releaseSamples = Math.max(1, Math.floor(f.limiter.release * sampleRate))
+      let gain = 1
+      for (let i = 0; i < len; i++) {
+        const abs = Math.abs(samples[i])
+        const targetGain = abs > threshold ? threshold / abs : 1
+        if (targetGain < gain) {
+          gain += (targetGain - gain) / attackSamples
+        } else {
+          gain += (targetGain - gain) / releaseSamples
+        }
+        if (gain < 0.01) gain = 0.01
+        samples[i] = Math.max(-32768, Math.min(32767, Math.round(samples[i] * gain)))
       }
     }
 

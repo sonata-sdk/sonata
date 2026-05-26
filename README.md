@@ -37,8 +37,8 @@
     <td>YouTube (InnerTube), Spotify, SoundCloud, Deezer, Apple Music, Bandcamp, Twitch, Vimeo, NicoNico, Mixcloud, Podcasts, HTTP, Local</td>
   </tr>
   <tr>
-    <td>🎛️ <strong>10 DSP Filters</strong></td>
-    <td>EQ (15-band), karaoke, timescale, tremolo, vibrato, rotation (8D), distortion, channel mix, low-pass, volume</td>
+    <td>🎛️ <strong>13 DSP Filters</strong></td>
+    <td>EQ (15-band), karaoke, timescale, tremolo, vibrato, rotation (8D), distortion, channel mix, low-pass, high-pass, reverb, limiter, volume</td>
   </tr>
   <tr>
     <td>📦 <strong>Zero Java</strong></td>
@@ -200,8 +200,22 @@ Legacy `/v3/*` endpoints are also available for backward compatibility.
 | **Distortion** | Sin/Cos/Tan waveshaping | — |
 | **Channel Mix** | Left/right mixing matrix | — |
 | **Low Pass** | 1-pole low-pass filter | — |
+| **High Pass** | 1-pole high-pass filter | — |
+| **Reverb** | Comb-filter delay with decay | 0–100% mix |
+| **Limiter** | Dynamic range compression | 0–1 threshold |
 
 Apply via `PATCH /v4/sessions/{id}/players/{guildId}` with `{ filters: { ... } }`.
+
+Example usage:
+```json
+{
+  "filters": {
+    "reverb": { "delay": 0.05, "decay": 0.4, "mix": 0.3 },
+    "highPass": { "smoothing": 0.1 },
+    "limiter": { "threshold": 0.95, "attack": 0.002, "release": 0.1 }
+  }
+}
+```
 
 ---
 
@@ -264,7 +278,7 @@ src/
 ├── lavalink/             # REST API (v3+v4), WS protocol, session manager
 ├── player/               # Player state machine, queue, track encoder, audio streamer
 ├── discord/              # Voice connection (Opus + DAVE/MLS encryption)
-├── audio/                # DSP mixer with 10 filters
+├── audio/                # DSP mixer with 13 filters
 ├── resolving/            # 12 audio source resolvers
 │   ├── youtube/          # InnerTube API (5 client profiles)
 │   ├── soundcloud/       # SoundCloud public API
