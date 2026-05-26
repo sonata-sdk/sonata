@@ -88,10 +88,10 @@ if (clusterManager) {
 const webhooks = cfg.webhooks?.length ? new WebhookManager(cfg.webhooks, logger) : null
 
 // Discord Gateway (auto-connect mode)
-const discordCfg = cfg.discord as { token?: string; intents?: number } | undefined
-if (discordCfg?.token) {
+const discordCfg = cfg.discord
+if (discordCfg?.enabled && discordCfg?.token) {
   import('#discord/gateway').then(({ DiscordGateway }) => {
-    const dg = new DiscordGateway(discordCfg.token!, discordCfg.intents ?? 0)
+    const dg = new DiscordGateway(discordCfg.token, discordCfg.intents ?? 0)
     dg.connect()
     logger.info('Discord', `Gateway connected (intents: ${discordCfg.intents ?? 0})`)
   }).catch((err: any) => logger.warn('Discord', `Gateway init failed: ${err.message}`))

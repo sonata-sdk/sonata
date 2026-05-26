@@ -173,6 +173,63 @@ export default {
     stickyQueueFile: '',
     normalization: false,
     normalizationTarget: -14,
+
+    // ── Audio ducking (reduce volume when others speak) ──
+    ducking: {
+      enabled: false,
+      threshold: 0.02,       // Signal threshold to trigger duck
+      reduceBy: 0.5,         // Volume multiplier (0-1)
+      attackMs: 100,         // Time to reach reduced volume
+      releaseMs: 500,        // Time to restore volume
+      minVolume: 0.05,       // Minimum volume when ducking
+    },
+
+    // ── Gapless playback ──
+    gapless: {
+      enabled: false,
+      maxGapMs: 50,          // Max silence gap to eliminate
+      preferAccurate: true,  // Accurate mode (higher CPU)
+    },
+
+    // ── Fade in/out ──
+    fade: {
+      enabled: false,
+      fadeInMs: 2000,
+      fadeOutMs: 2000,
+      onPlay: true,
+      onPause: true,
+      onResume: false,
+      onSkip: false,
+    },
+
+    // ── Auto volume leveling ──
+    autoVolume: {
+      enabled: false,
+      targetLUFS: -14,       // Integrated loudness target
+      maxGain: 6,            // Max gain in dB
+      minGain: -6,           // Min gain in dB
+      attackMs: 2000,
+      releaseMs: 5000,
+    },
+
+    // ── Player snapshot/restore ──
+    snapshot: {
+      enabled: false,
+      dir: 'data/snapshots',
+      autoSave: true,
+      saveIntervalMs: 60_000,
+      maxSnapshots: 10,
+    },
+
+    // ── Intro/outro system ──
+    introOutro: {
+      enabled: false,
+      introFile: '',
+      outroFile: '',
+      mixIntro: true,        // Mix intro over track start
+      mixOutro: true,        // Mix outro over track end
+    },
+
     // Default filters applied to every player (optional).
     // Lavalink-compatible — all fields can be overridden per-player via API.
     filters: {
@@ -250,6 +307,63 @@ export default {
     configs: {},
     npm: [],
     scanDir: '',
+  },
+
+  // ── Discord Gateway (auto-connect mode) ───────────────────────────
+  discord: {
+    enabled: false,
+    token: '',
+    intents: 0,
+  },
+
+  // ── Webhooks ────────────────────────────────────────────────────────
+  webhooks: [
+    // {
+    //   url: 'https://discord.com/api/webhooks/...',
+    //   secret: 'hmac-secret',
+    //   events: ['TrackStartEvent', 'TrackEndEvent', 'TrackExceptionEvent'],
+    //   retries: 3,
+    //   retryDelay: 1000,
+    // },
+  ],
+
+  // ── Database ─────────────────────────────────────────────────────────
+  database: {
+    enabled: false,
+    type: 'sqlite',       // sqlite | postgres | mysql
+    url: '',
+    sqlitePath: 'data/sonata.db',
+    poolSize: 10,
+    migrate: true,
+  },
+
+  // ── Recording ────────────────────────────────────────────────────────
+  recording: {
+    enabled: false,
+    dir: 'recordings',
+    format: 'wav',        // wav | opus | pcm
+    maxDuration: 600,     // seconds, 0 = unlimited
+    splitOnTrack: true,
+    autoStart: false,
+    maxConcurrent: 3,
+  },
+
+  // ── OpenTelemetry ────────────────────────────────────────────────────
+  opentelemetry: {
+    enabled: false,
+    endpoint: '',
+    serviceName: 'sonata',
+    samplingRate: 0.1,
+    headers: {},
+  },
+
+  // ── SSE (Server-Sent Events) ─────────────────────────────────────────
+  sse: {
+    enabled: false,
+    path: '/events',
+    maxClients: 50,
+    heartbeatInterval: 30_000,
+    allowedEvents: ['TrackStartEvent', 'TrackEndEvent', 'PlayerUpdate'],
   },
 
   // ── Clustering ──────────────────────────────────────────────────────

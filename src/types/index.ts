@@ -464,6 +464,56 @@ export interface Config {
     normalizationTarget?: number
     /** Default filters applied to all players */
     filters?: FilterOptions
+    /** Audio ducking config */
+    ducking?: {
+      enabled: boolean
+      threshold?: number
+      reduceBy?: number
+      attackMs?: number
+      releaseMs?: number
+      minVolume?: number
+    }
+    /** Gapless playback config */
+    gapless?: {
+      enabled: boolean
+      maxGapMs?: number
+      preferAccurate?: boolean
+    }
+    /** Fade in/out config */
+    fade?: {
+      enabled: boolean
+      fadeInMs?: number
+      fadeOutMs?: number
+      onPlay?: boolean
+      onPause?: boolean
+      onResume?: boolean
+      onSkip?: boolean
+    }
+    /** Auto volume leveling */
+    autoVolume?: {
+      enabled: boolean
+      targetLUFS?: number
+      maxGain?: number
+      minGain?: number
+      attackMs?: number
+      releaseMs?: number
+    }
+    /** Player snapshot/restore */
+    snapshot?: {
+      enabled: boolean
+      dir?: string
+      autoSave?: boolean
+      saveIntervalMs?: number
+      maxSnapshots?: number
+    }
+    /** Intro/outro system */
+    introOutro?: {
+      enabled: boolean
+      introFile?: string
+      outroFile?: string
+      mixIntro?: boolean
+      mixOutro?: boolean
+    }
   }
   cache: {
     /** Enable track cache */
@@ -574,8 +624,44 @@ export interface Config {
   }>
   /** Discord auto-connect gateway */
   discord?: {
+    enabled: boolean
     token: string
     intents?: number
+  }
+  /** Database backend */
+  database?: {
+    enabled: boolean
+    type?: 'sqlite' | 'postgres' | 'mysql'
+    url?: string
+    sqlitePath?: string
+    poolSize?: number
+    migrate?: boolean
+  }
+  /** Audio recording */
+  recording?: {
+    enabled: boolean
+    dir?: string
+    format?: 'wav' | 'opus' | 'pcm'
+    maxDuration?: number
+    splitOnTrack?: boolean
+    autoStart?: boolean
+    maxConcurrent?: number
+  }
+  /** OpenTelemetry tracing */
+  opentelemetry?: {
+    enabled: boolean
+    endpoint?: string
+    serviceName?: string
+    samplingRate?: number
+    headers?: Record<string, string>
+  }
+  /** SSE (Server-Sent Events) */
+  sse?: {
+    enabled: boolean
+    path?: string
+    maxClients?: number
+    heartbeatInterval?: number
+    allowedEvents?: string[]
   }
   /** Graceful shutdown delay in ms */
   shutdownDelay?: number
