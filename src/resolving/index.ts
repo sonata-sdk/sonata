@@ -1,6 +1,7 @@
 import { AudioSourceManager } from './manager.js'
 import { MirrorResolver } from './mirror.js'
 import type { Track, LoadTracksResult } from '../types/index.js'
+import type { Logger } from '../utils/logger.js'
 
 interface ResolverConfig {
   youtube: { enabled: boolean; clientProfiles?: string[]; proxy?: string; apiKey?: string; clientName?: string; timeout?: number; maxResults?: number; fetchPlayerJS?: boolean; oauth?: { getOAuthToken?: boolean; refreshToken?: string }; cipher?: { url?: string; token?: string }; poToken?: { service?: string; token?: string }; playerUrl?: string }
@@ -26,6 +27,10 @@ export class Resolver {
 
   constructor() {
     this.#mirror = new MirrorResolver(this.#sourceManager)
+  }
+
+  setLogger(logger: Logger) {
+    this.#sourceManager.setLogger(logger)
   }
 
   async init(config: ResolverConfig) {

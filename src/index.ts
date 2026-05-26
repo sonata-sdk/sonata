@@ -20,6 +20,7 @@ const cfg = await loadConfig(process.argv[2])
 const logger = createLogger(cfg.logging)
 
 const resolver = new Resolver()
+resolver.setLogger(logger)
 await resolver.init({
   youtube: { ...cfg.sources.youtube, proxy: cfg.proxy?.socks || cfg.sources.youtube?.proxy },
   soundcloud: cfg.sources.soundcloud,

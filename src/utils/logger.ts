@@ -1,5 +1,6 @@
 import { createWriteStream, existsSync, mkdirSync, WriteStream } from 'node:fs'
 import { dirname } from 'node:path'
+import { inspect } from 'node:util'
 
 const LEVELS = ['trace', 'verbose', 'debug', 'normal', 'warn', 'error'] as const
 type Level = typeof LEVELS[number]
@@ -10,25 +11,30 @@ const LEVEL_MAP: Record<string, Level> = {
   fatal: 'error',
 }
 
-const COLORS: Record<Level, string> = {
-  trace: '\x1b[90m',
-  verbose: '\x1b[36m',
-  debug: '\x1b[34m',
-  normal: '\x1b[32m',
-  warn: '\x1b[33m',
-  error: '\x1b[31m',
-}
-
 const RESET = '\x1b[0m'
 
-function getTimestamp(fmt: string): string {
-  const now = new Date()
-  switch (fmt) {
-    case 'epoch': return String(now.getTime())
-    case 'iso': return now.toISOString()
-    case 'relative': return `+${process.uptime().toFixed(3)}s`
-    default: return ''
-  }
+const LEVEL_STYLES: Record<Level, { bg: string; fg: string }> = {
+  trace:   { bg: '\x1b[100m', fg: '\x1b[90m' },
+  verbose: { bg: '\x1b[46m',  fg: '\x1b[30m' },
+  debug:   { bg: '\x1b[44m',  fg: '\x1b[97m' },
+  normal:  { bg: '\x1b[42m',  fg: '\x1b[30m' },
+  warn:    { bg: '\x1b[43m',  fg: '\x1b[30m' },
+  error:   { bg: '\x1b[41m',  fg: '\x1b[97m' },
+}
+
+function levelTag(level: Level): string {
+  const s = LEVEL_STYLES[level]
+  const label = level === 'normal' ? 'INFO' : level.toUpperCase()
+  return `${s.bg}${s.fg} ${label} ${RESET}`
+}
+
+function shortTime(): string {
+  const d = new Date()
+  return `\x1b[2m${[
+    String(d.getHours()).padStart(2, '0'),
+    String(d.getMinutes()).padStart(2, '0'),
+    String(d.getSeconds()).padStart(2, '0'),
+  ].join(':')}.${String(d.getMilliseconds()).padStart(3, '0')}\x1b[22m`
 }
 
 function normalizeLevel(level: string): number {
@@ -41,7 +47,6 @@ export class Logger {
   #levelIdx: number
   #format: string
   #colorize: boolean
-  #tsFormat: string
   #moduleLevels: Record<string, string>
   #fileCfg: any
   #fileStream: WriteStream | null = null
@@ -61,7 +66,6 @@ export class Logger {
     this.#levelIdx = normalizeLevel(cfg.level ?? 'normal')
     this.#format = cfg.format ?? 'text'
     this.#colorize = cfg.colorize ?? true
-    this.#tsFormat = cfg.timestampFormat ?? 'iso'
     this.#moduleLevels = cfg.moduleLevels ?? {}
     this.#module = cfg.module ?? ''
     this.#showPid = cfg.showPid ?? true
@@ -83,10 +87,22 @@ export class Logger {
     return lvl >= this.#levelIdx
   }
 
-  #formatMsg(level: string, module: string, msg: string, args: any[]): string {
-    const ts = this.#tsFormat !== 'none' ? getTimestamp(this.#tsFormat) : ''
-    const pid = this.#showPid ? `[${process.pid}]` : ''
-    const prefix = [ts, pid, `${level.toUpperCase()}`, module ? `[${module}]` : ''].filter(Boolean).join(' ')
+  #formatMsg(level: Level, module: string, msg: string, args: any[]): string {
+    let fullMsg = msg
+    if (args.length > 0) {
+      const extras = args.map(a => {
+        if (a instanceof Error) return a.stack ?? a.message
+        if (typeof a === 'object') return inspect(a, { depth: 2, colors: false })
+        return String(a)
+      }).join(' ')
+      fullMsg = `${msg} ${extras}`
+    }
+    const modPart = module ? `\x1b[1m${module}\x1b[22m >` : ''
+    return `${shortTime()} ${levelTag(level)} ${modPart} ${fullMsg}`
+  }
+
+  #fileLine(level: Level, module: string, msg: string, args: any[]): string {
+    const ts = new Date().toISOString()
     let fullMsg = msg
     if (args.length > 0) {
       const extras = args.map(a => {
@@ -96,37 +112,42 @@ export class Logger {
       }).join(' ')
       fullMsg = `${msg} ${extras}`
     }
-    return `${prefix} ${fullMsg}`
+    const label = level === 'normal' ? 'INFO' : level.toUpperCase()
+    const modPart = module ? ` ${module} >` : ''
+    return `[${ts}] [${label}]${modPart} ${fullMsg}`
   }
 
   #write(level: Level, module: string, msg: string, ...args: any[]) {
     if (!this.#shouldLog(level)) return
-    const text = this.#formatMsg(level, module, msg, args)
     if (this.#format === 'json') {
-      const entry = JSON.stringify({
+      const entry = {
         timestamp: new Date().toISOString(),
         pid: process.pid,
-        level,
+        level: level === 'normal' ? 'info' : level,
         module,
         msg,
         args: args.length > 0 ? args.map(a => a instanceof Error ? a.message : a) : undefined,
-      })
-      this.#output(level, entry)
+      }
+      if (this.#colorize) {
+        process.stderr.write(JSON.stringify(entry) + '\n')
+      } else {
+        process.stderr.write(JSON.stringify(entry) + '\n')
+      }
     } else {
-      this.#output(level, text)
+      const text = this.#formatMsg(level, module, msg, args)
+      if (this.#colorize) {
+        process.stderr.write(text + '\n')
+      } else {
+        process.stderr.write(this.#stripAnsi(text) + '\n')
+      }
+    }
+    if (this.#fileStream) {
+      this.#fileStream.write(this.#fileLine(level, module, msg, args) + '\n')
     }
   }
 
-  #output(level: Level, text: string) {
-    if (this.#colorize && this.#format === 'text') {
-      const color = COLORS[level] ?? RESET
-      process.stderr.write(color + text + RESET + '\n')  // use stderr to not interfere with stdout
-    } else {
-      process.stderr.write(text + '\n')
-    }
-    if (this.#fileStream) {
-      this.#fileStream.write(text + '\n')
-    }
+  #stripAnsi(s: string): string {
+    return s.replace(/\x1b\[[\d;]+m/g, '')
   }
 
   trace(module: string, msg: string, ...args: any[]) { this.#write('trace', module, msg, ...args) }
@@ -141,11 +162,11 @@ export class Logger {
       level: LEVELS[this.#levelIdx],
       format: this.#format,
       colorize: this.#colorize,
-      timestampFormat: this.#tsFormat,
+      timestampFormat: 'none',
       moduleLevels: this.#moduleLevels,
       file: this.#fileCfg,
       module,
-      showPid: this.#showPid,
+      showPid: false,
     })
   }
 }

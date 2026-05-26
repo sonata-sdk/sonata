@@ -1,4 +1,5 @@
 import type { Track } from '../types/index.js'
+import type { Logger } from '../utils/logger.js'
 
 export interface AudioSource {
   name: string
@@ -13,11 +14,14 @@ export interface AudioPlayerManagerConfiguration {
 
 export class AudioSourceManager {
   #sources: AudioSource[] = []
+  #logger: Logger | null = null
+
+  setLogger(logger: Logger) { this.#logger = logger }
 
   register(source: AudioSource) {
-    // Remove existing source with same name (allows overriding)
     this.#sources = this.#sources.filter(s => s.name !== source.name)
     this.#sources.push(source)
+    this.#logger?.info('sources', `Registered source: ${source.name}`)
   }
 
   configure(config: AudioPlayerManagerConfiguration) {
@@ -33,22 +37,36 @@ export class AudioSourceManager {
   }
 
   async resolve(query: string): Promise<{ source: AudioSource; tracks: Track[] } | null> {
-    // First try exact match by URL
+    this.#logger?.debug('resolve', `Resolving: "${query.substring(0, 80)}"`)
+
+    const start = Date.now()
+
     for (const source of this.#sources) {
       if (source.matches(query)) {
+        this.#logger?.debug('resolve', `Trying ${source.name} (URL match)`)
         const tracks = await source.resolve(query)
-        if (tracks.length > 0) return { source, tracks }
+        if (tracks.length > 0) {
+          const elapsed = Date.now() - start
+          this.#logger?.info('resolve', `Resolved "${query.substring(0, 40)}" via ${source.name} (${tracks.length} tracks, ${elapsed}ms)`)
+          return { source, tracks }
+        }
       }
     }
 
-    // Then try all sources as search
     for (const source of this.#sources) {
       try {
+        this.#logger?.debug('resolve', `Trying ${source.name} (search)`)
+        const startSearch = Date.now()
         const tracks = await source.resolve(query)
-        if (tracks.length > 0) return { source, tracks }
+        if (tracks.length > 0) {
+          const elapsed = Date.now() - start
+          this.#logger?.info('resolve', `Resolved "${query.substring(0, 40)}" via ${source.name} (${tracks.length} tracks, ${elapsed}ms)`)
+          return { source, tracks }
+        }
       } catch { continue }
     }
 
+    this.#logger?.warn('resolve', `No results for "${query.substring(0, 80)}"`)
     return null
   }
 
@@ -56,7 +74,10 @@ export class AudioSourceManager {
     for (const source of this.#sources) {
       try {
         const track = await source.resolveTrack(encoded)
-        if (track) return track
+        if (track) {
+          this.#logger?.debug('resolve', `Resolved track via ${source.name}: "${track.info.title}"`)
+          return track
+        }
       } catch { continue }
     }
     return null

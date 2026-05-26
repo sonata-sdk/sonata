@@ -57,9 +57,11 @@ export class LavalinkWS {
     if (resumeSessionId && this.sessions.get(resumeSessionId)) {
       sessionId = resumeSessionId
       resumed = true
+      this.#logger?.info('sessions', `Resumed session ${sessionId} for user=${userId || 'unknown'}`)
     } else {
       const session = this.sessions.create(false, '')
       sessionId = session.id
+      this.#logger?.info('sessions', `New session ${sessionId} for user=${userId || 'unknown'}`)
     }
 
     const client: WSClient = { ws, sessionId, resumed, userId }
@@ -73,9 +75,13 @@ export class LavalinkWS {
     })
 
     ws.on('close', () => {
+      this.#logger?.info('sessions', `Session ${sessionId} disconnected, waiting 60s for resume`)
       setTimeout(() => {
         const c = this.#clients.get(sessionId)
-        if (c && c === client) this.#clients.delete(sessionId)
+        if (c && c === client) {
+          this.#clients.delete(sessionId)
+          this.#logger?.info('sessions', `Session ${sessionId} expired`)
+        }
       }, 60000)
     })
 
@@ -205,6 +211,7 @@ export class LavalinkWS {
       }
 
       case 'stop': {
+        this.#logger?.info('player', `stop guild=${guildId}`)
         const streamer = this.#streamers.get(guildId)
         streamer?.stop()
         const t = p.track
@@ -223,9 +230,11 @@ export class LavalinkWS {
       case 'pause': {
         const streamer = this.#streamers.get(guildId)
         if (msg.pause !== false) {
+          this.#logger?.info('player', `pause guild=${guildId}`)
           streamer?.pause()
           p.pause()
         } else {
+          this.#logger?.info('player', `resume guild=${guildId}`)
           streamer?.resume()
           p.resume()
         }
@@ -233,6 +242,7 @@ export class LavalinkWS {
       }
 
       case 'seek': {
+        this.#logger?.info('player', `seek guild=${guildId} pos=${msg.position ?? 0}`)
         const streamer = this.#streamers.get(guildId)
         streamer?.seek(msg.position ?? 0)
         p.setPosition(msg.position ?? 0)
@@ -240,6 +250,7 @@ export class LavalinkWS {
       }
 
       case 'volume': {
+        this.#logger?.debug('player', `volume guild=${guildId} vol=${msg.volume ?? 100}`)
         const streamer = this.#streamers.get(guildId)
         streamer?.setVolume(msg.volume ?? 100)
         p.setVolume(msg.volume ?? 100)
@@ -247,6 +258,7 @@ export class LavalinkWS {
       }
 
       case 'destroy': {
+        this.#logger?.info('player', `destroy guild=${guildId}`)
         this.#cleanup(guildId)
         p.stop()
         this.pm.remove(guildId)
@@ -263,6 +275,7 @@ export class LavalinkWS {
         const f = { ...msg }
         delete f.op
         delete f.guildId
+        this.#logger?.info('player', `filters guild=${guildId} keys=${Object.keys(f).join(',')}`)
         p.setFilters(f)
         this.#streamers.get(guildId)?.setPlayerFilters(f)
         break
@@ -309,6 +322,7 @@ export class LavalinkWS {
   }
 
   #cleanup(guildId: string) {
+    this.#logger?.debug('ws', `cleanup guild=${guildId}`)
     const streamer = this.#streamers.get(guildId)
     streamer?.stop()
     this.#streamers.delete(guildId)
