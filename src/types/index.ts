@@ -282,6 +282,14 @@ export interface Config {
     timestampFormat?: 'iso' | 'epoch' | 'relative' | 'none'
     /** Include process PID in logs */
     showPid?: boolean
+    /** Enables per-request correlation IDs in logs */
+    correlationId?: boolean
+    /** Audit trail for admin actions */
+    audit?: {
+      enabled: boolean
+      events?: string[]
+      file?: string
+    }
   }
   sources: {
     youtube: {
@@ -426,6 +434,46 @@ export interface Config {
     emptyRepeatMode?: 'none' | 'track' | 'queue'
     /** Max tracks per source (e.g. { youtube: 50, soundcloud: 30 }) */
     perSourceLimits?: Record<string, number>
+    /** DJ mode (restricted queue) */
+    djMode?: {
+      enabled: boolean
+      roles?: string[]
+      users?: string[]
+      allowSelfPlay?: boolean
+      bypassOnEmpty?: boolean
+    }
+    /** Collaborative queue */
+    collaborative?: {
+      enabled: boolean
+      maxTracksPerUser?: number
+      minVotesToSkip?: number
+      voteSkipEnabled?: boolean
+    }
+    /** Radio mode (autoplay on empty) */
+    radioMode?: {
+      enabled: boolean
+      source?: string
+      basedOn?: 'lastTrack' | 'history' | 'seed'
+      seedTracks?: string[]
+      refreshAfter?: number
+    }
+    /** Smart queue (auto-generated from history) */
+    smartQueue?: {
+      enabled: boolean
+      mode?: 'history' | 'genre' | 'artist' | 'similar'
+      maxTracks?: number
+      minTracksToTrigger?: number
+    }
+    /** Queue filters (dedup, source limits, duration) */
+    filters?: {
+      deduplicate?: boolean
+      maxPerSource?: number
+      maxPerArtist?: number
+      minDurationMs?: number
+      maxDurationMs?: number
+      allowedSources?: string[]
+      blockedSources?: string[]
+    }
   }
   player: {
     /** Auto advance to next track */
@@ -514,6 +562,122 @@ export interface Config {
       mixIntro?: boolean
       mixOutro?: boolean
     }
+    /** Bandwidth limit per player */
+    bandwidthLimit?: {
+      enabled: boolean
+      maxKbps?: number
+      burstKbps?: number
+    }
+    /** Dynamic EQ (genre-adaptive) */
+    dynamicEq?: {
+      enabled: boolean
+      preset?: 'auto' | 'rock' | 'jazz' | 'classical' | 'electronic' | 'custom'
+      customBands?: Array<{ band: number; gain: number }>
+      adaptationMs?: number
+    }
+    /** Reverb presets */
+    reverb?: {
+      enabled: boolean
+      preset?: 'room' | 'hall' | 'stage' | 'cathedral' | 'plate'
+      mix?: number
+      decay?: number
+      delay?: number
+    }
+    /** Sync zones (player groups) */
+    syncZone?: {
+      enabled: boolean
+      maxSkewMs?: number
+      syncIntervalMs?: number
+    }
+    /** HLS playback */
+    hls?: {
+      enabled: boolean
+      maxBufferSize?: number
+    }
+    /** DASH playback */
+    dash?: {
+      enabled: boolean
+      maxBufferSize?: number
+    }
+    /** Multichannel downmixing */
+    downmix?: {
+      enabled: boolean
+      mode?: 'stereo' | 'surround' | 'phantomCenter'
+    }
+    /** Pitch shifting */
+    pitchShift?: {
+      enabled: boolean
+      speed?: number
+      pitch?: number
+    }
+    /** Spatial audio (3D/binaural) */
+    spatialAudio?: {
+      enabled: boolean
+      method?: 'binaural' | 'stereo' | 'headphone'
+      headSize?: number
+    }
+    /** Stereo widening */
+    stereoWidening?: {
+      enabled: boolean
+      width?: number
+    }
+    /** Mono downmix */
+    monoDownmix?: {
+      enabled: boolean
+      method?: 'average' | 'left' | 'right'
+    }
+    /** Noise gate */
+    noiseGate?: {
+      enabled: boolean
+      threshold?: number
+      attackMs?: number
+      releaseMs?: number
+      holdMs?: number
+    }
+    /** Convolution reverb */
+    convolutionReverb?: {
+      enabled: boolean
+      impulseFile?: string
+      mix?: number
+    }
+    /** Sidechain compression */
+    sidechain?: {
+      enabled: boolean
+      threshold?: number
+      ratio?: number
+      attackMs?: number
+      releaseMs?: number
+    }
+    /** Echo/Delay */
+    echo?: {
+      enabled: boolean
+      delayMs?: number
+      feedback?: number
+      mix?: number
+    }
+    /** Flanger */
+    flanger?: {
+      enabled: boolean
+      rate?: number
+      depth?: number
+      feedback?: number
+      mix?: number
+    }
+    /** Phaser */
+    phaser?: {
+      enabled: boolean
+      rate?: number
+      depth?: number
+      feedback?: number
+      stages?: number
+      mix?: number
+    }
+    /** Audio fingerprint */
+    fingerprint?: {
+      enabled: boolean
+      provider?: string
+      minConfidence?: number
+    }
   }
   cache: {
     /** Enable track cache */
@@ -562,6 +726,12 @@ export interface Config {
     trustProxy?: boolean
     /** Per-user rate limiting (key by user ID from Authorization) */
     perUser?: boolean
+    /** Redis-backed rate limiting for multi-instance */
+    redis?: {
+      enabled: boolean
+      url?: string
+      keyPrefix?: string
+    }
   }
   security: {
     /** Rate limit enabled (deprecated, use rateLimiting.enabled) */
@@ -612,6 +782,16 @@ export interface Config {
       maxNodes: number
       cpuThreshold: number
       cooldownMs: number
+    }
+    /** Inter-process communication */
+    ipc?: {
+      enabled: boolean
+      socketPath?: string
+    }
+    /** Consistent hashing for scaling */
+    consistentHashing?: {
+      enabled: boolean
+      virtualNodes?: number
     }
   }
   /** Webhook notifications */
@@ -701,6 +881,55 @@ export interface Config {
     retryDelay?: number
     /** Fallback sources if primary fails */
     fallbacks?: string[]
+  }
+  /** Sentry error tracking */
+  sentry?: {
+    enabled: boolean
+    dsn?: string
+    environment?: string
+    tracesSampleRate?: number
+    attachStacktrace?: boolean
+  }
+  /** Datadog metrics */
+  datadog?: {
+    enabled: boolean
+    agentHost?: string
+    agentPort?: number
+    prefix?: string
+    tags?: Record<string, string>
+  }
+  /** WebSocket event filtering & announcements */
+  ws?: {
+    eventFiltering?: boolean
+    allowedEvents?: string[]
+    announcements?: {
+      enabled: boolean
+      intervalMs?: number
+      message?: string
+    }
+  }
+  /** Health check configuration */
+  healthChecks?: {
+    enabled: boolean
+    intervalMs?: number
+    checks?: string[]
+    timeout?: number
+  }
+  /** Maintenance mode */
+  maintenance?: {
+    enabled: boolean
+    message?: string
+    allowAdmins?: boolean
+    drainPlayers?: boolean
+  }
+  /** API documentation (Swagger) */
+  docs?: {
+    swagger?: {
+      enabled: boolean
+      path?: string
+      title?: string
+      version?: string
+    }
   }
 }
 

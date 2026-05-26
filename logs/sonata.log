@@ -43,3 +43,611 @@
 [2026-05-26T02:42:10.219Z] [INFO] >: proxy > SOCKS5 proxy: socks5h://127.0.0.1:40000
 [2026-05-26T02:42:10.228Z] [INFO] >: http > Sonata server started on 0.0.0.0:8080
 [2026-05-26T02:45:55.752Z] [INFO] >: system > Shutting down...
+[2026-05-26T02:49:57.881Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T02:49:57.881Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T02:49:57.881Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T02:49:57.881Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  💾  local                               │
+[2026-05-26T02:49:57.882Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T02:49:57.882Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T02:49:57.882Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T02:49:57.882Z] [info] System > Git main/563490f  ·  2026-05-26T02:49:03+00:00
+[2026-05-26T02:49:57.882Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T02:49:57.882Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T02:49:57.882Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T02:49:57.882Z] [info] Server > HTTP compression  enabled
+[2026-05-26T02:49:57.882Z] [info] Server > HTTP/2  enabled
+[2026-05-26T02:49:57.882Z] [info] Server > CORS  enabled
+[2026-05-26T02:49:57.882Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T02:49:57.883Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T02:49:57.883Z] [info] Player > AutoPlay  enabled
+[2026-05-26T02:49:57.883Z] [info] Player > ReplayGain  enabled
+[2026-05-26T02:49:57.883Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T02:49:57.883Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T02:49:57.883Z] [info] Queue > Shuffle  enabled
+[2026-05-26T02:49:57.883Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T02:49:57.883Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T02:49:57.887Z] [info] Sources > Registered source: youtube
+[2026-05-26T02:49:57.887Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T02:49:57.888Z] [info] Sources > Registered source: http
+[2026-05-26T02:49:57.888Z] [info] Sources > Registered source: local
+[2026-05-26T02:49:57.889Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T02:49:57.889Z] [info] Sources > Registered source: twitch
+[2026-05-26T02:49:57.890Z] [info] Sources > Registered source: vimeo
+[2026-05-26T02:49:57.891Z] [info] Sources > Registered source: deezer
+[2026-05-26T02:49:57.892Z] [info] Sources > Registered source: apple
+[2026-05-26T02:49:57.892Z] [info] Sources > Registered source: nico
+[2026-05-26T02:49:57.893Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T02:49:57.894Z] [info] Sources > Registered source: podcast
+[2026-05-26T02:49:57.894Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T02:49:57.894Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T02:49:57.909Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T02:51:08.335Z] [info] System > Shutting down...
+[2026-05-26T02:51:10.043Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T02:51:10.043Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T02:51:10.043Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  💾  local                               │
+[2026-05-26T02:51:10.044Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T02:51:10.044Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T02:51:10.044Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T02:51:10.044Z] [info] System > Git main/563490f  ·  2026-05-26T02:49:03+00:00
+[2026-05-26T02:51:10.044Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T02:51:10.044Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T02:51:10.044Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T02:51:10.044Z] [info] Server > HTTP compression  enabled
+[2026-05-26T02:51:10.045Z] [info] Server > HTTP/2  enabled
+[2026-05-26T02:51:10.045Z] [info] Server > CORS  enabled
+[2026-05-26T02:51:10.045Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T02:51:10.045Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T02:51:10.045Z] [info] Player > AutoPlay  enabled
+[2026-05-26T02:51:10.045Z] [info] Player > ReplayGain  enabled
+[2026-05-26T02:51:10.045Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T02:51:10.045Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T02:51:10.045Z] [info] Queue > Shuffle  enabled
+[2026-05-26T02:51:10.045Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T02:51:10.045Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T02:51:10.048Z] [info] Sources > Registered source: youtube
+[2026-05-26T02:51:10.048Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T02:51:10.049Z] [info] Sources > Registered source: http
+[2026-05-26T02:51:10.049Z] [info] Sources > Registered source: local
+[2026-05-26T02:51:10.050Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T02:51:10.050Z] [info] Sources > Registered source: twitch
+[2026-05-26T02:51:10.051Z] [info] Sources > Registered source: vimeo
+[2026-05-26T02:51:10.052Z] [info] Sources > Registered source: deezer
+[2026-05-26T02:51:10.052Z] [info] Sources > Registered source: apple
+[2026-05-26T02:51:10.053Z] [info] Sources > Registered source: nico
+[2026-05-26T02:51:10.053Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T02:51:10.058Z] [info] Sources > Registered source: podcast
+[2026-05-26T02:51:10.058Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T02:51:10.059Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T02:51:10.079Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T02:51:15.791Z] [info] System > Shutting down...
+[2026-05-26T02:51:15.949Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T02:51:15.950Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T02:51:15.950Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T02:51:15.950Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T02:51:15.950Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T02:51:15.950Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T02:51:15.950Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T02:51:15.950Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T02:51:15.950Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T02:51:15.951Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T02:51:15.951Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T02:51:15.951Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T02:51:15.951Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T02:51:15.951Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T02:51:15.951Z] [info] Sources > │  💾  local                               │
+[2026-05-26T02:51:15.951Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T02:51:15.951Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T02:51:15.951Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T02:51:15.951Z] [info] System > Git main/563490f  ·  2026-05-26T02:49:03+00:00
+[2026-05-26T02:51:15.951Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T02:51:15.951Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T02:51:15.951Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T02:51:15.951Z] [info] Server > HTTP compression  enabled
+[2026-05-26T02:51:15.951Z] [info] Server > HTTP/2  enabled
+[2026-05-26T02:51:15.951Z] [info] Server > CORS  enabled
+[2026-05-26T02:51:15.951Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T02:51:15.951Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T02:51:15.951Z] [info] Player > AutoPlay  enabled
+[2026-05-26T02:51:15.951Z] [info] Player > ReplayGain  enabled
+[2026-05-26T02:51:15.951Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T02:51:15.951Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T02:51:15.951Z] [info] Queue > Shuffle  enabled
+[2026-05-26T02:51:15.951Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T02:51:15.951Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T02:51:15.956Z] [info] Sources > Registered source: youtube
+[2026-05-26T02:51:15.957Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T02:51:15.957Z] [info] Sources > Registered source: http
+[2026-05-26T02:51:15.958Z] [info] Sources > Registered source: local
+[2026-05-26T02:51:15.959Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T02:51:15.959Z] [info] Sources > Registered source: twitch
+[2026-05-26T02:51:15.960Z] [info] Sources > Registered source: vimeo
+[2026-05-26T02:51:15.961Z] [info] Sources > Registered source: deezer
+[2026-05-26T02:51:15.962Z] [info] Sources > Registered source: apple
+[2026-05-26T02:51:15.963Z] [info] Sources > Registered source: nico
+[2026-05-26T02:51:15.963Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T02:51:15.964Z] [info] Sources > Registered source: podcast
+[2026-05-26T02:51:15.965Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T02:51:15.965Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T02:51:15.990Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T02:55:38.414Z] [info] System > Shutting down...
+[2026-05-26T02:58:35.614Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T02:58:35.615Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T02:58:35.615Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T02:58:35.616Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T02:58:35.616Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  💾  local                               │
+[2026-05-26T02:58:35.617Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T02:58:35.617Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T02:58:35.617Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T02:58:35.617Z] [info] System > Git main/563490f  ·  2026-05-26T02:49:03+00:00
+[2026-05-26T02:58:35.617Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T02:58:35.617Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T02:58:35.617Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T02:58:35.617Z] [info] Server > HTTP compression  enabled
+[2026-05-26T02:58:35.618Z] [info] Server > HTTP/2  enabled
+[2026-05-26T02:58:35.618Z] [info] Server > CORS  enabled
+[2026-05-26T02:58:35.618Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T02:58:35.618Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T02:58:35.618Z] [info] Player > AutoPlay  enabled
+[2026-05-26T02:58:35.618Z] [info] Player > ReplayGain  enabled
+[2026-05-26T02:58:35.618Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T02:58:35.618Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T02:58:35.618Z] [info] Queue > Shuffle  enabled
+[2026-05-26T02:58:35.618Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T02:58:35.618Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T02:58:35.627Z] [info] Sources > Registered source: youtube
+[2026-05-26T02:58:35.629Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T02:58:35.630Z] [info] Sources > Registered source: http
+[2026-05-26T02:58:35.631Z] [info] Sources > Registered source: local
+[2026-05-26T02:58:35.631Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T02:58:35.632Z] [info] Sources > Registered source: twitch
+[2026-05-26T02:58:35.633Z] [info] Sources > Registered source: vimeo
+[2026-05-26T02:58:35.634Z] [info] Sources > Registered source: deezer
+[2026-05-26T02:58:35.636Z] [info] Sources > Registered source: apple
+[2026-05-26T02:58:35.638Z] [info] Sources > Registered source: nico
+[2026-05-26T02:58:35.638Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T02:58:35.639Z] [info] Sources > Registered source: podcast
+[2026-05-26T02:58:35.645Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T02:58:35.645Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T02:58:35.665Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T02:58:45.404Z] [info] System > Shutting down...
+[2026-05-26T02:58:57.708Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T02:58:57.709Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T02:58:57.709Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T02:58:57.709Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T02:58:57.709Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T02:58:57.709Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T02:58:57.710Z] [info] Sources > │  💾  local                               │
+[2026-05-26T02:58:57.711Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T02:58:57.711Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T02:58:57.711Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T02:58:57.711Z] [info] System > Git main/563490f  ·  2026-05-26T02:49:03+00:00
+[2026-05-26T02:58:57.711Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T02:58:57.711Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T02:58:57.711Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T02:58:57.711Z] [info] Server > HTTP compression  enabled
+[2026-05-26T02:58:57.711Z] [info] Server > HTTP/2  enabled
+[2026-05-26T02:58:57.711Z] [info] Server > CORS  enabled
+[2026-05-26T02:58:57.711Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T02:58:57.711Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T02:58:57.711Z] [info] Player > AutoPlay  enabled
+[2026-05-26T02:58:57.712Z] [info] Player > ReplayGain  enabled
+[2026-05-26T02:58:57.712Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T02:58:57.712Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T02:58:57.712Z] [info] Queue > Shuffle  enabled
+[2026-05-26T02:58:57.712Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T02:58:57.712Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T02:58:57.717Z] [info] Sources > Registered source: youtube
+[2026-05-26T02:58:57.718Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T02:58:57.721Z] [info] Sources > Registered source: http
+[2026-05-26T02:58:57.722Z] [info] Sources > Registered source: local
+[2026-05-26T02:58:57.723Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T02:58:57.723Z] [info] Sources > Registered source: twitch
+[2026-05-26T02:58:57.724Z] [info] Sources > Registered source: vimeo
+[2026-05-26T02:58:57.725Z] [info] Sources > Registered source: deezer
+[2026-05-26T02:58:57.726Z] [info] Sources > Registered source: apple
+[2026-05-26T02:58:57.727Z] [info] Sources > Registered source: nico
+[2026-05-26T02:58:57.727Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T02:58:57.728Z] [info] Sources > Registered source: podcast
+[2026-05-26T02:58:57.729Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T02:58:57.729Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T02:58:57.747Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T02:59:01.105Z] [info] System > Shutting down...
+[2026-05-26T03:13:32.723Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:13:32.724Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:13:32.724Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:13:32.724Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:13:32.725Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:13:32.725Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:13:32.726Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:13:32.726Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:13:32.726Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:13:32.726Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:13:32.727Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:13:32.727Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:13:32.727Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:13:32.727Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:13:32.727Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:13:32.727Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:13:32.727Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:13:32.727Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:13:32.727Z] [info] System > Git main/7e01e6f  ·  2026-05-26T02:59:09+00:00
+[2026-05-26T03:13:32.727Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:13:32.727Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:13:32.728Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:13:32.728Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:13:32.728Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:13:32.728Z] [info] Server > CORS  enabled
+[2026-05-26T03:13:32.728Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:13:32.728Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:13:32.728Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:13:32.728Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:13:32.728Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:13:32.728Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:13:32.728Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:13:32.728Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:13:32.728Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:13:32.733Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:13:32.734Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:13:32.735Z] [info] Sources > Registered source: http
+[2026-05-26T03:13:32.735Z] [info] Sources > Registered source: local
+[2026-05-26T03:13:32.736Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:13:32.736Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:13:32.737Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:13:32.738Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:13:32.739Z] [info] Sources > Registered source: apple
+[2026-05-26T03:13:32.740Z] [info] Sources > Registered source: nico
+[2026-05-26T03:13:32.741Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:13:32.742Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:13:32.742Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:13:32.743Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:13:32.766Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:13:39.209Z] [info] System > Shutting down...
+[2026-05-26T03:14:36.951Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:14:36.952Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:14:36.952Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:14:36.952Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:14:36.953Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:14:36.953Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:14:36.953Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:14:36.953Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:14:36.953Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:14:36.953Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:14:36.953Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:14:36.954Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:14:36.954Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:14:36.954Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:14:36.954Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:14:36.954Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:14:36.954Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:14:36.954Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:14:36.954Z] [info] System > Git main/7e01e6f  ·  2026-05-26T02:59:09+00:00
+[2026-05-26T03:14:36.954Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:14:36.954Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:14:36.954Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:14:36.954Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:14:36.954Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:14:36.954Z] [info] Server > CORS  enabled
+[2026-05-26T03:14:36.954Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:14:36.954Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:14:36.954Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:14:36.954Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:14:36.954Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:14:36.954Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:14:36.954Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:14:36.955Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:14:36.955Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:14:36.961Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:14:36.962Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:14:36.969Z] [info] Sources > Registered source: http
+[2026-05-26T03:14:36.970Z] [info] Sources > Registered source: local
+[2026-05-26T03:14:36.972Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:14:36.972Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:14:36.973Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:14:36.974Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:14:36.975Z] [info] Sources > Registered source: apple
+[2026-05-26T03:14:36.975Z] [info] Sources > Registered source: nico
+[2026-05-26T03:14:36.976Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:14:36.976Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:14:36.977Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:14:36.977Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:14:37.001Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:14:40.266Z] [info] System > Shutting down...
+[2026-05-26T03:14:41.339Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:14:41.339Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:14:41.339Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:14:41.339Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:14:41.340Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:14:41.340Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:14:41.340Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:14:41.341Z] [info] System > Git main/7e01e6f  ·  2026-05-26T02:59:09+00:00
+[2026-05-26T03:14:41.341Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:14:41.341Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:14:41.341Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:14:41.341Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:14:41.341Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:14:41.341Z] [info] Server > CORS  enabled
+[2026-05-26T03:14:41.341Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:14:41.341Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:14:41.341Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:14:41.341Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:14:41.341Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:14:41.341Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:14:41.341Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:14:41.341Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:14:41.341Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:14:41.345Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:14:41.346Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:14:41.347Z] [info] Sources > Registered source: http
+[2026-05-26T03:14:41.348Z] [info] Sources > Registered source: local
+[2026-05-26T03:14:41.348Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:14:41.349Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:14:41.349Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:14:41.351Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:14:41.351Z] [info] Sources > Registered source: apple
+[2026-05-26T03:14:41.352Z] [info] Sources > Registered source: nico
+[2026-05-26T03:14:41.353Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:14:41.353Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:14:41.354Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:14:41.355Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:14:41.379Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:14:46.098Z] [info] System > Shutting down...
+[2026-05-26T03:17:17.257Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:17:17.258Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:17:17.258Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:17:17.259Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:17:17.259Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:17:17.259Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:17:17.259Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:17:17.259Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:17:17.259Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:17:17.259Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:17:17.259Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:17:17.259Z] [info] System > Git main/7e01e6f  ·  2026-05-26T02:59:09+00:00
+[2026-05-26T03:17:17.259Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:17:17.259Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:17:17.259Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:17:17.259Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:17:17.259Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:17:17.259Z] [info] Server > CORS  enabled
+[2026-05-26T03:17:17.259Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:17:17.259Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:17:17.259Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:17:17.259Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:17:17.259Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:17:17.259Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:17:17.259Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:17:17.260Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:17:17.260Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:17:17.264Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:17:17.265Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:17:17.266Z] [info] Sources > Registered source: http
+[2026-05-26T03:17:17.267Z] [info] Sources > Registered source: local
+[2026-05-26T03:17:17.267Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:17:17.268Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:17:17.269Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:17:17.270Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:17:17.271Z] [info] Sources > Registered source: apple
+[2026-05-26T03:17:17.271Z] [info] Sources > Registered source: nico
+[2026-05-26T03:17:17.272Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:17:17.273Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:17:17.274Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:17:17.278Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:17:17.284Z] [info] Cluster > Node registered: sonata-1 @ 127.0.0.1:8081
+[2026-05-26T03:17:17.301Z] [info] Cluster > Cluster sync listening on 127.0.0.1:8081
+[2026-05-26T03:17:17.301Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:17:20.826Z] [info] System > Shutting down...
+[2026-05-26T03:20:07.430Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:20:07.430Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:20:07.430Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:20:07.430Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:20:07.431Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:20:07.431Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:20:07.431Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:20:07.431Z] [info] System > Git main/37fc470  ·  2026-05-26T03:17:50+00:00
+[2026-05-26T03:20:07.431Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:20:07.432Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:20:07.432Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:20:07.432Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:20:07.432Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:20:07.432Z] [info] Server > CORS  enabled
+[2026-05-26T03:20:07.432Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:20:07.432Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:20:07.432Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:20:07.432Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:20:07.432Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:20:07.432Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:20:07.432Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:20:07.432Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:20:07.432Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:20:07.436Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:20:07.437Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:20:07.437Z] [info] Sources > Registered source: http
+[2026-05-26T03:20:07.438Z] [info] Sources > Registered source: local
+[2026-05-26T03:20:07.438Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:20:07.439Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:20:07.439Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:20:07.440Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:20:07.441Z] [info] Sources > Registered source: apple
+[2026-05-26T03:20:07.441Z] [info] Sources > Registered source: nico
+[2026-05-26T03:20:07.442Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:20:07.442Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:20:07.443Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:20:07.444Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:20:07.449Z] [info] Cluster > Node registered: 127.0.0.1:8081 @ 127.0.0.1:8081
+[2026-05-26T03:20:07.466Z] [info] Cluster > Cluster sync listening on 127.0.0.1:8081
+[2026-05-26T03:20:07.466Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:20:10.939Z] [info] System > Shutting down...
+[2026-05-26T03:20:21.544Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:20:21.544Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:20:21.544Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:20:21.544Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:20:21.544Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:20:21.544Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:20:21.545Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:20:21.545Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:20:21.545Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:20:21.545Z] [info] System > Git main/37fc470  ·  2026-05-26T03:17:50+00:00
+[2026-05-26T03:20:21.546Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:20:21.546Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:20:21.546Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:20:21.546Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:20:21.546Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:20:21.546Z] [info] Server > CORS  enabled
+[2026-05-26T03:20:21.546Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:20:21.546Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:20:21.546Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:20:21.546Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:20:21.546Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:20:21.546Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:20:21.546Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:20:21.546Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:20:21.546Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:20:21.549Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:20:21.550Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:20:21.550Z] [info] Sources > Registered source: http
+[2026-05-26T03:20:21.551Z] [info] Sources > Registered source: local
+[2026-05-26T03:20:21.552Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:20:21.552Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:20:21.553Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:20:21.554Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:20:21.555Z] [info] Sources > Registered source: apple
+[2026-05-26T03:20:21.555Z] [info] Sources > Registered source: nico
+[2026-05-26T03:20:21.556Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:20:21.556Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:20:21.557Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:20:21.558Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:20:21.566Z] [info] Cluster > Node registered: 127.0.0.1:8081 @ 127.0.0.1:8081
+[2026-05-26T03:20:21.586Z] [info] Cluster > Cluster sync listening on 127.0.0.1:8081
+[2026-05-26T03:20:21.586Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:20:24.397Z] [info] System > Shutting down...
+[2026-05-26T03:24:44.561Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:24:44.561Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:24:44.561Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:24:44.561Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:24:44.562Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:24:44.562Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:24:44.562Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:24:44.562Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:24:44.563Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:24:44.563Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:24:44.564Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:24:44.564Z] [info] System > Git main/d9e9594  ·  2026-05-26T03:20:37+00:00
+[2026-05-26T03:24:44.564Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:24:44.564Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:24:44.564Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:24:44.564Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:24:44.564Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:24:44.564Z] [info] Server > CORS  enabled
+[2026-05-26T03:24:44.564Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:24:44.564Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:24:44.564Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:24:44.564Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:24:44.564Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:24:44.564Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:24:44.564Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:24:44.566Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:24:44.566Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:24:44.571Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:24:44.571Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:24:44.573Z] [info] Sources > Registered source: http
+[2026-05-26T03:24:44.574Z] [info] Sources > Registered source: local
+[2026-05-26T03:24:44.575Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:24:44.576Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:24:44.576Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:24:44.578Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:24:44.578Z] [info] Sources > Registered source: apple
+[2026-05-26T03:24:44.579Z] [info] Sources > Registered source: nico
+[2026-05-26T03:24:44.580Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:24:44.580Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:24:44.581Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:24:44.582Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:24:44.586Z] [info] Cluster > Node registered: 127.0.0.1:8081 @ 127.0.0.1:8081
+[2026-05-26T03:24:44.600Z] [info] Cluster > Cluster sync listening on 127.0.0.1:8081
+[2026-05-26T03:24:44.600Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:24:51.994Z] [info] System > Shutting down...

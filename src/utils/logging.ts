@@ -118,6 +118,48 @@ export function logBanner(cfg: any, logger?: Logger) {
   if (cfg.opentelemetry?.enabled) logger?.info('OTel', `Trace  endpoint=${cfg.opentelemetry.endpoint}  rate=${cfg.opentelemetry.samplingRate}`)
   if (cfg.sse?.enabled) logger?.info('SSE', `Events  ${cfg.sse.path}  max=${cfg.sse.maxClients} clients`)
   if (cfg.player?.introOutro?.enabled) logger?.info('Player', `Intro/outro  intro=${cfg.player.introOutro.introFile || 'none'}  outro=${cfg.player.introOutro.outroFile || 'none'}`)
+
+  // Player DSP features
+  if (cfg.player?.bandwidthLimit?.enabled) logger?.info('Player', `Bandwidth limit  max=${cfg.player.bandwidthLimit.maxKbps}Kbps  burst=${cfg.player.bandwidthLimit.burstKbps}`)
+  if (cfg.player?.dynamicEq?.enabled) logger?.info('Player', `Dynamic EQ  preset=${cfg.player.dynamicEq.preset}  adapt=${cfg.player.dynamicEq.adaptationMs}ms`)
+  if (cfg.player?.reverb?.enabled) logger?.info('Player', `Reverb  preset=${cfg.player.reverb.preset}  mix=${cfg.player.reverb.mix}  decay=${cfg.player.reverb.decay}`)
+  if (cfg.player?.syncZone?.enabled) logger?.info('Player', `Sync zone  maxSkew=${cfg.player.syncZone.maxSkewMs}ms  interval=${cfg.player.syncZone.syncIntervalMs}ms`)
+  if (cfg.player?.hls?.enabled) logger?.info('Player', 'HLS playback  enabled')
+  if (cfg.player?.dash?.enabled) logger?.info('Player', 'DASH playback  enabled')
+  if (cfg.player?.downmix?.enabled) logger?.info('Player', `Downmix  mode=${cfg.player.downmix.mode}`)
+  if (cfg.player?.pitchShift?.enabled) logger?.info('Player', `Pitch shift  speed=${cfg.player.pitchShift.speed}  pitch=${cfg.player.pitchShift.pitch}`)
+  if (cfg.player?.spatialAudio?.enabled) logger?.info('Player', `Spatial audio  method=${cfg.player.spatialAudio.method}`)
+  if (cfg.player?.stereoWidening?.enabled) logger?.info('Player', `Stereo widening  width=${cfg.player.stereoWidening.width}`)
+  if (cfg.player?.monoDownmix?.enabled) logger?.info('Player', `Mono downmix  method=${cfg.player.monoDownmix.method}`)
+  if (cfg.player?.noiseGate?.enabled) logger?.info('Player', `Noise gate  threshold=${cfg.player.noiseGate.threshold}`)
+  if (cfg.player?.convolutionReverb?.enabled) logger?.info('Player', `Convolution reverb  impulse=${cfg.player.convolutionReverb.impulseFile || 'none'}`)
+  if (cfg.player?.sidechain?.enabled) logger?.info('Player', `Sidechain  threshold=${cfg.player.sidechain.threshold}  ratio=${cfg.player.sidechain.ratio}`)
+  if (cfg.player?.echo?.enabled) logger?.info('Player', `Echo/Delay  delay=${cfg.player.echo.delayMs}ms  feedback=${cfg.player.echo.feedback}`)
+  if (cfg.player?.flanger?.enabled) logger?.info('Player', `Flanger  rate=${cfg.player.flanger.rate}  depth=${cfg.player.flanger.depth}`)
+  if (cfg.player?.phaser?.enabled) logger?.info('Player', `Phaser  rate=${cfg.player.phaser.rate}  stages=${cfg.player.phaser.stages}`)
+  if (cfg.player?.fingerprint?.enabled) logger?.info('Player', `Audio fingerprint  provider=${cfg.player.fingerprint.provider || 'default'}`)
+
+  // Queue features
+  if (cfg.queue?.djMode?.enabled) logger?.info('Queue', `DJ mode  roles=${cfg.queue.djMode.roles?.length ?? 0}  users=${cfg.queue.djMode.users?.length ?? 0}`)
+  if (cfg.queue?.collaborative?.enabled) logger?.info('Queue', `Collaborative  maxPerUser=${cfg.queue.collaborative.maxTracksPerUser}  voteSkip=${cfg.queue.collaborative.voteSkipEnabled}`)
+  if (cfg.queue?.radioMode?.enabled) logger?.info('Queue', `Radio mode  source=${cfg.queue.radioMode.source}  basedOn=${cfg.queue.radioMode.basedOn}`)
+  if (cfg.queue?.smartQueue?.enabled) logger?.info('Queue', `Smart queue  mode=${cfg.queue.smartQueue.mode}  max=${cfg.queue.smartQueue.maxTracks}`)
+  if (cfg.queue?.filters?.deduplicate) logger?.info('Queue', 'Queue dedup  enabled')
+  if (cfg.queue?.filters?.maxPerSource) logger?.info('Queue', `Queue source limit  ${cfg.queue.filters.maxPerSource} per source`)
+
+  // New sections
+  if (cfg.sentry?.enabled) logger?.info('Sentry', `Error tracking  env=${cfg.sentry.environment}  rate=${cfg.sentry.tracesSampleRate}`)
+  if (cfg.datadog?.enabled) logger?.info('Datadog', `Metrics  ${cfg.datadog.agentHost}:${cfg.datadog.agentPort}  prefix=${cfg.datadog.prefix}`)
+  if (cfg.ws?.announcements?.enabled) logger?.info('WS', `Announcements  every ${cfg.ws.announcements.intervalMs / 1000}s`)
+  if (cfg.ws?.eventFiltering) logger?.info('WS', 'Event filtering  enabled')
+  if (cfg.healthChecks?.enabled) logger?.info('HealthChecks', `Active  every ${cfg.healthChecks.intervalMs / 1000}s  checks=${cfg.healthChecks.checks?.join(', ') ?? 'all'}`)
+  if (cfg.maintenance?.enabled) logger?.info('Maintenance', `ACTIVE  ${cfg.maintenance.message}  drainPlayers=${cfg.maintenance.drainPlayers}`)
+  if (cfg.docs?.swagger?.enabled) logger?.info('Docs', `Swagger  ${cfg.docs.swagger.path}  ${cfg.docs.swagger.title} v${cfg.docs.swagger.version}`)
+  if (cfg.clustering?.ipc?.enabled) logger?.info('Cluster', `IPC  ${cfg.clustering.ipc.socketPath}`)
+  if (cfg.clustering?.consistentHashing?.enabled) logger?.info('Cluster', `Consistent hashing  vnodes=${cfg.clustering.consistentHashing.virtualNodes}`)
+  if (cfg.rateLimiting?.redis?.enabled) logger?.info('RateLimiter', `Redis  ${cfg.rateLimiting.redis.keyPrefix}`)
+  if (cfg.logging?.correlationId) logger?.info('Logging', 'Correlation IDs  enabled')
+  if (cfg.logging?.audit?.enabled) logger?.info('Logging', `Audit trail  → ${cfg.logging.audit.file}  events=${cfg.logging.audit.events?.length ?? 'all'}`)
 }
 
 export function logMemory(logger?: Logger) {

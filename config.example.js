@@ -31,6 +31,12 @@ export default {
     timestampFormat: 'iso', // iso | epoch | relative | none
     excludePaths: ['/health', '/metrics', '/dashboard', '/version'],
     moduleLevels: {},
+    correlationId: false,
+    audit: {
+      enabled: false,
+      events: ['session.create', 'session.destroy', 'player.play', 'player.stop', 'queue.clear', 'queue.shuffle'],
+      file: 'logs/audit.log',
+    },
     file: {
       enabled: false,
       path: 'logs/sonata.log',
@@ -152,6 +158,51 @@ export default {
     shuffle: false,
     emptyRepeatMode: 'none',  // none | track | queue
     perSourceLimits: {},
+
+    // ── DJ mode ──
+    djMode: {
+      enabled: false,
+      roles: [],
+      users: [],
+      allowSelfPlay: true,
+      bypassOnEmpty: true,
+    },
+
+    // ── Collaborative queue ──
+    collaborative: {
+      enabled: false,
+      maxTracksPerUser: 10,
+      minVotesToSkip: 3,
+      voteSkipEnabled: false,
+    },
+
+    // ── Radio mode (autoplay) ──
+    radioMode: {
+      enabled: false,
+      source: 'youtube',
+      basedOn: 'lastTrack',    // lastTrack | history | seed
+      seedTracks: [],
+      refreshAfter: 10,        // tracks played before refresh
+    },
+
+    // ── Smart queue ──
+    smartQueue: {
+      enabled: false,
+      mode: 'history',         // history | genre | artist | similar
+      maxTracks: 20,
+      minTracksToTrigger: 5,
+    },
+
+    // ── Queue filters ──
+    filters: {
+      deduplicate: false,
+      maxPerSource: 0,         // 0 = unlimited
+      maxPerArtist: 0,
+      minDurationMs: 0,
+      maxDurationMs: 0,
+      allowedSources: [],
+      blockedSources: [],
+    },
   },
 
   // ── Player ──────────────────────────────────────────────────────────
@@ -230,6 +281,138 @@ export default {
       mixOutro: true,        // Mix outro over track end
     },
 
+    // ── Bandwidth limit per player ──
+    bandwidthLimit: {
+      enabled: false,
+      maxKbps: 0,              // 0 = unlimited
+      burstKbps: 0,
+    },
+
+    // ── Dynamic EQ (genre-adaptive) ──
+    dynamicEq: {
+      enabled: false,
+      preset: 'auto',          // auto | rock | jazz | classical | electronic | custom
+      customBands: [],
+      adaptationMs: 2000,
+    },
+
+    // ── Reverb presets ──
+    reverb: {
+      enabled: false,
+      preset: 'room',          // room | hall | stage | cathedral | plate
+      mix: 0.3,
+      decay: 0.5,
+      delay: 0.05,
+    },
+
+    // ── Sync zones (player groups) ──
+    syncZone: {
+      enabled: false,
+      maxSkewMs: 50,
+      syncIntervalMs: 1000,
+    },
+
+    // ── HLS/DASH playback ──
+    hls: {
+      enabled: true,
+      maxBufferSize: 10_485_760,
+    },
+    dash: {
+      enabled: true,
+      maxBufferSize: 10_485_760,
+    },
+
+    // ── Multichannel downmixing ──
+    downmix: {
+      enabled: false,
+      mode: 'stereo',          // stereo | surround | phantomCenter
+    },
+
+    // ── Pitch shifting ──
+    pitchShift: {
+      enabled: false,
+      speed: 1.0,
+      pitch: 1.0,
+    },
+
+    // ── Spatial audio (3D/binaural) ──
+    spatialAudio: {
+      enabled: false,
+      method: 'binaural',      // binaural | stereo | headphone
+      headSize: 0.09,
+    },
+
+    // ── Stereo widening ──
+    stereoWidening: {
+      enabled: false,
+      width: 1.0,              // 0 = mono, 1 = normal, 2 = wide
+    },
+
+    // ── Mono downmix ──
+    monoDownmix: {
+      enabled: false,
+      method: 'average',       // average | left | right
+    },
+
+    // ── Noise gate ──
+    noiseGate: {
+      enabled: false,
+      threshold: 0.01,
+      attackMs: 10,
+      releaseMs: 100,
+      holdMs: 50,
+    },
+
+    // ── Convolution reverb ──
+    convolutionReverb: {
+      enabled: false,
+      impulseFile: '',
+      mix: 0.5,
+    },
+
+    // ── Sidechain compression ──
+    sidechain: {
+      enabled: false,
+      threshold: 0.5,
+      ratio: 4,
+      attackMs: 5,
+      releaseMs: 50,
+    },
+
+    // ── Echo/Delay ──
+    echo: {
+      enabled: false,
+      delayMs: 200,
+      feedback: 0.3,
+      mix: 0.5,
+    },
+
+    // ── Flanger ──
+    flanger: {
+      enabled: false,
+      rate: 0.5,
+      depth: 1.0,
+      feedback: 0.5,
+      mix: 0.5,
+    },
+
+    // ── Phaser ──
+    phaser: {
+      enabled: false,
+      rate: 0.3,
+      depth: 1.0,
+      feedback: 0.3,
+      stages: 4,
+      mix: 0.5,
+    },
+
+    // ── Audio fingerprint (acoustic) ──
+    fingerprint: {
+      enabled: false,
+      provider: '',            // external service URL or module name
+      minConfidence: 0.8,
+    },
+
     // Default filters applied to every player (optional).
     // Lavalink-compatible — all fields can be overridden per-player via API.
     filters: {
@@ -283,6 +466,11 @@ export default {
     sendHeaders: true,
     trustProxy: false,
     perUser: false,
+    redis: {
+      enabled: false,
+      url: '',
+      keyPrefix: 'sonata:rl:',
+    },
   },
 
   // ── Security ────────────────────────────────────────────────────────
@@ -348,6 +536,24 @@ export default {
     maxConcurrent: 3,
   },
 
+  // ── Sentry (error tracking) ──────────────────────────────────────────
+  sentry: {
+    enabled: false,
+    dsn: '',
+    environment: 'production',
+    tracesSampleRate: 0.1,
+    attachStacktrace: true,
+  },
+
+  // ── Datadog (metrics) ────────────────────────────────────────────────
+  datadog: {
+    enabled: false,
+    agentHost: 'localhost',
+    agentPort: 8125,
+    prefix: 'sonata.',
+    tags: {},
+  },
+
   // ── OpenTelemetry ────────────────────────────────────────────────────
   opentelemetry: {
     enabled: false,
@@ -366,6 +572,43 @@ export default {
     allowedEvents: ['TrackStartEvent', 'TrackEndEvent', 'PlayerUpdate'],
   },
 
+  // ── WebSocket ────────────────────────────────────────────────────────
+  ws: {
+    eventFiltering: false,
+    allowedEvents: [],
+    announcements: {
+      enabled: false,
+      intervalMs: 60_000,
+      message: '',
+    },
+  },
+
+  // ── Health Checks ────────────────────────────────────────────────────
+  healthChecks: {
+    enabled: false,
+    intervalMs: 30_000,
+    checks: ['redis', 'sentry', 'sources'],
+    timeout: 5_000,
+  },
+
+  // ── Maintenance Mode ─────────────────────────────────────────────────
+  maintenance: {
+    enabled: false,
+    message: 'Server is under maintenance. Please try again later.',
+    allowAdmins: true,
+    drainPlayers: false,
+  },
+
+  // ── API Documentation (Swagger) ──────────────────────────────────────
+  docs: {
+    swagger: {
+      enabled: false,
+      path: '/api-docs',
+      title: 'Sonata API',
+      version: '4.0.0',
+    },
+  },
+
   // ── Clustering ──────────────────────────────────────────────────────
   clustering: {
     enabled: false,
@@ -374,6 +617,14 @@ export default {
     heartbeatInterval: 10_000,
     heartbeatTimeout: 30_000,
     electionStrategy: 'manual',  // manual | lowestLoad | roundRobin | hash
+    ipc: {
+      enabled: false,
+      socketPath: '/tmp/sonata-cluster.sock',
+    },
+    consistentHashing: {
+      enabled: false,
+      virtualNodes: 100,
+    },
   },
 
   // ── Resolver ────────────────────────────────────────────────────────
