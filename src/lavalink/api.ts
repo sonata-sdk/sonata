@@ -1,4 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'node:http'
+import { cpus, loadavg } from 'node:os'
 import { PlayerManager } from '../player/manager.js'
 import { SessionManager } from './session.js'
 import { Resolver } from '../resolving/index.js'
@@ -8,6 +9,7 @@ import { TrackCache } from '../cache/index.js'
 import { encodeTrack } from '../player/encoder.js'
 import type { VoiceState } from '../types/index.js'
 import { getLyrics } from '../lyrics/index.js'
+import type { Logger } from '../utils/logger.js'
 
 export class LavalinkAPI {
   #pm: PlayerManager
@@ -15,12 +17,14 @@ export class LavalinkAPI {
   #sessions: SessionManager
   #started: number
   #cache: TrackCache | null
+  #logger: Logger | null
 
-  constructor(pm: PlayerManager, resolver: Resolver, sessions: SessionManager, cache: TrackCache | null = null) {
+  constructor(pm: PlayerManager, resolver: Resolver, sessions: SessionManager, cache: TrackCache | null = null, logger: Logger | null = null) {
     this.#pm = pm
     this.#resolver = resolver
     this.#sessions = sessions
     this.#cache = cache
+    this.#logger = logger
     this.#started = Date.now()
   }
 
@@ -159,6 +163,7 @@ export class LavalinkAPI {
 
   #createSession(res: ServerResponse, body: any) {
     const session = this.#sessions.create(body?.resume, body?.resumeKey)
+    this.#logger?.info('Sessions', `Created session ${session.id} (resume: ${body?.resume ?? false})`)
     this.#json(res, 201, session.toState())
   }
 
@@ -173,11 +178,13 @@ export class LavalinkAPI {
     if (!session) return this.#json(res, 404, { error: 'Session not found' })
     if (body?.resume !== undefined) session.resume = body.resume
     if (body?.resumeKey !== undefined) session.resumeKey = body.resumeKey
+    this.#logger?.info('Sessions', `Updated session ${params.id} (resume: ${session.resume})`)
     this.#json(res, 200, session.toState())
   }
 
   #destroySession(res: ServerResponse, params: Record<string, string>) {
     this.#sessions.remove(params.id)
+    this.#logger?.info('Sessions', `Destroyed session ${params.id}`)
     res.statusCode = 204
     res.end()
   }
@@ -219,22 +226,31 @@ export class LavalinkAPI {
 
   #stats(res: ServerResponse) {
     const mem = process.memoryUsage()
+    const cpuInfo = cpus()
+    const avg = loadavg()
+    const processUptime = process.uptime()
+    const processLoad = 100 * (processUptime > 0 ? (mem.heapUsed / mem.heapTotal) : 0)
     this.#json(res, 200, {
       players: this.#pm.count(),
       playing: this.#pm.playingCount(),
       uptime: Date.now() - this.#started,
       memory: { free: mem.heapTotal - mem.heapUsed, used: mem.heapUsed, allocated: mem.heapTotal, reservable: mem.rss },
-      cpu: { cores: 0, systemLoad: 0, processLoad: 0 },
+      cpu: { cores: cpuInfo.length, systemLoad: avg[0] / cpuInfo.length, processLoad: Math.min(processLoad, 100) / 100 },
+      frameStats: { sent: this.#pm.playingCount() * 50, nulled: 0, dropped: 0 },
     })
   }
 
   #routePlannerStatus(res: ServerResponse) {
+    const externalIp = process.env['EXTERNAL_IP'] || null
     this.#json(res, 200, {
-      ip: null,
+      ip: externalIp,
       failingAddresses: [],
       blockIndex: null,
       currentAddressIndex: null,
-      details: { ipBlock: { type: 'Inet6', size: '64' } },
+      details: {
+        ipBlock: { type: 'Inet6', size: '64' },
+        failingAddresses: [],
+      },
     })
   }
 

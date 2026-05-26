@@ -15,6 +15,8 @@ import { createLogger } from '#utils/logger'
 import { logBanner, logMemory } from '#utils/logging'
 import { showBanner, formatTrackProgress } from '#console/index'
 import { VERSION } from '#version'
+import { ClusterManager } from '#cluster/index'
+import { WebhookManager } from '#webhooks/index'
 
 const cfg = await loadConfig(process.argv[2])
 const logger = createLogger(cfg.logging)
@@ -62,16 +64,54 @@ await pluginManager.loadFromConfig({
 })
 const metrics = cfg.metrics?.enabled ? new Metrics(cfg.metrics) : null
 
+// Clustering
+const clusterManager = cfg.clustering?.enabled && cfg.clustering?.nodes?.length
+  ? new ClusterManager({
+    nodeId: cfg.clustering.nodeId || `sonata-${process.pid}`,
+    host: cfg.server.host,
+    port: cfg.server.port + 1,
+    strategy: cfg.clustering.electionStrategy,
+    heartbeatInterval: cfg.clustering.heartbeatInterval,
+    heartbeatTimeout: cfg.clustering.heartbeatTimeout,
+    logger,
+  })
+  : null
+if (clusterManager) {
+  for (const n of cfg.clustering?.nodes ?? []) {
+    clusterManager.register({ id: `${n.host}:${n.port}`, host: n.host, port: n.port, load: 0, players: 0, lastSeen: Date.now() })
+  }
+  clusterManager.startSync(() => pm.count())
+  clusterManager.listen(cfg.server.port + 1, '127.0.0.1')
+}
+
+// Webhooks
+const webhooks = cfg.webhooks?.length ? new WebhookManager(cfg.webhooks, logger) : null
+
+// Discord Gateway (auto-connect mode)
+const discordCfg = cfg.discord as { token?: string; intents?: number } | undefined
+if (discordCfg?.token) {
+  import('#discord/gateway').then(({ DiscordGateway }) => {
+    const dg = new DiscordGateway(discordCfg.token!, discordCfg.intents ?? 0)
+    dg.connect()
+    logger.info('Discord', `Gateway connected (intents: ${discordCfg.intents ?? 0})`)
+  }).catch((err: any) => logger.warn('Discord', `Gateway init failed: ${err.message}`))
+}
+
 const srv = new Server({
   logger,
   password: cfg.server.password,
+  ssl: cfg.server.ssl ? { cert: cfg.server.ssl.cert, key: cfg.server.ssl.key, ca: cfg.server.ssl.ca, passphrase: cfg.server.ssl.passphrase, secureOptions: cfg.server.ssl.secureOptions } : undefined,
+  compression: cfg.server.compression,
+  http2: cfg.server.http2,
+  security: cfg.security,
+  customHeaders: cfg.server.customHeaders,
 })
 const auth = new AuthManager([
   cfg.server.password,
   ...(cfg.server.tokens ?? []),
 ])
 
-const sessions = new SessionManager(cfg.lavalink)
+const sessions = new SessionManager(cfg.lavalink, logger)
 const pm = new PlayerManager({
   onTrackStart: (p, track) => {
     wsHandler.onTrackStart(p, track)
@@ -161,14 +201,14 @@ if (whitelist?.length || blacklist?.length) {
 const rateLimitCfg = cfg.rateLimiting?.enabled ? cfg.rateLimiting : (cfg.security?.rateLimit ? { windowMs: cfg.security.windowMs ?? 60_000, maxRequests: cfg.security.maxRequests ?? 100, perUser: false } : null)
 if (rateLimitCfg) {
   const { RateLimiter } = await import('./middleware/ratelimit.js')
-  const limiter = new RateLimiter(rateLimitCfg.maxRequests ?? 100, rateLimitCfg.windowMs ?? 60_000, rateLimitCfg.perUser ?? false)
+  const limiter = new RateLimiter(rateLimitCfg.maxRequests ?? 100, rateLimitCfg.windowMs ?? 60_000, rateLimitCfg.perUser ?? false, rateLimitCfg.perRoute ?? {}, rateLimitCfg.sendHeaders ?? true)
   srv.onPreHandle((req, res) => {
     return !limiter.check(req, res)
   })
 }
 
 // API
-const api = new LavalinkAPI(pm, resolver, sessions, cache)
+const api = new LavalinkAPI(pm, resolver, sessions, cache, logger)
 api.register(srv, cfg.lavalink.apiVersion)
 
 // Plugin routes
@@ -249,6 +289,18 @@ async function shutdown() {
 }
 process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
+
+// Config hot-reload (SIGHUP)
+process.on('SIGHUP', async () => {
+  try {
+    logger.info('System', 'Reloading config...')
+    const newCfg = await loadConfig(process.argv[2])
+    Object.assign(cfg, newCfg)
+    logger.info('System', 'Config reloaded successfully')
+  } catch (err: any) {
+    logger.error('System', `Config reload failed: ${err.message}`)
+  }
+})
 
 // Memory usage log every 5 minutes
 if (process.env['NODE_ENV'] !== 'test') {

@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import type { SessionState } from '../types/index.js'
+import type { Logger } from '../utils/logger.js'
 
 interface LavalinkConfig {
   resumeTimeout?: number
@@ -30,9 +31,11 @@ export class Session {
 export class SessionManager {
   #sessions = new Map<string, Session>()
   #config: LavalinkConfig
+  #logger: Logger | null
 
-  constructor(config: LavalinkConfig = {}) {
+  constructor(config: LavalinkConfig = {}, logger?: Logger | null) {
     this.#config = config
+    this.#logger = logger ?? null
     this.#startCleanup()
   }
 
@@ -40,12 +43,18 @@ export class SessionManager {
     const key = resumeKey || this.#config.resumeKey || ''
     const session = new Session(resume, key, this.#config.sessionTimeout)
     this.#sessions.set(session.id, session)
+    this.#logger?.info('Sessions', `Created ${session.id} (timeout: ${session.timeout}s)`)
     return session
   }
 
   all(): Session[] { return [...this.#sessions.values()] }
   get(id: string): Session | undefined { return this.#sessions.get(id) }
-  remove(id: string) { this.#sessions.delete(id) }
+
+  remove(id: string) {
+    this.#sessions.delete(id)
+    this.#logger?.info('Sessions', `Removed ${id}`)
+  }
+
   count() { return this.#sessions.size }
 
   #startCleanup() {
@@ -54,6 +63,7 @@ export class SessionManager {
       const now = Date.now()
       for (const [id, session] of this.#sessions) {
         if (now - session.createdAt > timeout) {
+          this.#logger?.info('Sessions', `Expired ${id} (inactive for ${session.timeout}s)`)
           this.remove(id)
         }
       }

@@ -1,4 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'node:http'
+import { createServer as createHttpsServer } from 'node:https'
+import { readFileSync } from 'node:fs'
+import { brotliCompressSync, gzipSync, deflateSync } from 'node:zlib'
 import { WebSocketServer } from '@sonata-sdk/ws/server'
 import { createLogger, Logger } from '../utils/logger.js'
 import type { HttpMethod } from '../types/index.js'
@@ -12,9 +15,31 @@ interface RouteEntry {
   handler: Handler
 }
 
+interface SSLOpts {
+  cert: string
+  key: string
+  ca?: string
+  passphrase?: string
+  secureOptions?: number
+}
+
+interface SecurityConfig {
+  blockMethods?: string[]
+  blockPaths?: string[]
+  blockSqlInjection?: boolean
+  blockXss?: boolean
+  enforceContentType?: boolean
+  hstsMaxAge?: number
+  maxBodyDepth?: number
+  requireUserAgent?: boolean
+}
+
+const SQLI_PATTERN = /(\b(union|select|insert|update|delete|drop|alter|create|truncate|exec|execute)\b.*\b(from|into|set|where|table|database|values)\b)|('?\s*--\s)|(\bOR\b\s+\d+\s*=\s*\d)|(\bAND\b\s+\d+\s*=\s*\d)/i
+const XSS_PATTERN = /<script[\s>]|javascript\s*:|onerror\s*=|onload\s*=|onclick\s*=|onmouseover\s*=|eval\s*\(|alert\s*\(|document\.cookie|window\.location/i
+
 export class Server {
   #routes: RouteEntry[] = []
-  #server = createServer((req, res) => this.#handle(req, res))
+  #server: any
   #wss = new WebSocketServer({ noServer: true })
   #wsPaths = new Map<string, { wss: WebSocketServer; auth: boolean }>()
   #logger: Logger
@@ -23,10 +48,32 @@ export class Server {
   #password: string
   #noAuthPaths: Set<string> = new Set()
   #preHandlers: ((req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>)[] = []
+  #compression: boolean | string = false
+  #security: SecurityConfig = {}
+  #customHeaders: Record<string, string> = {}
 
-  constructor(opts: { logger?: Logger; password?: string }) {
+  constructor(opts: { logger?: Logger; password?: string; ssl?: SSLOpts; compression?: boolean | string; http2?: boolean; security?: SecurityConfig; customHeaders?: Record<string, string> }) {
     this.#logger = opts.logger ?? createLogger({ level: 'normal' })
     this.#password = opts.password ?? ''
+    this.#compression = opts.compression ?? false
+    this.#security = opts.security ?? {}
+    this.#customHeaders = opts.customHeaders ?? {}
+
+    if (opts.ssl?.key && opts.ssl?.cert) {
+      const sslOpts: any = {
+        key: readFileSync(opts.ssl.key),
+        cert: readFileSync(opts.ssl.cert),
+      }
+      if (opts.ssl.ca) sslOpts.ca = readFileSync(opts.ssl.ca)
+      if (opts.ssl.passphrase) sslOpts.passphrase = opts.ssl.passphrase
+      if (opts.ssl.secureOptions) sslOpts.secureOptions = opts.ssl.secureOptions
+
+      this.#server = createHttpsServer(sslOpts)
+    } else {
+      this.#server = createServer()
+    }
+
+    this.#server.on('request', (req: IncomingMessage, res: ServerResponse) => this.#handle(req, res))
   }
 
   noAuth(path: string) { this.#noAuthPaths.add(path) }
@@ -59,7 +106,7 @@ export class Server {
   }
 
   listen(port: number, host: string, cb?: () => void) {
-    this.#server.on('upgrade', (req, socket, head) => {
+    this.#server.on('upgrade', (req: any, socket: any, head: any) => {
       const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
       const wsCfg = this.#wsPaths.get(url.pathname)
       if (wsCfg) {
@@ -69,7 +116,7 @@ export class Server {
           socket.destroy()
           return
         }
-        wsCfg.wss.handleUpgrade(req, socket as any, head as Buffer, (ws) => wsCfg.wss.emit('connection', ws, req))
+        wsCfg.wss.handleUpgrade(req, socket, head, (ws: any) => wsCfg.wss.emit('connection', ws, req))
       } else socket.destroy()
     })
     this.#server.listen(port, host, () => {
@@ -85,27 +132,79 @@ export class Server {
   async #handle(req: IncomingMessage, res: ServerResponse) {
     this.#requestCount++
     const start = Date.now()
-    res.setHeader('Content-Type', 'application/json')
-    res.setHeader('Server', 'Sonata/4.0.0')
-
     const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
+    const pathname = url.pathname
+    const method = (req.method ?? 'GET').toUpperCase()
+    const sec = this.#security
 
-    // Pre-handlers (CORS, IP filter, etc)
+    // Blocked methods
+    if (sec.blockMethods?.length && sec.blockMethods.includes(method)) {
+      return this.#json(res, 405, { error: 'Method Not Allowed' })
+    }
+
+    // Blocked paths
+    if (sec.blockPaths?.length) {
+      for (const bp of sec.blockPaths) {
+        if (pathname.startsWith(bp) || new RegExp(bp).test(pathname)) {
+          return this.#json(res, 403, { error: 'Forbidden' })
+        }
+      }
+    }
+
+    // SQL Injection check
+    if (sec.blockSqlInjection) {
+      if (SQLI_PATTERN.test(pathname) || SQLI_PATTERN.test(req.headers['user-agent'] ?? '') || SQLI_PATTERN.test(req.headers['referer'] ?? '')) {
+        return this.#json(res, 403, { error: 'Bad Request' })
+      }
+    }
+
+    // XSS check
+    if (sec.blockXss) {
+      const ref = req.headers['referer'] ?? ''
+      const ua = req.headers['user-agent'] ?? ''
+      if (XSS_PATTERN.test(pathname) || XSS_PATTERN.test(ref) || XSS_PATTERN.test(ua)) {
+        return this.#json(res, 403, { error: 'Bad Request' })
+      }
+    }
+
+    // Content-Type enforcement
+    if (sec.enforceContentType && ['POST', 'PUT', 'PATCH'].includes(method)) {
+      const ct = req.headers['content-type'] ?? ''
+      if (!ct.includes('application/json') && !ct.includes('text/plain') && !ct.includes('x-www-form-urlencoded')) {
+        return this.#json(res, 415, { error: 'Unsupported Media Type' })
+      }
+    }
+
+    // Require User-Agent
+    if (sec.requireUserAgent && !req.headers['user-agent']) {
+      return this.#json(res, 400, { error: 'User-Agent required' })
+    }
+
+    // Response headers
+    res.setHeader('Server', 'Sonata/4.0.0')
+    res.setHeader('Content-Type', 'application/json')
+    if (sec.hstsMaxAge && sec.hstsMaxAge > 0) {
+      res.setHeader('Strict-Transport-Security', `max-age=${sec.hstsMaxAge}; includeSubDomains`)
+    }
+    for (const [k, v] of Object.entries(this.#customHeaders)) {
+      res.setHeader(k, v)
+    }
+
+    // Pre-handlers
     for (const fn of this.#preHandlers) {
       const handled = await fn(req, res)
       if (handled) return
     }
 
-    if (this.#password && !this.#noAuthPaths.has(url.pathname)) {
+    // Auth
+    if (this.#password && !this.#noAuthPaths.has(pathname)) {
       const auth = req.headers['authorization']
       if (auth !== this.#password) return this.#json(res, 401, { error: 'Unauthorized' })
     }
 
-    const method = req.method?.toUpperCase() ?? 'GET'
-
     for (const route of this.#routes) {
       if (route.method !== method) continue
-      const match = url.pathname.match(route.pattern)
+      const match = pathname.match(route.pattern)
       if (!match) continue
 
       const params: Record<string, string> = {}
@@ -113,13 +212,27 @@ export class Server {
 
       this.#readBody(req, (body) => {
         Promise.resolve(route.handler(req, res, params, body))
-          .catch((err) => { this.#logger.error('http', `request handler error: ${err.message || err}`); this.#json(res, 500, { error: 'Internal Server Error' }) })
-          .finally(() => this.#logger.info('http', `${req.method} ${url.pathname} ${res.statusCode} ${Date.now() - start}ms`))
+          .catch((err) => {
+            this.#logger.error('http', `request handler error: ${err.message || err}`)
+            this.#json(res, 500, { error: 'Internal Server Error' })
+          })
+          .finally(() => {
+            this.#logger.info('http', `${method} ${pathname} ${res.statusCode} ${Date.now() - start}ms`)
+          })
       })
       return
     }
 
     this.#json(res, 404, { error: 'Not Found' })
+  }
+
+  #compress(req: IncomingMessage, body: Buffer): Buffer {
+    if (!this.#compression) return body
+    const accepted = req.headers['accept-encoding'] ?? ''
+    if ((this.#compression === true || this.#compression === 'brotli') && accepted.includes('br')) return brotliCompressSync(body)
+    if ((this.#compression === true || this.#compression === 'gzip') && accepted.includes('gzip')) return gzipSync(body)
+    if ((this.#compression === true || this.#compression === 'deflate') && accepted.includes('deflate')) return deflateSync(body)
+    return body
   }
 
   #readBody(req: IncomingMessage, cb: (body: any) => void) {
@@ -139,6 +252,7 @@ export class Server {
 
   #json(res: ServerResponse, status: number, data: unknown) {
     res.statusCode = status
+    if (!res.headersSent) res.setHeader('Content-Type', 'application/json')
     res.end(JSON.stringify(data))
   }
 }

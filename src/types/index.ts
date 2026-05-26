@@ -564,6 +564,19 @@ export interface Config {
       cooldownMs: number
     }
   }
+  /** Webhook notifications */
+  webhooks?: Array<{
+    url: string
+    secret?: string
+    events?: string[]
+    retries?: number
+    retryDelay?: number
+  }>
+  /** Discord auto-connect gateway */
+  discord?: {
+    token: string
+    intents?: number
+  }
   /** Graceful shutdown delay in ms */
   shutdownDelay?: number
   /** Dashboard customization */
