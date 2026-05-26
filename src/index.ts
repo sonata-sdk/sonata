@@ -5,7 +5,7 @@ import { SessionManager } from './lavalink/session.js'
 import { LavalinkAPI } from './lavalink/api.js'
 import { LavalinkWS } from './lavalink/ws.js'
 import { Resolver } from './resolving/index.js'
-import { pluginManager } from './plugin/index.js'
+import { PluginManager } from './plugin/index.js'
 import { Metrics } from './metrics/index.js'
 import { TrackCache } from './cache/index.js'
 import { AuthManager } from './middleware/auth.js'
@@ -47,6 +47,15 @@ if (cfg.cache?.enabled) {
     cache = new TrackCache(cfg.cache.ttl, cfg.cache.maxSize)
   }
 }
+const pluginManager = new PluginManager({
+  logger,
+  pluginConfigs: cfg.plugins?.configs,
+})
+await pluginManager.loadFromConfig({
+  paths: cfg.plugins?.paths,
+  npm: cfg.plugins?.npm,
+  scanDir: cfg.plugins?.scanDir,
+})
 const metrics = cfg.metrics?.enabled ? new Metrics(cfg.metrics) : null
 
 const srv = new Server({
@@ -69,10 +78,17 @@ const pm = new PlayerManager({
     wsHandler.onTrackEnd(p, track, reason)
     pluginManager.emitTrackEnd(p.guildId, track, reason)
   },
-  onTrackStuck: (p, track, threshold) => wsHandler.onTrackStuck(p, track, threshold),
-  onTrackException: (p, track, err) => wsHandler.onTrackException(p, track, err),
+  onTrackStuck: (p, track, threshold) => {
+    wsHandler.onTrackStuck(p, track, threshold)
+    pluginManager.emitTrackStuck(p.guildId, track, threshold)
+  },
+  onTrackException: (p, track, err) => {
+    wsHandler.onTrackException(p, track, err)
+    pluginManager.emitTrackException(p.guildId, track, err)
+  },
   onPlayerUpdate: (p, state) => {
     wsHandler.onPlayerUpdate(p, state)
+    pluginManager.emitPlayerUpdate(p.guildId, state)
     if (metrics) metrics.playersActive.set(pm.count())
     if (state.track && !state.paused) {
       const progress = formatTrackProgress(state.position, state.track.info.duration)
@@ -82,6 +98,7 @@ const pm = new PlayerManager({
   },
   onQueueEnd: (p) => {
     wsHandler.onQueueEnd(p)
+    pluginManager.emitQueueEnd(p.guildId)
     if (cfg.player?.autoPlay && p.queue.length > 0) {
       const next = p.queue.dequeue()
       if (next) p.play(next)
@@ -149,6 +166,9 @@ if (rateLimitCfg) {
 // API
 const api = new LavalinkAPI(pm, resolver, sessions, cache)
 api.register(srv, cfg.lavalink.apiVersion)
+
+// Plugin routes
+pluginManager.registerRoutes(srv)
 
 // WebSocket - Lavalink v4 clients connect to root path
 srv.ws('/')

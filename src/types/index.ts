@@ -1,3 +1,5 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS'
 
 export interface Track {
@@ -94,14 +96,34 @@ export interface Plugin {
   install(ctx: PluginContext): void | Promise<void>
 }
 
+export type LogLevel = 'trace' | 'verbose' | 'debug' | 'normal' | 'warn' | 'error'
+
+export type TrackStartHandler = (guildId: string, track: Track) => void
+export type TrackEndHandler = (guildId: string, track: Track, reason: string) => void
+export type TrackStuckHandler = (guildId: string, track: Track, thresholdMs: number) => void
+export type TrackExceptionHandler = (guildId: string, track: Track, error: string) => void
+export type TrackExceptionRawHandler = (guildId: string, track: Track, error: Error | string) => void
+export type QueueEndHandler = (guildId: string) => void
+export type PlayerUpdateHandler = (guildId: string, state: PlayerState) => void
+export type QueueEventHandler = (guildId: string, detail: unknown) => void
+export type QueueEventType = 'add' | 'remove' | 'clear' | 'shuffle'
+
+export type RouteHandler = (req: IncomingMessage, res: ServerResponse, params: Record<string, string>) => void | Promise<void>
+
 export interface PluginContext {
   config: Record<string, unknown>
-  onTrackStart: (handler: TrackEventHandler) => void
+  onTrackStart: (handler: TrackStartHandler) => void
   onTrackEnd: (handler: TrackEndHandler) => void
+  onTrackStuck: (handler: TrackStuckHandler) => void
+  onTrackException: (handler: TrackExceptionHandler) => void
+  onQueueEnd: (handler: QueueEndHandler) => void
+  onPlayerUpdate: (handler: PlayerUpdateHandler) => void
+  onQueueEvent: (type: QueueEventType, handler: QueueEventHandler) => void
+  registerRoute: (method: HttpMethod, path: string, handler: RouteHandler) => void
+  log: (level: LogLevel, message: string, ...args: unknown[]) => void
 }
 
-export type TrackEventHandler = (guildId: string, track: Track) => void
-export type TrackEndHandler = (guildId: string, track: Track, reason: string) => void
+export type TrackEventHandler = TrackStartHandler
 
 export interface QueueState {
   current: Track | null
