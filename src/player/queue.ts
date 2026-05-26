@@ -2,6 +2,16 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import type { Track } from '../types/index.js'
 
+export interface QueueFilterConfig {
+  deduplicate?: boolean
+  maxPerSource?: number
+  maxPerArtist?: number
+  minDurationMs?: number
+  maxDurationMs?: number
+  allowedSources?: string[]
+  blockedSources?: string[]
+}
+
 export type QueueEventType = 'add' | 'remove' | 'clear' | 'shuffle'
 
 export interface QueueEventPayload {
@@ -17,13 +27,35 @@ export class Queue extends EventTarget {
   #current: Track | null = null
   #stickyFile = ''
   #stickyDirtyTimer: ReturnType<typeof setTimeout> | null = null
+  #filters: QueueFilterConfig = {}
 
-  constructor(stickyFile = '') {
+  constructor(stickyFile = '', filters: QueueFilterConfig = {}) {
     super()
+    this.#filters = filters
     if (stickyFile) {
       this.#stickyFile = stickyFile
       this.#restore()
     }
+  }
+
+  setFilters(f: QueueFilterConfig) { this.#filters = f }
+
+  canAdd(track: Track): string | null {
+    const f = this.#filters
+    if (f.deduplicate && this.#tracks.some(t => t.encoded === track.encoded)) return 'Track already in queue'
+    if (f.maxPerSource) {
+      const fromSource = this.#tracks.filter(t => t.source === track.source).length
+      if (fromSource >= f.maxPerSource) return `Max ${f.maxPerSource} tracks from ${track.source}`
+    }
+    if (f.maxPerArtist) {
+      const fromArtist = this.#tracks.filter(t => t.info.author === track.info.author).length
+      if (fromArtist >= f.maxPerArtist) return `Max ${f.maxPerArtist} tracks by ${track.info.author}`
+    }
+    if (f.minDurationMs && track.info.duration < f.minDurationMs) return 'Track too short'
+    if (f.maxDurationMs && track.info.duration > f.maxDurationMs) return 'Track too long'
+    if (f.allowedSources?.length && !f.allowedSources.includes(track.source)) return `Source ${track.source} not allowed`
+    if (f.blockedSources?.length && f.blockedSources.includes(track.source)) return `Source ${track.source} blocked`
+    return null
   }
 
   setStickyFile(path: string) {
@@ -58,10 +90,13 @@ export class Queue extends EventTarget {
     }, 100)
   }
 
-  enqueue(track: Track) {
+  enqueue(track: Track): string | null {
+    const rejection = this.canAdd(track)
+    if (rejection) return rejection
     this.#tracks.push(track)
     this.#emit('add', { track, index: this.#tracks.length - 1 })
     this.#save()
+    return null
   }
 
   dequeue(): Track | null {

@@ -651,3 +651,649 @@
 [2026-05-26T03:24:44.600Z] [info] Cluster > Cluster sync listening on 127.0.0.1:8081
 [2026-05-26T03:24:44.600Z] [info] System > Server listening on 0.0.0.0:8080
 [2026-05-26T03:24:51.994Z] [info] System > Shutting down...
+[2026-05-26T03:30:56.439Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:30:56.439Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:30:56.439Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:30:56.439Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:30:56.439Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:30:56.439Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:30:56.439Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:30:56.439Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:30:56.440Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:30:56.440Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:30:56.440Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:30:56.440Z] [info] System > Git main/9fd2e24  ·  2026-05-26T03:30:39+00:00
+[2026-05-26T03:30:56.440Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:30:56.440Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:30:56.440Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:30:56.440Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:30:56.440Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:30:56.440Z] [info] Server > CORS  enabled
+[2026-05-26T03:30:56.440Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:30:56.440Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:30:56.440Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:30:56.440Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:30:56.440Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:30:56.440Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:30:56.440Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:30:56.440Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:30:56.440Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:30:56.444Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:30:56.445Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:30:56.446Z] [info] Sources > Registered source: http
+[2026-05-26T03:30:56.446Z] [info] Sources > Registered source: local
+[2026-05-26T03:30:56.447Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:30:56.448Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:30:56.448Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:30:56.450Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:30:56.450Z] [info] Sources > Registered source: apple
+[2026-05-26T03:30:56.451Z] [info] Sources > Registered source: nico
+[2026-05-26T03:30:56.451Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:30:56.452Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:30:56.453Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:30:56.453Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:30:56.457Z] [info] Cluster > Node registered: 127.0.0.1:8081 @ 127.0.0.1:8081
+[2026-05-26T03:30:56.475Z] [info] Cluster > Cluster sync listening on 127.0.0.1:8081
+[2026-05-26T03:30:56.476Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:31:01.339Z] [info] System > Shutting down...
+[2026-05-26T03:32:00.818Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:32:00.818Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:32:00.818Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:32:00.818Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:32:00.818Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:32:00.819Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:32:00.819Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:32:00.819Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:32:00.819Z] [info] System > Git main/9fd2e24  ·  2026-05-26T03:30:39+00:00
+[2026-05-26T03:32:00.819Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:32:00.819Z] [info] Cluster > Active  ·  1 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:32:00.819Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:32:00.819Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:32:00.819Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:32:00.820Z] [info] Server > CORS  enabled
+[2026-05-26T03:32:00.820Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:32:00.820Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:32:00.820Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:32:00.820Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:32:00.820Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:32:00.820Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:32:00.820Z] [info] Player > Audio ducking  threshold=0.02  reduce=0.5
+[2026-05-26T03:32:00.820Z] [info] Player > Gapless playback  maxGap=50ms
+[2026-05-26T03:32:00.820Z] [info] Player > Fade in/out  2000ms/2000ms
+[2026-05-26T03:32:00.820Z] [info] Player > Auto volume  target=-14LUFS  gain=6dB
+[2026-05-26T03:32:00.820Z] [info] Player > Snapshots  data/snapshots  every 60s
+[2026-05-26T03:32:00.820Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:32:00.820Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:32:00.820Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:32:00.820Z] [info] Discord > Gateway  intents=0
+[2026-05-26T03:32:00.820Z] [info] Database > sqlite  data/sonata.db  pool=10
+[2026-05-26T03:32:00.820Z] [info] Recording > wav  → recordings  max=600s  split=true
+[2026-05-26T03:32:00.820Z] [info] OTel > Trace  endpoint=  rate=0.1
+[2026-05-26T03:32:00.820Z] [info] SSE > Events  /events  max=50 clients
+[2026-05-26T03:32:00.820Z] [info] Player > Intro/outro  intro=data/intro.mp3  outro=data/outro.mp3
+[2026-05-26T03:32:00.820Z] [info] Player > Bandwidth limit  max=0Kbps  burst=0
+[2026-05-26T03:32:00.820Z] [info] Player > Dynamic EQ  preset=auto  adapt=2000ms
+[2026-05-26T03:32:00.820Z] [info] Player > Reverb  preset=room  mix=0.3  decay=0.5
+[2026-05-26T03:32:00.820Z] [info] Player > Sync zone  maxSkew=50ms  interval=1000ms
+[2026-05-26T03:32:00.820Z] [info] Player > HLS playback  enabled
+[2026-05-26T03:32:00.820Z] [info] Player > DASH playback  enabled
+[2026-05-26T03:32:00.820Z] [info] Player > Downmix  mode=stereo
+[2026-05-26T03:32:00.820Z] [info] Player > Pitch shift  speed=1  pitch=1
+[2026-05-26T03:32:00.821Z] [info] Player > Spatial audio  method=binaural
+[2026-05-26T03:32:00.821Z] [info] Player > Stereo widening  width=1
+[2026-05-26T03:32:00.821Z] [info] Player > Mono downmix  method=average
+[2026-05-26T03:32:00.821Z] [info] Player > Noise gate  threshold=0.01
+[2026-05-26T03:32:00.821Z] [info] Player > Convolution reverb  impulse=data/impulse/room.wav
+[2026-05-26T03:32:00.821Z] [info] Player > Sidechain  threshold=0.5  ratio=4
+[2026-05-26T03:32:00.821Z] [info] Player > Echo/Delay  delay=200ms  feedback=0.3
+[2026-05-26T03:32:00.821Z] [info] Player > Flanger  rate=0.5  depth=1
+[2026-05-26T03:32:00.821Z] [info] Player > Phaser  rate=0.3  stages=4
+[2026-05-26T03:32:00.821Z] [info] Player > Audio fingerprint  provider=default
+[2026-05-26T03:32:00.821Z] [info] Queue > DJ mode  roles=2  users=0
+[2026-05-26T03:32:00.821Z] [info] Queue > Collaborative  maxPerUser=10  voteSkip=true
+[2026-05-26T03:32:00.821Z] [info] Queue > Radio mode  source=youtube  basedOn=lastTrack
+[2026-05-26T03:32:00.821Z] [info] Queue > Smart queue  mode=history  max=20
+[2026-05-26T03:32:00.821Z] [info] Queue > Queue dedup  enabled
+[2026-05-26T03:32:00.821Z] [info] Sentry > Error tracking  env=production  rate=0.1
+[2026-05-26T03:32:00.821Z] [info] Datadog > Metrics  localhost:8125  prefix=sonata.
+[2026-05-26T03:32:00.821Z] [info] WS > Announcements  every 60s
+[2026-05-26T03:32:00.821Z] [info] WS > Event filtering  enabled
+[2026-05-26T03:32:00.821Z] [info] HealthChecks > Active  every 30s  checks=sentry, sources
+[2026-05-26T03:32:00.821Z] [info] Docs > Swagger  /api-docs  Sonata API v4.0.0
+[2026-05-26T03:32:00.821Z] [info] Cluster > IPC  /tmp/sonata-cluster.sock
+[2026-05-26T03:32:00.821Z] [info] Cluster > Consistent hashing  vnodes=100
+[2026-05-26T03:32:00.821Z] [info] RateLimiter > Redis  sonata:rl:
+[2026-05-26T03:32:00.821Z] [info] Logging > Correlation IDs  enabled
+[2026-05-26T03:32:00.821Z] [info] Logging > Audit trail  → logs/audit.log  events=6
+[2026-05-26T03:32:00.831Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:32:00.832Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:32:00.833Z] [info] Sources > Registered source: http
+[2026-05-26T03:32:00.835Z] [info] Sources > Registered source: local
+[2026-05-26T03:32:00.836Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:32:00.836Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:32:00.837Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:32:00.839Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:32:00.839Z] [info] Sources > Registered source: apple
+[2026-05-26T03:32:00.840Z] [info] Sources > Registered source: nico
+[2026-05-26T03:32:00.841Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:32:00.842Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:32:00.843Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:32:00.843Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:32:00.850Z] [info] Cluster > Node registered: 127.0.0.1:8081 @ 127.0.0.1:8081
+[2026-05-26T03:32:00.869Z] [info] Cluster > Cluster sync listening on 127.0.0.1:8081
+[2026-05-26T03:32:00.869Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:32:30.855Z] [warn] Cluster > Node timed out: 127.0.0.1:8081
+[2026-05-26T03:34:14.008Z] [info] System > Shutting down...
+[2026-05-26T03:34:14.554Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:34:14.554Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:34:14.554Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:34:14.554Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:34:14.554Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:34:14.554Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:34:14.554Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:34:14.555Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:34:14.555Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:34:14.555Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:34:14.555Z] [info] System > Git main/9fd2e24  ·  2026-05-26T03:30:39+00:00
+[2026-05-26T03:34:14.555Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:34:14.555Z] [info] Cluster > Active  ·  0 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:34:14.555Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:34:14.555Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:34:14.555Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:34:14.555Z] [info] Server > CORS  enabled
+[2026-05-26T03:34:14.555Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:34:14.555Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:34:14.555Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:34:14.555Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:34:14.555Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:34:14.555Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:34:14.555Z] [info] Player > Audio ducking  threshold=0.02  reduce=0.5
+[2026-05-26T03:34:14.556Z] [info] Player > Gapless playback  maxGap=50ms
+[2026-05-26T03:34:14.556Z] [info] Player > Fade in/out  2000ms/2000ms
+[2026-05-26T03:34:14.556Z] [info] Player > Auto volume  target=-14LUFS  gain=6dB
+[2026-05-26T03:34:14.556Z] [info] Player > Snapshots  data/snapshots  every 60s
+[2026-05-26T03:34:14.556Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:34:14.556Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:34:14.556Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:34:14.556Z] [info] Discord > Gateway  intents=0
+[2026-05-26T03:34:14.556Z] [info] Database > sqlite  data/sonata.db  pool=10
+[2026-05-26T03:34:14.556Z] [info] Recording > wav  → recordings  max=600s  split=true
+[2026-05-26T03:34:14.556Z] [info] OTel > Trace  endpoint=  rate=0.1
+[2026-05-26T03:34:14.556Z] [info] SSE > Events  /events  max=50 clients
+[2026-05-26T03:34:14.556Z] [info] Player > Intro/outro  intro=data/intro.mp3  outro=data/outro.mp3
+[2026-05-26T03:34:14.556Z] [info] Player > Bandwidth limit  max=0Kbps  burst=0
+[2026-05-26T03:34:14.556Z] [info] Player > Dynamic EQ  preset=auto  adapt=2000ms
+[2026-05-26T03:34:14.556Z] [info] Player > Reverb  preset=room  mix=0.3  decay=0.5
+[2026-05-26T03:34:14.556Z] [info] Player > Sync zone  maxSkew=50ms  interval=1000ms
+[2026-05-26T03:34:14.556Z] [info] Player > HLS playback  enabled
+[2026-05-26T03:34:14.556Z] [info] Player > DASH playback  enabled
+[2026-05-26T03:34:14.556Z] [info] Player > Downmix  mode=stereo
+[2026-05-26T03:34:14.556Z] [info] Player > Pitch shift  speed=1  pitch=1
+[2026-05-26T03:34:14.556Z] [info] Player > Spatial audio  method=binaural
+[2026-05-26T03:34:14.556Z] [info] Player > Stereo widening  width=1
+[2026-05-26T03:34:14.556Z] [info] Player > Mono downmix  method=average
+[2026-05-26T03:34:14.556Z] [info] Player > Noise gate  threshold=0.01
+[2026-05-26T03:34:14.556Z] [info] Player > Convolution reverb  impulse=data/impulse/room.wav
+[2026-05-26T03:34:14.556Z] [info] Player > Sidechain  threshold=0.5  ratio=4
+[2026-05-26T03:34:14.556Z] [info] Player > Echo/Delay  delay=200ms  feedback=0.3
+[2026-05-26T03:34:14.556Z] [info] Player > Flanger  rate=0.5  depth=1
+[2026-05-26T03:34:14.556Z] [info] Player > Phaser  rate=0.3  stages=4
+[2026-05-26T03:34:14.556Z] [info] Player > Audio fingerprint  provider=default
+[2026-05-26T03:34:14.556Z] [info] Queue > DJ mode  roles=2  users=0
+[2026-05-26T03:34:14.556Z] [info] Queue > Collaborative  maxPerUser=10  voteSkip=true
+[2026-05-26T03:34:14.556Z] [info] Queue > Radio mode  source=youtube  basedOn=lastTrack
+[2026-05-26T03:34:14.556Z] [info] Queue > Smart queue  mode=history  max=20
+[2026-05-26T03:34:14.556Z] [info] Queue > Queue dedup  enabled
+[2026-05-26T03:34:14.556Z] [info] Sentry > Error tracking  env=production  rate=0.1
+[2026-05-26T03:34:14.556Z] [info] Datadog > Metrics  localhost:8125  prefix=sonata.
+[2026-05-26T03:34:14.556Z] [info] WS > Announcements  every 60s
+[2026-05-26T03:34:14.556Z] [info] WS > Event filtering  enabled
+[2026-05-26T03:34:14.556Z] [info] HealthChecks > Active  every 30s  checks=sentry, sources
+[2026-05-26T03:34:14.556Z] [info] Docs > Swagger  /api-docs  Sonata API v4.0.0
+[2026-05-26T03:34:14.556Z] [info] Cluster > IPC  /tmp/sonata-cluster.sock
+[2026-05-26T03:34:14.556Z] [info] Cluster > Consistent hashing  vnodes=100
+[2026-05-26T03:34:14.556Z] [info] RateLimiter > Redis  sonata:rl:
+[2026-05-26T03:34:14.556Z] [info] Logging > Correlation IDs  enabled
+[2026-05-26T03:34:14.556Z] [info] Logging > Audit trail  → logs/audit.log  events=6
+[2026-05-26T03:34:14.569Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:34:14.570Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:34:14.571Z] [info] Sources > Registered source: http
+[2026-05-26T03:34:14.572Z] [info] Sources > Registered source: local
+[2026-05-26T03:34:14.573Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:34:14.573Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:34:14.574Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:34:14.575Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:34:14.576Z] [info] Sources > Registered source: apple
+[2026-05-26T03:34:14.577Z] [info] Sources > Registered source: nico
+[2026-05-26T03:34:14.577Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:34:14.578Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:34:14.579Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:34:14.583Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:34:14.605Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:35:27.216Z] [info] System > Shutting down...
+[2026-05-26T03:35:34.232Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:35:34.232Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:35:34.232Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:35:34.232Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:35:34.233Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:35:34.234Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:35:34.234Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:35:34.234Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:35:34.234Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:35:34.234Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:35:34.234Z] [info] System > Git main/9fd2e24  ·  2026-05-26T03:30:39+00:00
+[2026-05-26T03:35:34.234Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:35:34.234Z] [info] Cluster > Active  ·  0 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:35:34.234Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:35:34.234Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:35:34.234Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:35:34.234Z] [info] Server > CORS  enabled
+[2026-05-26T03:35:34.234Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:35:34.234Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:35:34.234Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:35:34.234Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:35:34.234Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:35:34.234Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:35:34.234Z] [info] Player > Audio ducking  threshold=0.02  reduce=0.5
+[2026-05-26T03:35:34.234Z] [info] Player > Gapless playback  maxGap=50ms
+[2026-05-26T03:35:34.234Z] [info] Player > Fade in/out  2000ms/2000ms
+[2026-05-26T03:35:34.234Z] [info] Player > Auto volume  target=-14LUFS  gain=6dB
+[2026-05-26T03:35:34.234Z] [info] Player > Snapshots  data/snapshots  every 60s
+[2026-05-26T03:35:34.234Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:35:34.234Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:35:34.234Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:35:34.234Z] [info] Discord > Gateway  intents=0
+[2026-05-26T03:35:34.235Z] [info] Database > sqlite  data/sonata.db  pool=10
+[2026-05-26T03:35:34.235Z] [info] Recording > wav  → recordings  max=600s  split=true
+[2026-05-26T03:35:34.235Z] [info] OTel > Trace  endpoint=  rate=0.1
+[2026-05-26T03:35:34.235Z] [info] SSE > Events  /events  max=50 clients
+[2026-05-26T03:35:34.235Z] [info] Player > Intro/outro  intro=data/intro.mp3  outro=data/outro.mp3
+[2026-05-26T03:35:34.235Z] [info] Player > Bandwidth limit  max=0Kbps  burst=0
+[2026-05-26T03:35:34.235Z] [info] Player > Dynamic EQ  preset=auto  adapt=2000ms
+[2026-05-26T03:35:34.235Z] [info] Player > Reverb  preset=room  mix=0.3  decay=0.5
+[2026-05-26T03:35:34.235Z] [info] Player > Sync zone  maxSkew=50ms  interval=1000ms
+[2026-05-26T03:35:34.235Z] [info] Player > HLS playback  enabled
+[2026-05-26T03:35:34.235Z] [info] Player > DASH playback  enabled
+[2026-05-26T03:35:34.235Z] [info] Player > Downmix  mode=stereo
+[2026-05-26T03:35:34.235Z] [info] Player > Pitch shift  speed=1  pitch=1
+[2026-05-26T03:35:34.235Z] [info] Player > Spatial audio  method=binaural
+[2026-05-26T03:35:34.235Z] [info] Player > Stereo widening  width=1
+[2026-05-26T03:35:34.235Z] [info] Player > Mono downmix  method=average
+[2026-05-26T03:35:34.235Z] [info] Player > Noise gate  threshold=0.01
+[2026-05-26T03:35:34.235Z] [info] Player > Convolution reverb  impulse=data/impulse/room.wav
+[2026-05-26T03:35:34.235Z] [info] Player > Sidechain  threshold=0.5  ratio=4
+[2026-05-26T03:35:34.235Z] [info] Player > Echo/Delay  delay=200ms  feedback=0.3
+[2026-05-26T03:35:34.235Z] [info] Player > Flanger  rate=0.5  depth=1
+[2026-05-26T03:35:34.235Z] [info] Player > Phaser  rate=0.3  stages=4
+[2026-05-26T03:35:34.235Z] [info] Player > Audio fingerprint  provider=default
+[2026-05-26T03:35:34.235Z] [info] Queue > DJ mode  roles=2  users=0
+[2026-05-26T03:35:34.235Z] [info] Queue > Collaborative  maxPerUser=10  voteSkip=true
+[2026-05-26T03:35:34.235Z] [info] Queue > Radio mode  source=youtube  basedOn=lastTrack
+[2026-05-26T03:35:34.235Z] [info] Queue > Smart queue  mode=history  max=20
+[2026-05-26T03:35:34.235Z] [info] Queue > Queue dedup  enabled
+[2026-05-26T03:35:34.235Z] [info] Sentry > Error tracking  env=production  rate=0.1
+[2026-05-26T03:35:34.235Z] [info] Datadog > Metrics  localhost:8125  prefix=sonata.
+[2026-05-26T03:35:34.235Z] [info] WS > Announcements  every 60s
+[2026-05-26T03:35:34.235Z] [info] WS > Event filtering  enabled
+[2026-05-26T03:35:34.235Z] [info] HealthChecks > Active  every 30s  checks=sentry, sources
+[2026-05-26T03:35:34.235Z] [info] Docs > Swagger  /api-docs  Sonata API v4.0.0
+[2026-05-26T03:35:34.235Z] [info] Cluster > IPC  /tmp/sonata-cluster.sock
+[2026-05-26T03:35:34.235Z] [info] Cluster > Consistent hashing  vnodes=100
+[2026-05-26T03:35:34.235Z] [info] RateLimiter > Redis  sonata:rl:
+[2026-05-26T03:35:34.235Z] [info] Logging > Correlation IDs  enabled
+[2026-05-26T03:35:34.235Z] [info] Logging > Audit trail  → logs/audit.log  events=6
+[2026-05-26T03:35:34.240Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:35:34.241Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:35:34.242Z] [info] Sources > Registered source: http
+[2026-05-26T03:35:34.242Z] [info] Sources > Registered source: local
+[2026-05-26T03:35:34.243Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:35:34.246Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:35:34.247Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:35:34.248Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:35:34.249Z] [info] Sources > Registered source: apple
+[2026-05-26T03:35:34.250Z] [info] Sources > Registered source: nico
+[2026-05-26T03:35:34.250Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:35:34.251Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:35:34.252Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:35:34.252Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:35:34.288Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:37:14.638Z] [info] http > GET /dashboard 200 7ms
+[2026-05-26T03:38:01.699Z] [info] http > GET /dashboard 200 1ms
+[2026-05-26T03:38:44.225Z] [info] System > Shutting down...
+[2026-05-26T03:46:57.211Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:46:57.212Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:46:57.212Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:46:57.212Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:46:57.212Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:46:57.212Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:46:57.212Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:46:57.212Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:46:57.212Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:46:57.213Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:46:57.213Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:46:57.213Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:46:57.213Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:46:57.213Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:46:57.213Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:46:57.213Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:46:57.213Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:46:57.213Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:46:57.213Z] [info] System > Git main/9fd2e24  ·  2026-05-26T03:30:39+00:00
+[2026-05-26T03:46:57.213Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:46:57.213Z] [info] Cluster > Active  ·  0 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:46:57.213Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:46:57.213Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:46:57.213Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:46:57.213Z] [info] Server > CORS  enabled
+[2026-05-26T03:46:57.213Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:46:57.213Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:46:57.213Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:46:57.213Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:46:57.213Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:46:57.213Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:46:57.213Z] [info] Player > Audio ducking  threshold=0.02  reduce=0.5
+[2026-05-26T03:46:57.213Z] [info] Player > Gapless playback  maxGap=50ms
+[2026-05-26T03:46:57.213Z] [info] Player > Fade in/out  2000ms/2000ms
+[2026-05-26T03:46:57.213Z] [info] Player > Auto volume  target=-14LUFS  gain=6dB
+[2026-05-26T03:46:57.213Z] [info] Player > Snapshots  data/snapshots  every 60s
+[2026-05-26T03:46:57.213Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:46:57.213Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:46:57.213Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:46:57.213Z] [info] Discord > Gateway  intents=0
+[2026-05-26T03:46:57.213Z] [info] Database > sqlite  data/sonata.db  pool=10
+[2026-05-26T03:46:57.213Z] [info] Recording > wav  → recordings  max=600s  split=true
+[2026-05-26T03:46:57.213Z] [info] OTel > Trace  endpoint=  rate=0.1
+[2026-05-26T03:46:57.213Z] [info] SSE > Events  /events  max=50 clients
+[2026-05-26T03:46:57.213Z] [info] Player > Intro/outro  intro=data/intro.mp3  outro=data/outro.mp3
+[2026-05-26T03:46:57.213Z] [info] Player > Bandwidth limit  max=0Kbps  burst=0
+[2026-05-26T03:46:57.214Z] [info] Player > Dynamic EQ  preset=auto  adapt=2000ms
+[2026-05-26T03:46:57.214Z] [info] Player > Reverb  preset=room  mix=0.3  decay=0.5
+[2026-05-26T03:46:57.214Z] [info] Player > Sync zone  maxSkew=50ms  interval=1000ms
+[2026-05-26T03:46:57.214Z] [info] Player > HLS playback  enabled
+[2026-05-26T03:46:57.214Z] [info] Player > DASH playback  enabled
+[2026-05-26T03:46:57.214Z] [info] Player > Downmix  mode=stereo
+[2026-05-26T03:46:57.214Z] [info] Player > Pitch shift  speed=1  pitch=1
+[2026-05-26T03:46:57.214Z] [info] Player > Spatial audio  method=binaural
+[2026-05-26T03:46:57.214Z] [info] Player > Stereo widening  width=1
+[2026-05-26T03:46:57.214Z] [info] Player > Mono downmix  method=average
+[2026-05-26T03:46:57.214Z] [info] Player > Noise gate  threshold=0.01
+[2026-05-26T03:46:57.214Z] [info] Player > Convolution reverb  impulse=data/impulse/room.wav
+[2026-05-26T03:46:57.214Z] [info] Player > Sidechain  threshold=0.5  ratio=4
+[2026-05-26T03:46:57.214Z] [info] Player > Echo/Delay  delay=200ms  feedback=0.3
+[2026-05-26T03:46:57.214Z] [info] Player > Flanger  rate=0.5  depth=1
+[2026-05-26T03:46:57.214Z] [info] Player > Phaser  rate=0.3  stages=4
+[2026-05-26T03:46:57.214Z] [info] Player > Audio fingerprint  provider=default
+[2026-05-26T03:46:57.214Z] [info] Queue > DJ mode  roles=2  users=0
+[2026-05-26T03:46:57.214Z] [info] Queue > Collaborative  maxPerUser=10  voteSkip=true
+[2026-05-26T03:46:57.214Z] [info] Queue > Radio mode  source=youtube  basedOn=lastTrack
+[2026-05-26T03:46:57.214Z] [info] Queue > Smart queue  mode=history  max=20
+[2026-05-26T03:46:57.214Z] [info] Queue > Queue dedup  enabled
+[2026-05-26T03:46:57.214Z] [info] Sentry > Error tracking  env=production  rate=0.1
+[2026-05-26T03:46:57.214Z] [info] Datadog > Metrics  localhost:8125  prefix=sonata.
+[2026-05-26T03:46:57.214Z] [info] WS > Announcements  every 60s
+[2026-05-26T03:46:57.214Z] [info] WS > Event filtering  enabled
+[2026-05-26T03:46:57.214Z] [info] HealthChecks > Active  every 30s  checks=sentry, sources
+[2026-05-26T03:46:57.214Z] [info] Docs > Swagger  /api-docs  Sonata API v4.0.0
+[2026-05-26T03:46:57.214Z] [info] Cluster > IPC  /tmp/sonata-cluster.sock
+[2026-05-26T03:46:57.214Z] [info] Cluster > Consistent hashing  vnodes=100
+[2026-05-26T03:46:57.214Z] [info] RateLimiter > Redis  sonata:rl:
+[2026-05-26T03:46:57.214Z] [info] Logging > Correlation IDs  enabled
+[2026-05-26T03:46:57.214Z] [info] Logging > Audit trail  → logs/audit.log  events=6
+[2026-05-26T03:46:57.219Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:46:57.220Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:46:57.220Z] [info] Sources > Registered source: http
+[2026-05-26T03:46:57.221Z] [info] Sources > Registered source: local
+[2026-05-26T03:46:57.222Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:46:57.222Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:46:57.223Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:46:57.224Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:46:57.232Z] [info] Sources > Registered source: apple
+[2026-05-26T03:46:57.233Z] [info] Sources > Registered source: nico
+[2026-05-26T03:46:57.234Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:46:57.235Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:46:57.238Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:46:57.239Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:46:57.263Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:47:19.728Z] [info] http > GET /health 200 22ms
+[2026-05-26T03:47:19.747Z] [info] http > GET /version 200 1ms
+[2026-05-26T03:47:19.801Z] [info] http > GET /v4/stats 200 2ms
+[2026-05-26T03:47:19.885Z] [info] http > POST /maintenance/enable 200 1ms
+[2026-05-26T03:47:34.749Z] [info] System > Shutting down...
+[2026-05-26T03:47:35.300Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:47:35.300Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:47:35.300Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:47:35.300Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:47:35.300Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:47:35.300Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:47:35.300Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:47:35.300Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:47:35.302Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:47:35.302Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:47:35.302Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:47:35.302Z] [info] System > Git main/9fd2e24  ·  2026-05-26T03:30:39+00:00
+[2026-05-26T03:47:35.302Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:47:35.302Z] [info] Cluster > Active  ·  0 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:47:35.302Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:47:35.302Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:47:35.303Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:47:35.303Z] [info] Server > CORS  enabled
+[2026-05-26T03:47:35.303Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:47:35.303Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:47:35.303Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:47:35.303Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:47:35.303Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:47:35.303Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:47:35.303Z] [info] Player > Audio ducking  threshold=0.02  reduce=0.5
+[2026-05-26T03:47:35.303Z] [info] Player > Gapless playback  maxGap=50ms
+[2026-05-26T03:47:35.303Z] [info] Player > Fade in/out  2000ms/2000ms
+[2026-05-26T03:47:35.303Z] [info] Player > Auto volume  target=-14LUFS  gain=6dB
+[2026-05-26T03:47:35.303Z] [info] Player > Snapshots  data/snapshots  every 60s
+[2026-05-26T03:47:35.303Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:47:35.303Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:47:35.303Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:47:35.303Z] [info] Discord > Gateway  intents=0
+[2026-05-26T03:47:35.303Z] [info] Database > sqlite  data/sonata.db  pool=10
+[2026-05-26T03:47:35.303Z] [info] Recording > wav  → recordings  max=600s  split=true
+[2026-05-26T03:47:35.303Z] [info] OTel > Trace  endpoint=  rate=0.1
+[2026-05-26T03:47:35.303Z] [info] SSE > Events  /events  max=50 clients
+[2026-05-26T03:47:35.303Z] [info] Player > Intro/outro  intro=data/intro.mp3  outro=data/outro.mp3
+[2026-05-26T03:47:35.303Z] [info] Player > Bandwidth limit  max=0Kbps  burst=0
+[2026-05-26T03:47:35.303Z] [info] Player > Dynamic EQ  preset=auto  adapt=2000ms
+[2026-05-26T03:47:35.303Z] [info] Player > Reverb  preset=room  mix=0.3  decay=0.5
+[2026-05-26T03:47:35.303Z] [info] Player > Sync zone  maxSkew=50ms  interval=1000ms
+[2026-05-26T03:47:35.303Z] [info] Player > HLS playback  enabled
+[2026-05-26T03:47:35.303Z] [info] Player > DASH playback  enabled
+[2026-05-26T03:47:35.303Z] [info] Player > Downmix  mode=stereo
+[2026-05-26T03:47:35.303Z] [info] Player > Pitch shift  speed=1  pitch=1
+[2026-05-26T03:47:35.303Z] [info] Player > Spatial audio  method=binaural
+[2026-05-26T03:47:35.303Z] [info] Player > Stereo widening  width=1
+[2026-05-26T03:47:35.303Z] [info] Player > Mono downmix  method=average
+[2026-05-26T03:47:35.303Z] [info] Player > Noise gate  threshold=0.01
+[2026-05-26T03:47:35.303Z] [info] Player > Convolution reverb  impulse=data/impulse/room.wav
+[2026-05-26T03:47:35.303Z] [info] Player > Sidechain  threshold=0.5  ratio=4
+[2026-05-26T03:47:35.303Z] [info] Player > Echo/Delay  delay=200ms  feedback=0.3
+[2026-05-26T03:47:35.303Z] [info] Player > Flanger  rate=0.5  depth=1
+[2026-05-26T03:47:35.303Z] [info] Player > Phaser  rate=0.3  stages=4
+[2026-05-26T03:47:35.303Z] [info] Player > Audio fingerprint  provider=default
+[2026-05-26T03:47:35.303Z] [info] Queue > DJ mode  roles=2  users=0
+[2026-05-26T03:47:35.303Z] [info] Queue > Collaborative  maxPerUser=10  voteSkip=true
+[2026-05-26T03:47:35.303Z] [info] Queue > Radio mode  source=youtube  basedOn=lastTrack
+[2026-05-26T03:47:35.303Z] [info] Queue > Smart queue  mode=history  max=20
+[2026-05-26T03:47:35.303Z] [info] Queue > Queue dedup  enabled
+[2026-05-26T03:47:35.303Z] [info] Sentry > Error tracking  env=production  rate=0.1
+[2026-05-26T03:47:35.303Z] [info] Datadog > Metrics  localhost:8125  prefix=sonata.
+[2026-05-26T03:47:35.303Z] [info] WS > Announcements  every 60s
+[2026-05-26T03:47:35.303Z] [info] WS > Event filtering  enabled
+[2026-05-26T03:47:35.303Z] [info] HealthChecks > Active  every 30s  checks=sentry, sources
+[2026-05-26T03:47:35.303Z] [info] Docs > Swagger  /api-docs  Sonata API v4.0.0
+[2026-05-26T03:47:35.304Z] [info] Cluster > IPC  /tmp/sonata-cluster.sock
+[2026-05-26T03:47:35.304Z] [info] Cluster > Consistent hashing  vnodes=100
+[2026-05-26T03:47:35.304Z] [info] RateLimiter > Redis  sonata:rl:
+[2026-05-26T03:47:35.304Z] [info] Logging > Correlation IDs  enabled
+[2026-05-26T03:47:35.304Z] [info] Logging > Audit trail  → logs/audit.log  events=6
+[2026-05-26T03:47:35.310Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:47:35.311Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:47:35.312Z] [info] Sources > Registered source: http
+[2026-05-26T03:47:35.313Z] [info] Sources > Registered source: local
+[2026-05-26T03:47:35.314Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:47:35.314Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:47:35.315Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:47:35.317Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:47:35.319Z] [info] Sources > Registered source: apple
+[2026-05-26T03:47:35.320Z] [info] Sources > Registered source: nico
+[2026-05-26T03:47:35.321Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:47:35.322Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:47:35.325Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:47:35.325Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:47:35.351Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:47:44.783Z] [info] http > GET /health 200 12ms
+[2026-05-26T03:47:44.795Z] [info] http > GET /version 200 1ms
+[2026-05-26T03:47:44.831Z] [info] http > GET /v4/stats 200 4ms
+[2026-05-26T03:47:44.845Z] [info] http > GET /api-docs 200 0ms
+[2026-05-26T03:47:44.877Z] [info] http > POST /maintenance/enable 200 2ms
+[2026-05-26T03:48:30.103Z] [info] System > Shutting down...
+[2026-05-26T03:48:30.653Z] [info] Sources > ┌──────────────────────────────────────────┐
+[2026-05-26T03:48:30.653Z] [info] Sources > │  ▶️  youtube                             │
+[2026-05-26T03:48:30.653Z] [info] Sources > │  ☁️  soundcloud                          │
+[2026-05-26T03:48:30.653Z] [info] Sources > │  🔴  spotify                             │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  💿  bandcamp                            │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  📺  twitch                              │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  🎬  vimeo                               │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  🎵  deezer                              │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  🍎  apple                               │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  📹  nico                                │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  🌧️  mixcloud                           │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  🎤  podcast                             │
+[2026-05-26T03:48:30.654Z] [info] Sources > │  🎼  jiosaavn                            │
+[2026-05-26T03:48:30.655Z] [info] Sources > │  🌐  http                                │
+[2026-05-26T03:48:30.655Z] [info] Sources > │  💾  local                               │
+[2026-05-26T03:48:30.655Z] [info] Sources > │  🔴  tiktok                              │
+[2026-05-26T03:48:30.655Z] [info] Sources > └──────────────────────────────────────────┘
+[2026-05-26T03:48:30.655Z] [info] System > sonata v4.0.0  ·  v22.22.2 linux x64
+[2026-05-26T03:48:30.655Z] [info] System > Git main/9fd2e24  ·  2026-05-26T03:30:39+00:00
+[2026-05-26T03:48:30.655Z] [info] System > Listening on 0.0.0.0:8080  (Lavalink v4)
+[2026-05-26T03:48:30.655Z] [info] Cluster > Active  ·  0 node(s)  ·  lowestLoad strategy
+[2026-05-26T03:48:30.655Z] [info] RateLimiter > Active  ·  100 req / 60s
+[2026-05-26T03:48:30.655Z] [info] Server > HTTP compression  enabled
+[2026-05-26T03:48:30.655Z] [info] Server > HTTP/2  enabled
+[2026-05-26T03:48:30.655Z] [info] Server > CORS  enabled
+[2026-05-26T03:48:30.655Z] [info] Server > Dashboard  /dashboard
+[2026-05-26T03:48:30.655Z] [info] Cache > Memory-only  ·  TTL 300000ms  ·  max 500 entries
+[2026-05-26T03:48:30.655Z] [info] Player > AutoPlay  enabled
+[2026-05-26T03:48:30.655Z] [info] Player > ReplayGain  enabled
+[2026-05-26T03:48:30.655Z] [info] Player > Loudness normalization  enabled
+[2026-05-26T03:48:30.655Z] [info] Player > Sticky queue  sticky-queue.json
+[2026-05-26T03:48:30.656Z] [info] Player > Audio ducking  threshold=0.02  reduce=0.5
+[2026-05-26T03:48:30.656Z] [info] Player > Gapless playback  maxGap=50ms
+[2026-05-26T03:48:30.656Z] [info] Player > Fade in/out  2000ms/2000ms
+[2026-05-26T03:48:30.656Z] [info] Player > Auto volume  target=-14LUFS  gain=6dB
+[2026-05-26T03:48:30.656Z] [info] Player > Snapshots  data/snapshots  every 60s
+[2026-05-26T03:48:30.656Z] [info] Queue > Shuffle  enabled
+[2026-05-26T03:48:30.656Z] [info] Proxy > SOCKS5  socks5h://127.0.0.1:40000
+[2026-05-26T03:48:30.656Z] [info] Logging > File  logs/sonata.log
+[2026-05-26T03:48:30.656Z] [info] Discord > Gateway  intents=0
+[2026-05-26T03:48:30.656Z] [info] Database > sqlite  data/sonata.db  pool=10
+[2026-05-26T03:48:30.656Z] [info] Recording > wav  → recordings  max=600s  split=true
+[2026-05-26T03:48:30.656Z] [info] OTel > Trace  endpoint=  rate=0.1
+[2026-05-26T03:48:30.656Z] [info] SSE > Events  /events  max=50 clients
+[2026-05-26T03:48:30.656Z] [info] Player > Intro/outro  intro=data/intro.mp3  outro=data/outro.mp3
+[2026-05-26T03:48:30.656Z] [info] Player > Bandwidth limit  max=0Kbps  burst=0
+[2026-05-26T03:48:30.656Z] [info] Player > Dynamic EQ  preset=auto  adapt=2000ms
+[2026-05-26T03:48:30.656Z] [info] Player > Reverb  preset=room  mix=0.3  decay=0.5
+[2026-05-26T03:48:30.656Z] [info] Player > Sync zone  maxSkew=50ms  interval=1000ms
+[2026-05-26T03:48:30.656Z] [info] Player > HLS playback  enabled
+[2026-05-26T03:48:30.656Z] [info] Player > DASH playback  enabled
+[2026-05-26T03:48:30.656Z] [info] Player > Downmix  mode=stereo
+[2026-05-26T03:48:30.656Z] [info] Player > Pitch shift  speed=1  pitch=1
+[2026-05-26T03:48:30.656Z] [info] Player > Spatial audio  method=binaural
+[2026-05-26T03:48:30.656Z] [info] Player > Stereo widening  width=1
+[2026-05-26T03:48:30.656Z] [info] Player > Mono downmix  method=average
+[2026-05-26T03:48:30.656Z] [info] Player > Noise gate  threshold=0.01
+[2026-05-26T03:48:30.656Z] [info] Player > Convolution reverb  impulse=data/impulse/room.wav
+[2026-05-26T03:48:30.656Z] [info] Player > Sidechain  threshold=0.5  ratio=4
+[2026-05-26T03:48:30.656Z] [info] Player > Echo/Delay  delay=200ms  feedback=0.3
+[2026-05-26T03:48:30.656Z] [info] Player > Flanger  rate=0.5  depth=1
+[2026-05-26T03:48:30.656Z] [info] Player > Phaser  rate=0.3  stages=4
+[2026-05-26T03:48:30.656Z] [info] Player > Audio fingerprint  provider=default
+[2026-05-26T03:48:30.656Z] [info] Queue > DJ mode  roles=2  users=0
+[2026-05-26T03:48:30.656Z] [info] Queue > Collaborative  maxPerUser=10  voteSkip=true
+[2026-05-26T03:48:30.656Z] [info] Queue > Radio mode  source=youtube  basedOn=lastTrack
+[2026-05-26T03:48:30.656Z] [info] Queue > Smart queue  mode=history  max=20
+[2026-05-26T03:48:30.656Z] [info] Queue > Queue dedup  enabled
+[2026-05-26T03:48:30.656Z] [info] Sentry > Error tracking  env=production  rate=0.1
+[2026-05-26T03:48:30.656Z] [info] Datadog > Metrics  localhost:8125  prefix=sonata.
+[2026-05-26T03:48:30.656Z] [info] WS > Announcements  every 60s
+[2026-05-26T03:48:30.656Z] [info] WS > Event filtering  enabled
+[2026-05-26T03:48:30.656Z] [info] HealthChecks > Active  every 30s  checks=sentry, sources
+[2026-05-26T03:48:30.656Z] [info] Docs > Swagger  /api-docs  Sonata API v4.0.0
+[2026-05-26T03:48:30.656Z] [info] Cluster > IPC  /tmp/sonata-cluster.sock
+[2026-05-26T03:48:30.656Z] [info] Cluster > Consistent hashing  vnodes=100
+[2026-05-26T03:48:30.656Z] [info] RateLimiter > Redis  sonata:rl:
+[2026-05-26T03:48:30.656Z] [info] Logging > Correlation IDs  enabled
+[2026-05-26T03:48:30.656Z] [info] Logging > Audit trail  → logs/audit.log  events=6
+[2026-05-26T03:48:30.661Z] [info] Sources > Registered source: youtube
+[2026-05-26T03:48:30.661Z] [info] Sources > Registered source: soundcloud
+[2026-05-26T03:48:30.662Z] [info] Sources > Registered source: http
+[2026-05-26T03:48:30.663Z] [info] Sources > Registered source: local
+[2026-05-26T03:48:30.663Z] [info] Sources > Registered source: bandcamp
+[2026-05-26T03:48:30.664Z] [info] Sources > Registered source: twitch
+[2026-05-26T03:48:30.664Z] [info] Sources > Registered source: vimeo
+[2026-05-26T03:48:30.666Z] [info] Sources > Registered source: deezer
+[2026-05-26T03:48:30.666Z] [info] Sources > Registered source: apple
+[2026-05-26T03:48:30.667Z] [info] Sources > Registered source: nico
+[2026-05-26T03:48:30.668Z] [info] Sources > Registered source: mixcloud
+[2026-05-26T03:48:30.669Z] [info] Sources > Registered source: podcast
+[2026-05-26T03:48:30.669Z] [info] Sources > Registered source: jiosaavn
+[2026-05-26T03:48:30.670Z] [info] Plugins > Loaded 0 plugin(s)
+[2026-05-26T03:48:30.699Z] [info] System > Server listening on 0.0.0.0:8080
+[2026-05-26T03:48:37.925Z] [info] http > POST /maintenance/enable 200 6ms
+[2026-05-26T03:48:37.958Z] [info] http > POST /maintenance/disable 200 0ms
+[2026-05-26T03:48:37.976Z] [info] http > GET /health 200 2ms
+[2026-05-26T03:48:43.022Z] [info] http > GET /health 200 4ms
+[2026-05-26T03:48:43.055Z] [info] http > GET /version 200 5ms
+[2026-05-26T03:48:43.070Z] [info] http > GET /v4/stats 200 2ms
+[2026-05-26T03:48:43.088Z] [info] http > GET /api-docs 200 1ms
+[2026-05-26T03:48:43.141Z] [info] http > GET /v4/stats 200 1ms
+[2026-05-26T03:48:43.180Z] [info] Sessions > Created 5d98d26b86b6273d (timeout: 300s)
+[2026-05-26T03:48:43.180Z] [info] Sessions > Created session 5d98d26b86b6273d (resume: false)
+[2026-05-26T03:48:43.180Z] [info] http > POST /v4/sessions 201 1ms

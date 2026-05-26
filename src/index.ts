@@ -17,6 +17,9 @@ import { showBanner, formatTrackProgress } from '#console/index'
 import { VERSION } from '#version'
 import { ClusterManager } from '#cluster/index'
 import { WebhookManager } from '#webhooks/index'
+import { MaintenanceMode } from '#maintenance/index'
+import { AuditLogger } from '#audit/index'
+import { RadioMode } from '#radio/index'
 
 const cfg = await loadConfig(process.argv[2])
 const logger = createLogger(cfg.logging)
@@ -97,6 +100,9 @@ if (discordCfg?.enabled && discordCfg?.token) {
   }).catch((err: any) => logger.warn('Discord', `Gateway init failed: ${err.message}`))
 }
 
+const audit = new AuditLogger(cfg.logging?.audit ?? { enabled: false })
+const maintenance = new MaintenanceMode(cfg.maintenance ?? { enabled: false }, [cfg.server.password, ...(cfg.server.tokens ?? [])], ['/maintenance/enable', '/maintenance/disable'])
+
 const srv = new Server({
   logger,
   password: cfg.server.password,
@@ -105,6 +111,7 @@ const srv = new Server({
   http2: cfg.server.http2,
   security: cfg.security,
   customHeaders: cfg.server.customHeaders,
+  correlationId: cfg.logging?.correlationId,
 })
 const auth = new AuthManager([
   cfg.server.password,
@@ -146,9 +153,17 @@ const pm = new PlayerManager({
     if (cfg.player?.autoPlay && p.queue.length > 0) {
       const next = p.queue.dequeue()
       if (next) p.play(next)
+    } else if (cfg.queue?.radioMode?.enabled) {
+      const radio = new RadioMode(resolver, cfg.queue.radioMode, logger)
+      radio.generateTrack(p.queue.history).then(track => {
+        if (track) {
+          p.play(track)
+          audit.log('radio.next', { guildId: p.guildId, track: track.info.title })
+        }
+      })
     }
   },
-}, Boolean(cfg.player?.stickyQueue), cfg.player?.stickyQueueFile ?? '')
+}, Boolean(cfg.player?.stickyQueue), cfg.player?.stickyQueueFile ?? '', cfg.queue?.filters)
 
 // proxy is logged in logBanner now
 const wsHandler = new LavalinkWS(pm, sessions, { queue: cfg.queue, player: cfg.player, proxy: cfg.proxy, youtube: cfg.sources?.youtube }, logger)
@@ -194,6 +209,38 @@ if (whitelist?.length || blacklist?.length) {
       return true
     }
     return false
+  })
+}
+
+// Maintenance mode
+srv.onPreHandle((req, res) => maintenance.handler(req, res))
+srv.handle('POST', '/maintenance/enable', (req, res, params, body) => {
+  maintenance.enable(body?.message)
+  audit.log('maintenance.enable', { message: body?.message })
+  res.end(JSON.stringify({ status: 'maintenance enabled' }))
+})
+srv.handle('POST', '/maintenance/disable', (req, res) => {
+  maintenance.disable()
+  audit.log('maintenance.disable', {})
+  res.end(JSON.stringify({ status: 'maintenance disabled' }))
+})
+
+// Swagger docs
+const swaggerDocs = cfg.docs?.swagger
+if (swaggerDocs?.enabled) {
+  srv.handle('GET', swaggerDocs.path ?? '/api-docs', (req, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({
+      openapi: '3.0.0',
+      info: { title: swaggerDocs.title ?? 'Sonata API', version: swaggerDocs.version ?? '4.0.0' },
+      paths: {
+        '/health': { get: { summary: 'Health check', responses: { '200': { description: 'OK' } } } },
+        '/version': { get: { summary: 'Version info', responses: { '200': { description: 'OK' } } } },
+        '/v4/stats': { get: { summary: 'Server stats', responses: { '200': { description: 'OK' } } } },
+        '/v4/sessions': { post: { summary: 'Create session', responses: { '201': { description: 'Created' } } } },
+        '/v4/loadtracks': { get: { summary: 'Load tracks', parameters: [{ name: 'identifier', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'OK' } } } },
+      },
+    }))
   })
 }
 

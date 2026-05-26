@@ -51,13 +51,15 @@ export class Server {
   #compression: boolean | string = false
   #security: SecurityConfig = {}
   #customHeaders: Record<string, string> = {}
+  #correlationId: boolean = false
 
-  constructor(opts: { logger?: Logger; password?: string; ssl?: SSLOpts; compression?: boolean | string; http2?: boolean; security?: SecurityConfig; customHeaders?: Record<string, string> }) {
+  constructor(opts: { logger?: Logger; password?: string; ssl?: SSLOpts; compression?: boolean | string; http2?: boolean; security?: SecurityConfig; customHeaders?: Record<string, string>; correlationId?: boolean }) {
     this.#logger = opts.logger ?? createLogger({ level: 'normal' })
     this.#password = opts.password ?? ''
     this.#compression = opts.compression ?? false
     this.#security = opts.security ?? {}
     this.#customHeaders = opts.customHeaders ?? {}
+    this.#correlationId = opts.correlationId ?? false
 
     if (opts.ssl?.key && opts.ssl?.cert) {
       const sslOpts: any = {
@@ -136,6 +138,13 @@ export class Server {
     const pathname = url.pathname
     const method = (req.method ?? 'GET').toUpperCase()
     const sec = this.#security
+
+    // Correlation ID
+    if (this.#correlationId) {
+      const cid = (req.headers['x-request-id'] as string) || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+      res.setHeader('X-Request-Id', cid);
+      (req as any).correlationId = cid
+    }
 
     // Blocked methods
     if (sec.blockMethods?.length && sec.blockMethods.includes(method)) {

@@ -1,5 +1,6 @@
 import { Player, PlayerEventHandlers, State } from './player.js'
 import { TrackCache } from '../cache/index.js'
+import type { QueueFilterConfig } from './queue.js'
 
 const IDLE_TIMEOUT = 300_000
 
@@ -12,11 +13,13 @@ export class PlayerManager {
   #onAutoLeave: ((guildId: string) => void) | null = null
   #stickyQueueEnabled = false
   #stickyQueueFileTemplate = ''
+  #queueFilters: QueueFilterConfig = {}
 
-  constructor(handler: PlayerEventHandlers, stickyQueue = false, stickyQueueFile = '') {
+  constructor(handler: PlayerEventHandlers, stickyQueue = false, stickyQueueFile = '', queueFilters: QueueFilterConfig = {}) {
     this.#handler = handler
     this.#stickyQueueEnabled = stickyQueue
     this.#stickyQueueFileTemplate = stickyQueueFile
+    this.#queueFilters = queueFilters
   }
 
   setAutoLeave(ms: number, onLeave: (guildId: string) => void) {
@@ -47,6 +50,7 @@ export class PlayerManager {
         ? (this.#stickyQueueFileTemplate || `data/queue-${guildId}.json`).replace('{guildId}', guildId)
         : ''
       p = new Player(guildId, this.#handler, stickyFile)
+      p.queue.setFilters(this.#queueFilters)
       this.#players.set(guildId, p)
       this.#resetIdle(guildId)
     }
