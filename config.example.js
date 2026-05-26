@@ -96,6 +96,7 @@ export default {
       maxPlaylistTracks: 200,
       resolverFlavor: 'auto',  // auto | mirror | direct
       retryCount: 2,
+      spDc: '',  // Spotify sp_dc cookie (optional, enables ISRC via internal API)
     },
     bandcamp:  { enabled: true, quality: 'high',  timeout: 10_000 },
     twitch:    { enabled: true, quality: 'source', timeout: 10_000 },

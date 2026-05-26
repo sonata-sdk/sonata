@@ -5,7 +5,7 @@ import type { Track, LoadTracksResult } from '../types/index.js'
 interface ResolverConfig {
   youtube: { enabled: boolean; clientProfiles?: string[]; proxy?: string; apiKey?: string; clientName?: string; timeout?: number; maxResults?: number; fetchPlayerJS?: boolean; oauth?: { getOAuthToken?: boolean; refreshToken?: string }; cipher?: { url?: string; token?: string }; poToken?: { service?: string; token?: string }; playerUrl?: string }
   soundcloud: { enabled: boolean; clientId?: string; apiUrl?: string; resolveRedirects?: boolean; timeout?: number }
-  spotify: { enabled: boolean; clientId: string; clientSecret: string; market?: string; country?: string; maxPlaylistTracks?: number; resolverFlavor?: string; retryCount?: number }
+  spotify: { enabled: boolean; clientId: string; clientSecret: string; market?: string; country?: string; maxPlaylistTracks?: number; resolverFlavor?: string; retryCount?: number; spDc?: string }
   bandcamp?: boolean
   twitch?: boolean
   vimeo?: boolean
@@ -99,7 +99,12 @@ export class Resolver {
     }
     if (config.spotify?.enabled && config.spotify.clientId && config.spotify.clientSecret) {
       const mod = await import('./spotify/index.js')
-      this.#sourceManager.register(new mod.SpotifySource(config.spotify.clientId, config.spotify.clientSecret))
+      this.#sourceManager.register(new mod.SpotifySource({
+        clientId: config.spotify.clientId,
+        clientSecret: config.spotify.clientSecret,
+        spDc: config.spotify.spDc,
+        market: config.spotify.market,
+      }))
     }
     await this.#registerOptional(config.http, './http/index.js', 'HTTPSource')
     await this.#registerOptional(config.local, './local/index.js', 'LocalSource')

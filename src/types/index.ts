@@ -353,6 +353,8 @@ export interface Config {
       resolverFlavor?: 'auto' | 'mirror' | 'direct'
       /** Retry on failure count */
       retryCount?: number
+      /** Spotify sp_dc cookie for mobile-level token (enables ISRC via internal API) */
+      spDc?: string
     }
     bandcamp?: { enabled: boolean; quality?: 'high' | 'medium' | 'low'; timeout?: number }
     twitch?: { enabled: boolean; clientId?: string; clientSecret?: string; quality?: string; timeout?: number }
