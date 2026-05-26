@@ -1,7 +1,7 @@
 import { createWriteStream, existsSync, mkdirSync, WriteStream } from 'node:fs'
 import { dirname } from 'node:path'
 import { inspect } from 'node:util'
-import chalk, { type ChalkInstance } from 'chalk'
+import chalk from 'chalk'
 
 const LEVELS = ['trace', 'verbose', 'debug', 'normal', 'warn', 'error'] as const
 type Level = typeof LEVELS[number]
@@ -12,13 +12,36 @@ const LEVEL_MAP: Record<string, Level> = {
   fatal: 'error',
 }
 
-const LEVEL_LABELS: Record<Level, string> = {
-  trace: 'TRACE',
-  verbose: 'VERBOSE',
-  debug: 'DEBUG',
-  normal: 'INFO',
-  warn: 'WARN',
-  error: 'ERROR',
+const LEVEL_STYLES: Record<Level, { dot: string; label: string }> = {
+  trace: { dot: chalk.dim('\u25CB'), label: 'trace' },
+  verbose: { dot: chalk.cyan('\u25D8'), label: 'verbose' },
+  debug: { dot: chalk.blue('\u25C9'), label: 'debug' },
+  normal: { dot: chalk.green('\u25C9'), label: 'info' },
+  warn: { dot: chalk.yellow('\u26A0'), label: 'warn' },
+  error: { dot: chalk.red('\u2716'), label: 'error' },
+}
+
+const MODULE_COLORS: Record<string, (...s: string[]) => string> = {
+  System: chalk.bold.cyan,
+  Cluster: chalk.bold.magenta,
+  RateLimiter: chalk.bold.yellow,
+  Server: chalk.bold.blue,
+  Cache: chalk.bold.green,
+  Player: chalk.bold.white,
+  Queue: chalk.bold.cyan,
+  Proxy: chalk.bold.hex('#FF8C00'),
+  Logging: chalk.bold.gray,
+  Sources: chalk.bold.hex('#00BFFF'),
+  Plugins: chalk.bold.hex('#9370DB'),
+  Resolve: chalk.bold.hex('#20B2AA'),
+  Sessions: chalk.bold.hex('#FF69B4'),
+  WS: chalk.bold.hex('#87CEEB'),
+  Memory: chalk.bold.hex('#A9A9A9'),
+  AutoLeave: chalk.bold.hex('#FFA07A'),
+}
+
+function moduleColor(mod: string): (...s: string[]) => string {
+  return MODULE_COLORS[mod] ?? chalk.bold
 }
 
 function normalizeLevel(level: string): number {
@@ -29,20 +52,11 @@ function normalizeLevel(level: string): number {
 
 function ts(): string {
   const d = new Date()
-  return `[${[
+  return `${[
     String(d.getHours()).padStart(2, '0'),
     String(d.getMinutes()).padStart(2, '0'),
     String(d.getSeconds()).padStart(2, '0'),
-  ].join(':')}.${String(d.getMilliseconds()).padStart(3, '0')}]`
-}
-
-const BADGES: Record<Level, ChalkInstance> = {
-  trace: chalk.bgBlack.white,
-  verbose: chalk.bgCyan.black,
-  debug: chalk.bgBlue.white,
-  normal: chalk.bgGreen.black,
-  warn: chalk.bgYellow.black,
-  error: chalk.bgRed.white,
+  ].join(':')}.${String(d.getMilliseconds()).padStart(3, '0')}`
 }
 
 export class Logger {
@@ -91,9 +105,9 @@ export class Logger {
         return String(a)
       }).join(' ')}`
     }
-    const badge = BADGES[level](`[${LEVEL_LABELS[level]}]`)
-    const mod = module ? chalk.bold(`>: ${module} >`) : '>:'
-    return `${ts()} ${badge} ${mod} ${fullMsg}`
+    const style = LEVEL_STYLES[level]
+    const mod = module ? moduleColor(module)(` ${module} `) : ''
+    return `${chalk.dim(`[${ts()}]`)} ${style.dot}${mod}· ${fullMsg}`
   }
 
   #write(level: Level, module: string, msg: string, ...args: any[]) {
@@ -102,7 +116,7 @@ export class Logger {
     if (this.#format === 'json') {
       const entry = JSON.stringify({
         timestamp: new Date().toISOString(),
-        level: LEVEL_LABELS[level],
+        level: LEVEL_STYLES[level].label,
         module,
         message: msg,
         args: args.length > 0 ? args.map(a => a instanceof Error ? a.message : a) : undefined,
@@ -113,8 +127,8 @@ export class Logger {
     }
 
     if (this.#fileStream) {
-      const label = LEVEL_LABELS[level]
-      const mod = module ? ` >: ${module} >` : ' >:'
+      const label = LEVEL_STYLES[level].label
+      const mod = module ? ` ${module} >` : ''
       const tsFull = new Date().toISOString()
       let fullMsg = msg
       if (args.length > 0) {

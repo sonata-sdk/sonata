@@ -39,46 +39,17 @@ const SOURCE_ICONS: Record<string, string> = {
 export function logBanner(cfg: any, logger?: Logger) {
   const git = getGitInfo()
 
-  logger?.info('System', `Starting ${NAME} v${VERSION}`)
-  logger?.info('System', `Git ${git.branch}/${git.commit}${git.date ? ` (${git.date})` : ''}`)
-  logger?.info('System', `${process.version} ${process.platform} ${process.arch}`)
+  logger?.info('System', `${NAME} v${VERSION}  ·  ${process.version} ${process.platform} ${process.arch}`)
+  logger?.info('System', `Git ${git.branch}/${git.commit}${git.date ? `  ·  ${git.date}` : ''}`)
 
-  logger?.info('System', `Listening on ${cfg.server.host}:${cfg.server.port} (Lavalink v${cfg.lavalink.apiVersion})`)
-
-  if (cfg.clustering?.enabled) {
-    logger?.info('Cluster', `Active (${cfg.clustering.nodes?.length ?? 0} node(s), ${cfg.clustering.electionStrategy} strategy)`)
-  } else {
-    logger?.info('Cluster', 'Standalone mode')
-  }
-
-  if (cfg.rateLimiting?.enabled) {
-    logger?.info('RateLimiter', `Active (${cfg.rateLimiting.maxRequests} req/${cfg.rateLimiting.windowMs / 1000}s)`)
-  }
-
-  if (cfg.server.compression) logger?.info('Server', 'HTTP compression enabled')
-  if (cfg.server.http2) logger?.info('Server', 'HTTP/2 enabled')
-  if (cfg.server.cors) logger?.info('Server', 'CORS enabled')
-  if (cfg.server.dashboard) logger?.info('Server', `Dashboard at ${cfg.server.dashboard}`)
-  if (cfg.cache?.enabled) logger?.info('Cache', `${cfg.cache.memoryOnly ? 'Memory-only' : 'Redis'} (TTL ${cfg.cache.ttl}ms, max ${cfg.cache.maxSize} entries)`)
-
-  if (cfg.player?.autoPlay) logger?.info('Player', 'AutoPlay enabled')
-  if (cfg.player?.replaygain) logger?.info('Player', 'ReplayGain enabled')
-  if (cfg.player?.normalization) logger?.info('Player', 'Loudness normalization enabled')
-  if (cfg.player?.stickyQueue) logger?.info('Player', `Sticky queue active (${cfg.player.stickyQueueFile})`)
-  if (cfg.queue?.shuffle) logger?.info('Queue', 'Shuffle enabled')
-
-  if (cfg.proxy?.socks) logger?.info('Proxy', `SOCKS5 ${cfg.proxy.socks}`)
-  if (cfg.proxy?.http) logger?.info('Proxy', `HTTP ${cfg.proxy.http}`)
-
-  if (cfg.logging?.file?.enabled) logger?.info('Logging', `File: ${cfg.logging.file.path}`)
-
+  // Sources box — FIRST
   const sources = Object.entries(cfg.sources)
     .filter(([k]) => !['priority', 'requestTimeout', 'userAgent'].includes(k))
     .map(([name, src]: [string, any]) => {
       const enabled = typeof src === 'object' ? src.enabled : src
       const iconName = SOURCE_ICONS[name] || '?'
       const icon = enabled ? iconName : '🔴'
-      return ` ${icon} ${name}`
+      return ` ${icon}  ${name}`
     })
 
   const longest = Math.max(...sources.map(s => s.length), 0)
@@ -92,14 +63,43 @@ export function logBanner(cfg: any, logger?: Logger) {
     logger?.info('Sources', fmt(line))
   }
   logger?.info('Sources', `\u2514${h.repeat(boxW + 2)}\u2518`)
+
+  // Feature messages — AFTER banner
+  logger?.info('System', `Listening on ${cfg.server.host}:${cfg.server.port}  (Lavalink v${cfg.lavalink.apiVersion})`)
+
+  if (cfg.clustering?.enabled) {
+    logger?.info('Cluster', `Active  ·  ${cfg.clustering.nodes?.length ?? 0} node(s)  ·  ${cfg.clustering.electionStrategy} strategy`)
+  } else {
+    logger?.info('Cluster', 'Standalone mode')
+  }
+
+  if (cfg.rateLimiting?.enabled) {
+    logger?.info('RateLimiter', `Active  ·  ${cfg.rateLimiting.maxRequests} req / ${cfg.rateLimiting.windowMs / 1000}s`)
+  }
+
+  if (cfg.server.compression) logger?.info('Server', 'HTTP compression  enabled')
+  if (cfg.server.http2) logger?.info('Server', 'HTTP/2  enabled')
+  if (cfg.server.cors) logger?.info('Server', 'CORS  enabled')
+  if (cfg.server.dashboard) logger?.info('Server', `Dashboard  ${cfg.server.dashboard}`)
+  if (cfg.cache?.enabled) logger?.info('Cache', `${cfg.cache.memoryOnly ? 'Memory-only' : 'Redis'}  ·  TTL ${cfg.cache.ttl}ms  ·  max ${cfg.cache.maxSize} entries`)
+
+  if (cfg.player?.autoPlay) logger?.info('Player', 'AutoPlay  enabled')
+  if (cfg.player?.replaygain) logger?.info('Player', 'ReplayGain  enabled')
+  if (cfg.player?.normalization) logger?.info('Player', 'Loudness normalization  enabled')
+  if (cfg.player?.stickyQueue) logger?.info('Player', `Sticky queue  ${cfg.player.stickyQueueFile}`)
+  if (cfg.queue?.shuffle) logger?.info('Queue', 'Shuffle  enabled')
+
+  if (cfg.proxy?.socks) logger?.info('Proxy', `SOCKS5  ${cfg.proxy.socks}`)
+  if (cfg.proxy?.http) logger?.info('Proxy', `HTTP  ${cfg.proxy.http}`)
+
+  if (cfg.logging?.file?.enabled) logger?.info('Logging', `File  ${cfg.logging.file.path}`)
 }
 
 export function logMemory(logger?: Logger) {
   const mem = process.memoryUsage()
-  logger?.debug('Memory', `rss=${(mem.rss / 1024 / 1024).toFixed(1)}MB heap=${(mem.heapUsed / 1024 / 1024).toFixed(1)}/${(mem.heapTotal / 1024 / 1024).toFixed(1)}MB ext=${(mem.external / 1024 / 1024).toFixed(1)}MB`)
+  logger?.debug('Memory', `rss ${(mem.rss / 1024 / 1024).toFixed(1)}MB  ·  heap ${(mem.heapUsed / 1024 / 1024).toFixed(1)}/${(mem.heapTotal / 1024 / 1024).toFixed(1)}MB  ·  ext ${(mem.external / 1024 / 1024).toFixed(1)}MB`)
 }
 
 export function logPlayerAction(guildId: string, action: string, detail?: string, logger?: Logger) {
-  const msg = `${guildId} ${action}${detail ? ` (${detail})` : ''}`
-  logger?.info('Player', msg)
+  logger?.info('Player', `${guildId}  ${action}${detail ? `  (${detail})` : ''}`)
 }
