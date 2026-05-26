@@ -1,6 +1,6 @@
 const CLIENT_ID = '861556708454-d6dlm3lh05idd8npek18k6be8ba3oc68.apps.googleusercontent.com'
 const CLIENT_SECRET = 'SboVhoG9s0rNafixCSGGKXAT'
-const SCOPES = 'http://gdata.youtube.com https://www.googleapis.com/auth/youtube'
+const SCOPES = 'https://www.googleapis.com/auth/youtube'
 
 interface DeviceCodeResponse {
   device_code: string
@@ -20,14 +20,15 @@ interface TokenResponse {
 }
 
 export async function acquireYouTubeRefreshToken(): Promise<string> {
-  const deviceRes = await fetch('https://www.youtube.com/o/oauth2/device/code', {
+  const deviceRes = await fetch('https://oauth2.googleapis.com/device/code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ client_id: CLIENT_ID, scope: SCOPES }),
   })
 
   if (!deviceRes.ok) {
-    throw new Error(`Device code request failed: ${deviceRes.status}`)
+    const text = await deviceRes.text()
+    throw new Error(`Device code request failed: ${deviceRes.status} - ${text.slice(0, 200)}`)
   }
 
   const deviceData = (await deviceRes.json()) as DeviceCodeResponse
@@ -54,7 +55,7 @@ export async function acquireYouTubeRefreshToken(): Promise<string> {
   while (!refreshToken) {
     await new Promise(resolve => setTimeout(resolve, interval))
 
-    const tokenRes = await fetch('https://www.google.com/oauth2/token', {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -71,8 +72,8 @@ export async function acquireYouTubeRefreshToken(): Promise<string> {
       continue
     }
 
-    if (tokenData.error) {
-      throw new Error(`Token error: ${tokenData.error_description || tokenData.error}`)
+    if (!tokenRes.ok || tokenData.error) {
+      throw new Error(`Token error: ${tokenData.error_description || tokenData.error || tokenRes.status}`)
     }
 
     if (tokenData.refresh_token) {
@@ -114,7 +115,7 @@ export async function acquireYouTubeRefreshToken(): Promise<string> {
 }
 
 export async function getOAuthAccessToken(refreshToken: string): Promise<string | null> {
-  const res = await fetch('https://www.google.com/oauth2/token', {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
