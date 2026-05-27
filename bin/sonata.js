@@ -30,12 +30,18 @@ if (args.includes('--help') || args.includes('-h')) {
 if (args.includes('--build')) {
   const { execSync } = await import('child_process')
   const { resolve } = await import('path')
-  const { readFileSync } = await import('fs')
+  const { existsSync, readFileSync } = await import('fs')
   const repo = 'https://github.com/sonata-sdk/sonata.git'
   const dir = resolve(process.cwd(), 'sonata')
 
-  console.log(`\n  Cloning ${repo}...`)
-  execSync(`git clone ${repo} "${dir}"`, { stdio: 'inherit' })
+  if (existsSync(dir)) {
+    console.log(`\n  Already exists: ${dir}`)
+    console.log('  Pulling latest...')
+    execSync('git pull', { cwd: dir, stdio: 'inherit' })
+  } else {
+    console.log(`\n  Cloning ${repo}...`)
+    execSync(`git clone ${repo} "${dir}"`, { stdio: 'inherit' })
+  }
 
   console.log('\n  Installing dependencies...')
   execSync('npm install', { cwd: dir, stdio: 'inherit' })
