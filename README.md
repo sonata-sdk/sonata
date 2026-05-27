@@ -67,18 +67,18 @@
 
 ## 🚀 Quick Start
 
+### 📦 npm (global)
+
 ```bash
-# clone & install
-git clone https://github.com/sonata-sdk/sonata.git
-cd sonata
-npm install
+npm install -g @sonata-sdk/server
+sonata                          # start with default config (./config.js)
+sonata /etc/sonata/config.js    # start with custom config
+```
 
-# configure
-cp config.example.js config.js
+### ◻ npx (no install)
 
-# build & run
-npm run build
-node dist/index.js
+```bash
+npx @sonata-sdk/server          # run directly
 ```
 
 ### 🐳 Docker
@@ -88,11 +88,40 @@ docker build -t sonata .
 docker run -p 2333:2333 -v ./config.js:/app/config.js sonata
 ```
 
+### 🔧 From source
+
+```bash
+git clone https://github.com/sonata-sdk/sonata.git
+cd sonata
+npm install
+npm run build
+node dist/index.js
+```
+
 ### ⚡ Dev mode (no build)
 
 ```bash
 npx tsx src/index.ts           # one-shot
 npm run dev                     # watch mode (auto-restart)
+```
+
+### 🏗️ Bootstrap (clone + build)
+
+```bash
+sonata --build                  # clones repo, installs deps, compiles
+```
+
+---
+
+## 💻 CLI
+
+```bash
+sonata [config-path]
+
+Options:
+  -v, --version       Show version
+  -h, --help          Show this help
+  --build             Clone repo, install deps, and build from GitHub
 ```
 
 ---
@@ -309,6 +338,7 @@ npm run dev         # Watch mode with auto-reload
 
 ## 📦 Related
 
+- [**@sonata-sdk/server**](https://npmjs.com/package/@sonata-sdk/server) — npm package for the server (binary: `sonata`)
 - [**@sonata-sdk/plugin-sdk**](https://github.com/sonata-sdk/sonata-sdk-packages) — TypeScript SDK for building Sonata plugins
 - [**sonata-sdk-packages**](https://github.com/sonata-sdk/sonata-sdk-packages) — Monorepo of official Sonata SDK packages
 - [**Docs**](https://sonata.enerthya.website) — Package documentation website
