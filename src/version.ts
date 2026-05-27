@@ -1,3 +1,3 @@
-export const VERSION = '4.1.0'
-export const BUILD = 3
+export const VERSION = '4.2.1'
+export const BUILD = 4
 export const NAME = 'sonata'
