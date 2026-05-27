@@ -1,0 +1,11 @@
+# Default owners
+* @sonata-sdk/maintainers
+
+# Audio & player internals
+/src/player/ @sonata-sdk/audio-maintainers
+
+# Source resolving
+/src/resolving/ @sonata-sdk/resolver-maintainers
+
+# Plugin API
+/src/plugin/ @sonata-sdk/plugin-maintainers
